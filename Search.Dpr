@@ -137,8 +137,8 @@ Const
   Months : Array[1..24] Of String = (
     'apr', 'april',
     'aug', 'august',
-    'feb', 'february',
     'dec', 'december',
+    'feb', 'february',
     'jan', 'january',
     'jul', 'july',
     'jun', 'june',
@@ -151,8 +151,8 @@ Const
   MonthIndexes : Array[1..24] Of Word = (
     4, 4,
     8, 8,
-    2, 2,
     12, 12,
+    2, 2,
     1, 1,
     7, 7,
     6, 6,
@@ -392,13 +392,19 @@ End;
 
 Procedure OutputCurrentSearchPath(strPath : String);
 
+Const
+  strLabel : String = 'Searching... ';
+  iLength : Integer = 14;
+
 Var
   C : CONSOLE_SCREEN_BUFFER_INFO;
 
 Begin
   GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), C);
-  strpath := 'Searching... ' + strPath;
-  Write(strPath + StringOfChar(#32, iWidth - Length(strPath)));
+  If Length(strPath) > (iWidth - iLength) Then
+    strPath := Copy(strPath, 1, iWidth - iLength);
+  strPath := Format('%s%-*s', [strLabel, iWidth - iLength, strPath]);
+  Write(strPath);
   SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), C.dwCursorPosition);
 End;
 
@@ -541,7 +547,7 @@ Procedure PrintHelp;
 Begin
   OutputLinesToConsole('Syntax:');
   OutputLinesToConsole('  SearchRX searchparam1 [searchparam2...] [/A] [/S]');
-  OutputLinesToConsole('    [/T RASHFDV] [/D "(DD/MM/YY HH:MM:SS-DD/MM/YY HH:MM:SS)"]');
+  OutputLinesToConsole('    [/T RASHFDV] [/D "(DD[/MM[/YY [HH:MM[:SS]]]]-DD[/MM[/YY [HH:MM[:SS]]]])"]');
   OutputLinesToConsole('    [/Z LowerByteSize-UpperByteSize]');
   OutputLinesToConsole('');
   OutputLinesToConsole('    /?     This help screen');
@@ -869,6 +875,9 @@ Begin
       boolFound := True;
     End;
   SysUtils.FindClose(recSearch);
+  If Not (clsSummaryLevel In CommandLineSwitches) Then
+    If iDirFiles > 0 Then
+      OutputLinesToConsole;
   (* Search sub directories *)
   If clsSubDirectories In CommandLineSwitches Then
     Begin
@@ -890,9 +899,7 @@ Begin
         If Not ((Result = 0) And (clsSupressZeros In CommandLineSwitches)) Then
         OutputLinesToConsole(Format('%15.0n%s%s', [
           Result + 0.1, StringOfChar(#32, 2 + 2 * iLevel), strPath]));
-    End Else
-      If iDirFiles > 0 Then
-        OutputLinesToConsole;
+    End;
   Dec(iLevel);
 End;
 
