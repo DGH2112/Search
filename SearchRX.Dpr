@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    26 Oct 2004
+  @Date    30 Oct 2004
 
 **)
 Program SearchRX;
@@ -16,41 +16,332 @@ Program SearchRX;
 {$R *.RES}
 
 uses
-  SysUtils,
-  Windows;
+  SysUtils, Windows, Classes;
 
 Type
-  TCommandLineSwitch = (clsSubDirectories, clsDebug, clsShowDate, clsShowTime,
-    clsShowAttribs, clsPause, clsShowFileSize);
+  (** This is a list of boolean on / off command line switches. **)
+  TCommandLineSwitch = (
+    clsShowHelp,         { /? or -? }
+    clsSubDirectories,   { /s or -s }
+    clsDebug,            { /d or -d }
+    clsShowAttribs,      { /a or -a }
+    clsPause,            { /p or -p }
+    clsDateRange,        { /d or -d }
+    clsSizeRange,        { /z or -z }
+    clsAttrRange         { /t ot -t }
+  );
 
+  (** This is a set of boolean command line switches. **)
   TCommandLineSwitches = Set of TCommandLineSwitch;
 
 Var
+  (** Define the applications command line switches. **)
   CommandLineSwitches : TCommandLineSwitches;
-  strSearchPath : String;
-  i : Integer;
+  (** The otal number of file found by the search. **)
   iFiles : Integer;
+  (** The total number of directories found by the search. **)
   iDirectories : Integer;
+  (** This is the upper limit of a file size search. **)
   iUSize : Integer;
+  (** This is the lower limit of a file size search. **)
   iLSize  :Integer;
-  iLDate : Double;
-  iUDate : Double;
+  (** This is the lower limit of a file date search. **)
+  dtLDate : Double;
+  (** This is the upper limit of a file date search. **)
+  dtUDate : Double;
+  (** The total size of al the files found in the search. **)
   iFileSize : Int64;
+  (** Height of the console. **)
   iHeight : Integer;
+  (** Width of the console. **)
   iWidth : Integer;
+  (** This is the current number of lines outputted to the console. **)
   iLinesOutputted : Integer;
+  (** This is a list of file attributes that are required in a search. **)
+  iFileAttrs : Integer;
+  (** This is a list of file type attributes that are required in a search. **)
+  iTypeAttrs : Integer;
+  (** This is a list of search parameters that are not part of the command line
+      switches. **)
+  slSearchParams : TStringList;
 
-{ -------------------------------------------------------------------------
+(**
 
-   This routine is used to output all the text to the screen. It monitors
-   how many lines have been output and pauses after a full screen full.
+  This function returns true if the given word is in the supplied word list. It
+  uses a binary search, so the word lists need to be sorted.
 
-   OutputLinesToConsole(
-     strText   // Text to output as a string
-   );
+  @precon  strWord is the word to be searches for in the word list.
+  @precon  strWordList is a static array of words in lowercase and alphabetical
+           order.
+  @postcon Returns true if the word is found in the list.
 
-  -------------------------------------------------------------------------- }
+  @param   strWord     as a String
+  @param   strWordList as an Array Of String
+  @return  a Boolean
 
+**)
+function IsKeyWord(strWord : String; strWordList : Array Of String): Boolean;
+
+Var
+  l, m, r : Integer;
+  str : String;
+
+begin
+  Result := False;
+  str := LowerCase(strWord);
+  l := 0;
+  r := High(strWordList);
+  While l <= r Do
+    Begin
+      m := (l + r) Div 2;
+      If strWordList[m] < str Then
+        l := Succ(m)
+      Else If strWordList[m] > str Then
+        r:= Pred(m)
+      Else
+        Begin
+          Result := True;
+          Exit;
+        End;
+    End;
+end;
+
+(**
+
+  This function converts a freeform text string representing dates and times
+  in standard formats in to a TDateTime value.
+
+  @precon  strDate is the string to convert into a date.
+  @postcon Returns a valid TDateTime value.
+
+  @param   strDate as a String
+  @return  a TDateTime
+
+**)
+Function ConvertDate(Const strDate : String) : TDateTime;
+
+Type
+  TDateRec = Record
+    iDay, iMonth, iYear, iHour, iMinute, iSecond : Word;
+  End;
+
+Const
+  strErrMsg = 'Can not convert the date "%s" to a valid TDateTime value.';
+  Delimiters : Set Of Char = ['-', ' ', '\', '/', ':'];
+  Days : Array[1..7] Of String = ('fri', 'mon', 'sat', 'sun', 'thu', 'tue', 'wed');
+  Months : Array[1..24] Of String = (
+    'apr', 'april',
+    'aug', 'august',
+    'feb', 'february',
+    'dec', 'december',
+    'jan', 'january',
+    'jul', 'july',
+    'jun', 'june',
+    'mar', 'march',
+    'may', 'may',
+    'nov', 'november',
+    'oct', 'october',
+    'sep', 'september'
+    );
+  MonthIndexes : Array[1..24] Of Word = (
+    4, 4,
+    8, 8,
+    2, 2,
+    12, 12,
+    1, 1,
+    7, 7,
+    6, 6,
+    3, 3,
+    5, 5,
+    11, 11,
+    10, 10,
+    9, 9
+  );
+
+Var
+  i : Integer;
+  sl : TStringList;
+  strToken : String;
+  iTime : Integer;
+  recDate : TDateRec;
+  tmp : Word;
+  iIndex0, iIndex1, iIndex2 : Integer;
+
+  (**
+
+    This procedure adds the token to the specified string list and clears the
+    token.
+
+    @precon  StringList is the string list to add the token too.
+    @precon  strToken is the token to add to the list.
+
+    @param   StringList as a TStringList
+    @param   strToken   as a String as a reference
+
+  **)
+  Procedure AddToken(StringList : TStringList; var strToken  : String);
+
+  Begin
+    If strToken <> '' Then
+      Begin
+        StringList.Add(strToken);
+        strToken := '';
+      End;
+  End;
+
+  (**
+
+    This procedure tries to extract the value from the indexed string list
+    item into the passed variable reference. It delete is true it remove the
+    item from the string list.
+
+    @precon  iIndex is the index of the item from the string list to extract.
+    @precon  iValue is a word variable to place the converted item into.
+    @precon  Delete determines whether the item is removed from the string list.
+
+    @param   iIndex as an Integer
+    @param   iValue as a Word as a reference
+    @param   Delete as a Boolean
+
+  **)
+  Procedure ProcessValue(iIndex : Integer; var iValue : Word; Delete : Boolean);
+
+  Begin
+    If iIndex > sl.Count - 1 Then Exit;
+    Val(sl[iIndex], iValue, i);
+    If i <> 0 Then Raise Exception.CreateFmt(strErrMsg, [strDate]);
+    If Delete Then sl.Delete(iIndex);
+  End;
+
+  (**
+
+    This procedure assigns string list indexes to the three index values
+    according to the short date format and what information is supplied.
+
+  **)
+  Procedure AssignIndexes();
+
+  Var
+    slFormat : TStringList;
+    str : String;
+    j : Integer;
+
+  Begin
+    iIndex0 := 0; // Default Day / Month / Year
+    iIndex1 := 1;
+    iIndex2 := 2;
+    slFormat := TstringList.Create;
+    Try
+      str := '';
+      For j := 1 To Length(ShortDateFormat) Do
+        If ShortDateFormat[j] In Delimiters Then
+          AddToken(slFormat, str)
+        Else
+          str := str + ShortDateFormat[j];
+      AddToken(slFormat, str);
+      // Remove day of week
+      For j := slFormat.Count - 1 DownTo 0 Do
+        If (slFormat[j][1] In ['d', 'D']) And (Length(slFormat[j]) > 2) Then
+          slFormat.Delete(j);
+      For j := 0 To slFormat.Count - 1 Do
+        Begin
+          If slFormat[j][1] In ['d', 'D'] Then iIndex0 := j;
+          If slFormat[j][1] In ['m', 'M'] Then iIndex1 := j;
+          If slFormat[j][1] In ['y', 'Y'] Then iIndex2 := j;
+        End;
+    Finally
+      slFormat.Free;
+    End;
+  End;
+
+Begin
+  Result := 0;
+  sl := TStringList.Create;
+  Try
+    strToken := '';
+    iTime := -1;
+    For i := 1 To Length(strDate) Do
+      If strDate[i] In Delimiters Then
+        Begin
+          AddToken(sl, strToken);
+          If (strDate[i] = ':') And (iTime = -1) Then iTime := sl.Count - 1;
+        End Else
+          strToken := strToken + strDate[i];
+    AddToken(sl, strToken);
+    FillChar(recDate, SizeOf(recDate), 0);
+    // Decode time
+    If iTime > -1 Then
+      Begin
+        ProcessValue(iTime,recDate.iHour, True);
+        ProcessValue(iTime,recDate.iMinute, True);
+        ProcessValue(iTime,recDate.iSecond, True);
+      End;
+    // Remove day value if present
+    For i := sl.Count - 1 DownTo 0 Do
+      If IsKeyWord(sl[i], Days) Then
+        sl.Delete(i);
+    // Decode date
+    Case sl.Count Of
+      1 :
+        Begin
+          DecodeDate(Now, recDate.iYear, recDate.iMonth, tmp);
+          ProcessValue(0, recDate.iDay, False); // Day only
+        End;
+      2, 3 : // Day and Month (Year)
+        Begin
+          DecodeDate(Now, recDate.iYear, tmp, tmp);
+          AssignIndexes;
+          ProcessValue(iIndex0, recDate.iDay, False); // Get day
+          If IsKeyWord(sl[iIndex1], Months) Then
+            Begin
+              For i := Low(Months) To High(Months) Do
+                If AnsiCompareText(Months[i], sl[iIndex1]) = 0 Then
+                  Begin
+                    recDate.iMonth := MonthIndexes[i];
+                    Break;
+                  End;
+            End Else
+              ProcessValue(iIndex1, recDate.iMonth, False); // Get Month
+            If sl.Count = 3 Then
+              Begin
+                ProcessValue(iIndex2, recDate.iYear, False); // Get Year
+                If recDate.iYear < 1900 Then Inc(recDate.iYear, 2000);
+              End;
+        End;
+    Else
+      If sl.Count <> 0 Then Raise Exception.CreateFmt(strErrMsg, [strDate]);
+    End;
+    // Output result.
+    With recDate Do
+      Begin
+        If Not (iHour In [0..23]) Then Raise Exception.CreateFmt(strErrMsg, [strDate]);
+        If Not (iMinute In [0..59]) Then Raise Exception.CreateFmt(strErrMsg, [strDate]);
+        If Not (iSecond In [0..59]) Then Raise Exception.CreateFmt(strErrMsg, [strDate]);
+        Result := EncodeTime(iHour, iMinute, iSecond, 0);
+        If iYear * iMonth * iDay <> 0 Then
+          Begin
+            If Not (iDay In [1..31]) Then Raise Exception.CreateFmt(strErrMsg, [strDate]);
+            If Not (iMonth In [1..12]) Then Raise Exception.CreateFmt(strErrMsg, [strDate]);
+            Result := Result + EncodeDate(iYear, iMonth, iDay);
+          End;
+      End;
+  Finally
+    sl.Free;
+  End;
+End;
+
+(**
+
+  This routine is used to output all the text to the screen. It monitors
+  how many lines have been output and pauses after a full screen full.
+
+  @precon  None.
+  @postcon Used to output all the text to the screen. It monitors how many lines
+           have been output and pauses after a full screen full.
+
+  @param   strText as a String
+
+**)
 Procedure OutputLinesToConsole(strText : String = '');
 
 Begin
@@ -64,16 +355,15 @@ Begin
     End;
 End;
 
-{ -------------------------------------------------------------------------
+(**
 
-   This routine get and stores the current number of lines and columns
-   in the console window.
+  This routine get and stores the current number of lines and columns
+  in the console window.
 
-   GetConsoleInformation(
-   );
+  @precon  None.
+  @postcon Gets the width and height of the console.
 
-  -------------------------------------------------------------------------- }
-
+**)
 Procedure GetConsoleInformation;
 
 Var
@@ -85,17 +375,25 @@ Begin
   iHeight := ConsoleInfo.dwSize.Y;
 End;
 
-{ -------------------------------------------------------------------------
+(**
 
-   This routine extract the build number from the EXE resources for
-   display in the app title.
+  This routine extract the build number from the EXE resources for
+  display in the app title.
 
-   GetBuildNumber(
-   );
+  @precon  None.
+  @postcon Extract the build number from the EXE resources for display in the
+           app title.
 
-  -------------------------------------------------------------------------- }
+  @param   iMajor  as an Integer as a reference
+  @param   iMinor  as an Integer as a reference
+  @param   iBugfix as an Integer as a reference
+  @return  a String
 
+**)
 Function GetBuildNumber(var iMajor, iMinor, iBugfix : Integer) : String;
+
+Const
+  strBuild = '%d.%d.%d.%d';
 
 Var
   VerInfoSize: DWORD;
@@ -105,7 +403,6 @@ Var
   Dummy: DWORD;
 
 Begin
-  { Build Number }
   VerInfoSize := GetFileVersionInfoSize(PChar(ParamStr(0)), Dummy);
   If VerInfoSize <> 0 Then
     Begin
@@ -117,25 +414,21 @@ Begin
         iMajor := dwFileVersionMS shr 16;
         iMinor := dwFileVersionMS and $FFFF;
         iBugfix := dwFileVersionLS shr 16;
-        Result := IntToStr(iMajor) +
-          '.' + IntToStr(iMinor) +
-          '.' + IntToStr(iBugfix) +
-          '.' + IntToStr(dwFileVersionLS and $FFFF);
+        Result := Format(strBuild, [iMajor, iMinor, iBugfix, dwFileVersionLS and $FFFF]);
       end;
       FreeMem(VerInfo, VerInfoSize);
     End Else
       OutputLinesToConsole('This executable does not contain any version information.');
 End;
 
-{ -------------------------------------------------------------------------
+(**
 
-   Prints a Title for the application on the screen.
+  Prints a Title for the application on the screen.
 
-   PrintTitle(
-   );
+  @precon  None.
+  @postcon Prints the title for the application on the screen.
 
-  -------------------------------------------------------------------------- }
-
+**)
 Procedure PrintTitle;
 
 Const
@@ -154,17 +447,17 @@ Begin
   OutputLinesToConsole;
 End;
 
-{ -------------------------------------------------------------------------
+(**
 
-   Prints the path and search pattern before each search
+  Prints the path and search pattern before each search
 
-   PrintHeader(
-     strPath      // The path tot be searched as a string
-     strPattern   // The pattern to be matched as a string
-   );
+  @precon  None.
+  @postcon Prints the path and search pattern before each search
 
-  -------------------------------------------------------------------------- }
+  @param   strPath    as a String
+  @param   strPattern as a String
 
+**)
 Procedure PrintHeader(strPath, strPattern : String);
 
 Begin
@@ -174,15 +467,14 @@ Begin
   iFileSize := 0;
 End;
 
-{ -------------------------------------------------------------------------
+(**
 
-   Prints a footer after the search displaying stats on the search.
+  Prints a footer after the search displaying stats on the search.
 
-   PrintFooter(
-   );
+  @precon  None.
+  @postcon Prints a footer after the search displaying stats on the search.
 
-  -------------------------------------------------------------------------- }
-
+**)
 Procedure PrintFooter;
 
 Begin
@@ -190,177 +482,210 @@ Begin
     [iFileSize + 0.1, iFiles, iDirectories]));
 End;
 
-{ -------------------------------------------------------------------------
+(**
 
-   This gets all the command lines switches and sets numerous flags.
+  This method prints on the console screen the command line search help
+  information.
 
-   GetCommandLineSwitches(
-   );
+  @precon  None.
+  @postcon Prints on the console screen the command line search help
+           information.
 
-  -------------------------------------------------------------------------- }
-
-Procedure GetCommandLineSwitches;
-
-Var
-  i, j : Integer;
-  iStart, iMiddle, iEnd : Integer;
+**)
+Procedure PrintHelp;
 
 Begin
-  (*
-    If /? or no command print some help text
-  *)
-  If FindCmdLineSwitch('?', ['/'], True) Or (ParamCount = 0) Then
-    Begin
-      PrintTitle;
-      OutputLinesToConsole('Syntax:');
-      OutputLinesToConsole('  SearchRX [/A] [/D] [/L] [/S] [/T]');
-      OutputLinesToConsole('    [/ATTR:RASHFDV] ["/DATE(DD/MM/YY HH:MM:SS-DD/MM/YY HH:MM:SS)"]');
-      OutputLinesToConsole('    [/PATH=startdirectory] [/SIZE(lowsize-highsize)]');
-      OutputLinesToConsole('');
-      OutputLinesToConsole('    /?     This help screen');
-      OutputLinesToConsole('    /A     Show file and directory attributes');
-      OutputLinesToConsole('    /D     Show file and directory dates');
-      OutputLinesToConsole('    /L     Show file and directory sizes');
-      OutputLinesToConsole('    /P     Pause the results after each screen');
-      OutputLinesToConsole('    /S     Recurse subdirectories');
-      OutputLinesToConsole('    /T     Show file and directory times');
-      OutputLinesToConsole('');
-      OutputLinesToConsole('    /ATTR: R = Read Only, A = Archive, S = System, H = Hidden, F = File,');
-      OutputLinesToConsole('           D = Directory, and V=  Volume ID');
-      OutputLinesToConsole('    /DATE( local computer short date and time format )');
-      OutputLinesToConsole('    /PATH= Relative or Direct path to a starting directory');
-      OutputLinesToConsole('    /SIZE( lower bounding size in bytes - upper bounding size in bytes )');
-      OutputLinesToConsole('');
-      OutputLinesToConsole('NOTE: The date time input format is dependent on your local settings');
-      OutputLinesToConsole('');;
-    End;
-  (*
-    get and set standard switches /S /Debug /D /T /P /L /S /A
-  *)
-  //: @todo This needs refactroing and changeing to allow for - and / as well as
-  //:       compound switches like -sdp
-  CommandLineSwitches := [];
-  If FindCmdLineSwitch('S', ['/', '-'], True) Then
-    Include(CommandLineSwitches, clsSubDirectories);
-  If FindCmdLineSwitch('Debug', ['/', '-'], True) Then
-    Include(CommandLineSwitches, clsDebug);
-  If FindCmdLineSwitch('D', ['/', '-'], True) Then
-    Include(CommandLineSwitches, clsShowDate);
-  If FindCmdLineSwitch('P', ['/', '-'], True) Then
-    Include(CommandLineSwitches, clsPause);
-  If FindCmdLineSwitch('T', ['/', '-'], True) Then
-    Include(CommandLineSwitches, clsShowTime);
-  If FindCmdLineSwitch('A', ['/', '-'], True) Then
-    Include(CommandLineSwitches, clsShowAttribs);
-  If FindCmdLineSwitch('L', ['/', '-'], True) Then
-    Include(CommandLineSwitches, clsShowFileSize);
-  (*
-    Find out if a starting path has been specified
-  *)
-  For i := 1 To ParamCount Do
-    If LowerCase(Copy(ParamStr(i), 1, 6)) = '/path=' Then
-      strSearchPath := Copy(ParamStr(i), 7, Length(ParamStr(i)) - 6);
-  If strSearchPath = '' Then
-    strSearchPath := GetCurrentDir;
-  If strSearchPath[Length(strSearchpath)] <> '\' Then
-    strSearchpath := ConCat(strSearchPath, '\');
-  (*
-    Find out if specific attributes have been asked for
-  *)
-  FileAttrs := [];
-  TypeAttrs := [];
-  For i := 1 To ParamCount Do
-    If LowerCase(Copy(ParamStr(i), 1, 6)) = '/attr:' Then
-      For j := 7 To Length(ParamStr(i)) Do
-        Case ParamStr(i)[j] Of
-          'r', 'R' : FileAttrs := FileAttrs + [deaReadOnly];
-          'a', 'A' : FileAttrs := FileAttrs + [deaAltered];
-          's', 'S' : FileAttrs := FileAttrs + [deaSystem];
-          'h', 'H' : FileAttrs := FileAttrs + [deaHidden];
-          'f', 'F' : TypeAttrs := TypeAttrs + [detFile];
-          'd', 'D' : TypeAttrs := TypeAttrs + [detDirectory];
-          'v', 'V' : TypeAttrs := TypeAttrs + [detVolumeID];
-        End;
-  If FileAttrs = [] Then
-    FileAttrs := [deaNormal, deaAltered, deaReadOnly, deaHidden, deaSystem];
-  If TypeAttrs = [] Then
-    TypeAttrs := [detFile, detDirectory, detVolumeID];
-  (*
-    Find out if a starting and ending size has been specified
-  *)
-  iLSize := 0;
-  iUSize := 2147483647;
-  For i := 1 To ParamCount Do
-    If LowerCase(Copy(ParamStr(i), 1, 6)) = '/size(' Then
-      Begin
-        iStart := Pos('(', ParamStr(i));
-        If iStart <> 0 Then
-          Begin
-            iMiddle := Pos('-', ParamStr(i));
-            If iMiddle <> 0 Then
-              Begin
-                iEnd := Pos(')', ParamStr(i));
-                If iEnd <> 0 Then
-                  Begin
-                    iLSize := StrToInt(Copy(ParamStr(i), iStart + 1,
-                      iMiddle - iStart - 1));
-                    iUSize := StrToInt(Copy(ParamStr(i), iMiddle + 1,
-                      iEnd - iMiddle - 1));
-                  End Else
-                    Raise Exception.Create('Could not find SIZE end parenthesis.');
-              End Else
-                Raise Exception.Create('Could not find SIZE range operator.');
-          End Else
-            Raise Exception.Create('Could not find SIZE start parenthesis.');
-      End;
-  (*
-    Find out if a starting and ending Date / Time has been specified
-  *)
-  iLDate := 0;
-  iUDate := 999999;
-  For i := 1 To ParamCount Do
-    If LowerCase(Copy(ParamStr(i), 1, 6)) = '/date(' Then
-      Begin
-        iStart := Pos('(', ParamStr(i));
-        If iStart <> 0 Then
-          Begin
-            iMiddle := Pos('-', ParamStr(i));
-            If iMiddle <> 0 Then
-              Begin
-                iEnd := Pos(')', ParamStr(i));
-                If iEnd <> 0 Then
-                  Begin
-                    iLDate := strToDateTime(Copy(ParamStr(i), iStart + 1,
-                      iMiddle - iStart - 1));
-                    iUDate := strToDateTime(Copy(ParamStr(i), iMiddle + 1,
-                      iEnd - iMiddle - 1));
-                  End Else
-                    Raise Exception.Create('Could not find DATE end parenthesis.');
-              End Else
-                Raise Exception.Create('Could not find DATE range operator.');
-          End Else
-            Raise Exception.Create('Could not find DATE start parenthesis.');
-      End;
+  PrintTitle;
+  OutputLinesToConsole('Syntax:');
+  OutputLinesToConsole('  SearchRX searchparam1 [searchparam2...] [/A] [/S]');
+  OutputLinesToConsole('    [/T RASHFDV] [/D "(DD/MM/YY HH:MM:SS-DD/MM/YY HH:MM:SS)"]');
+  OutputLinesToConsole('    [/Z LowerByteSize-UpperByteSize]');
+  OutputLinesToConsole('');
+  OutputLinesToConsole('    /?     This help screen');
+  OutputLinesToConsole('    /A     Show file and directory attributes');
+  OutputLinesToConsole('    /P     Pause the results after each screen');
+  OutputLinesToConsole('    /S     Recurse subdirectories');
+  OutputLinesToConsole('');
+  OutputLinesToConsole('    /T     R = Read Only, A = Archive, S = System, H = Hidden, F = File,');
+  OutputLinesToConsole('           D = Directory, and V=  Volume ID');
+  OutputLinesToConsole('    /D     ( local computer short date and time format )');
+  OutputLinesToConsole('    /Z     ( lower bounding size in bytes - upper bounding size in bytes )');
+  OutputLinesToConsole('');
+  OutputLinesToConsole('NOTE: The date time input format is dependent on your local settings');
+  OutputLinesToConsole('');;
 End;
 
-{ -------------------------------------------------------------------------
+(**
 
-   This is the main recursive routine that searches the currently passed
-   directory for files and then if subdirectories are required calls
-   its self on those dreictories.
+  This method determines if a date range has been specified on the command line.
 
-   SearchDirectories(
-     strPath      // The path as a string
-     strPattern   // The RegEx attern to match as a string
-   );
+  @precon  None.
+  @postcon Determines if a date range has been specified on the command line.
 
-  -------------------------------------------------------------------------- }
+  @param   iSwitch as an Integer as a Reference
 
+**)
+Procedure GetDateRange(Var iSwitch : Integer);
+
+Const
+  strRangeException = 'The parameter "%s" does not contain a range delimiter (-).';
+
+Var
+  iPos : Integer;
+  strTmp : String;
+
+Begin
+  Include(CommandLineSwitches, clsDateRange);
+  Inc(iSwitch); // Next parameter is the sieze range of the search
+  dtLDate := 0;
+  dtUDate := 999999;
+  iPos := Pos('-', ParamStr(iSwitch));
+  If iPos = 0 Then
+    Raise Exception.CreateFmt(strRangeException, [ParamStr(iSwitch)]);
+  strTmp := Copy(ParamStr(iSwitch), 1, iPos - 1);
+  dtLDate := ConvertDate(strTmp);
+  strTmp := Copy(ParamStr(iSwitch), iPos + 1, Length(ParamStr(iSwitch)) - iPos);
+  dtUDate := ConvertDate(strTmp);
+End;
+
+(**
+
+  This method determines of a size range has been specified on the command line.
+
+  @precon  None.
+  @postcon Determines of a size range has been specified on the command line.
+
+  @param   iSwitch as an Integer as a Reference
+
+**)
+Procedure GetSizeRange(Var iSwitch : Integer);
+
+Const
+  strRangeException = 'The parameter "%s" does not contain a range delimiter (-).';
+  strLowerRangeException = 'The lower range value of "%s" is not a valid integer.';
+  strUpperRangeException = 'The upper range value of "%s" is not a valid integer.';
+
+Var
+  iPos, iCode : Integer;
+  strTmp : String;
+
+Begin
+  Include(CommandLineSwitches, clsSizeRange);
+  Inc(iSwitch); // Next parameter is the sieze range of the search
+  iLSize := 0;
+  iUSize := MAXLONG;
+  iPos := Pos('-', ParamStr(iSwitch));
+  If iPos = 0 Then
+    Raise Exception.CreateFmt(strRangeException, [ParamStr(iSwitch)]);
+  strTmp := Copy(ParamStr(iSwitch), 1, iPos - 1);
+  Val(strTmp, iLSize, iCode);
+  If iCode > 0 Then
+    Raise Exception.CreateFmt(strLowerRangeException, [ParamStr(iSwitch)]);
+  strTmp := Copy(ParamStr(iSwitch), iPos + 1, Length(ParamStr(iSwitch)) - iPos);
+  Val(strTmp, iUSize, iCode);
+  If iCode > 0 Then
+    Raise Exception.CreateFmt(strUpperRangeException, [ParamStr(iSwitch)]);
+End;
+
+(**
+
+  This method determines the attribute range from the command line.
+
+  @precon  None.
+  @postcon Determines the attribute range from the command line.
+
+  @param   iSwitch as an Integer as a reference
+
+**)
+Procedure GetAttributes(Var iSwitch : Integer);
+
+Var
+  i : Integer;
+
+Begin
+  Include(CommandLineSwitches, clsAttrRange);
+  Inc(iSwitch); // Next parameter is the sieze range of the search
+  iFileAttrs := 0;
+  iTypeAttrs := 0;
+  For i := 1 To Length(ParamStr(iSwitch)) Do
+    Case ParamStr(iSwitch)[i] Of
+      'r', 'R' : iFileAttrs := iFileAttrs Or faReadOnly;
+      'a', 'A' : iFileAttrs := iFileAttrs Or faArchive;
+      's', 'S' : iFileAttrs := iFileAttrs Or faSysFile;
+      'h', 'H' : iFileAttrs := iFileAttrs Or faHidden;
+      'f', 'F' : iTypeAttrs := iTypeAttrs Or faAnyFile;
+      'd', 'D' : iTypeAttrs := iTypeAttrs Or faDirectory;
+      'v', 'V' : iTypeAttrs := iTypeAttrs Or faVolumeID;
+    End;
+  If iFileAttrs = 0 Then
+    iFileAttrs := faArchive Or faReadOnly Or faHidden Or faSysFile;
+  If iTypeAttrs = 0 Then
+    iTypeAttrs := faAnyFile Or faDirectory Or faVolumeID;
+End;
+
+(**
+
+  This gets all the command lines switches and sets numerous flags.
+
+  @precon  None.
+  @postcon Gets all the command lines switches and sets numerous flags.
+
+**)
+Procedure GetCommandLineSwitches;
+
+Const
+  strInvalidCommandLineSwitch = 'Invalid command line switch "%s."';
+
+Var
+  iSwitch, iSwitches : Integer;
+
+Begin
+  CommandLineSwitches := [];
+  iSwitch := 1;
+  While iSwitch <= ParamCount Do
+    Begin
+      If ParamStr(iSwitch)[1] In ['-', '/'] Then
+        Begin
+          For iSwitches := 2 To Length(ParamStr(iSwitch)) Do
+            Case ParamStr(iSwitch)[iSwitches] Of
+              '?'     : Include(CommandLineSwitches, clsShowHelp);
+              's', 'S': Include(CommandLineSwitches, clsSubDirectories);
+              '!'     : Include(CommandLineSwitches, clsDebug);
+              'a', 'A': Include(CommandLineSwitches, clsShowAttribs);
+              'p', 'P': Include(CommandLineSwitches, clsPause);
+              'd', 'D': GetDateRange(iSwitch);
+              'z', 'Z': GetSizeRange(iSwitch);
+              't', 'T': GetAttributes(iSwitch);
+            Else
+              Raise Exception.CreateFmt(strInValidCommandLineSwitch,
+                [ParamStr(iSwitch)]);
+            End;
+        End Else
+          slSearchParams.Add(ParamStr(iSwitch));
+      Inc(iSwitch); // Get the next switch
+    End;
+End;
+
+(**
+
+  This is the main recursive routine that searches the currently passed
+  directory for files and then if subdirectories are required calls
+  its self on those directories.
+
+  @precon  None.
+  @postcon Main recursive routine that searches the currently passed directory
+           for files and then if subdirectories are required calls its self on
+           those directories.
+
+  @param   strPath    as a String
+  @param   strPattern as a String
+
+**)
 Procedure SearchDirectory(strPath, strPattern : String);
 
 Var
   iResult : Integer;
-  recSearch : TdeSearchRec;
+  recSearch : TSearchRec;
   boolDirPrinted : Boolean;
   strOutput : String;
 
@@ -370,105 +695,129 @@ Begin
   (*
     Find Files
   *)
-  iResult := FindFirstEx(strPath, strPattern, TypeAttrs, FileAttrs, recSearch);
-  While iResult = 0 Do
+  iResult := FindFirst(strPath + strPattern, faAnyFile, recSearch);
+  While (iResult = 0) And (iFileAttrs And recSearch.Attr > 0) And
+    (iTypeAttrs And recSearch.Attr > 0) Do
     Begin
-      If (recSearch.srSize >= iLSize) And (recSearch.srSize <= iUSize) And
-        (FileDateToDateTime(recSearch.srTime) >= iLDate) And
-        (FileDateToDateTime(recSearch.srTime) <= iUDate) Then
+      If (recSearch.Size >= iLSize) And (recSearch.Size <= iUSize) And
+        (FileDateToDateTime(recSearch.Time) >= dtLDate) And
+        (FileDateToDateTime(recSearch.Time) <= dtUDate) Then
         Begin
           Inc(iFiles);
-          Inc(iFileSize, recSearch.srSize);
+          Inc(iFileSize, recSearch.Size);
           If Not boolDirPrinted Then
             Begin
               OutputLinesToConsole(strPath);
               boolDirPrinted := True;
             End;
           strOutput := '  ';
-          If clsShowDate In CommandLineSwitches Then
-            strOutput := strOutput + FormatDateTime('ddd dd/mmm/yyyy  ',
-              FileDateToDateTime(recSearch.srTime));
-          If clsShowTime In CommandLineSwitches Then
-            strOutput := strOutput + FormatDateTime('hh:mm:ss  ',
-              FileDateToDateTime(recSearch.srTime));
-          If clsShowFileSize In CommandLineSwitches Then
-            strOutput := strOutput + Format('%11.0n  ', [recSearch.srSize + 0.1]);
+          strOutput := strOutput + FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss  ',
+            FileDateToDateTime(recSearch.Time));
+          strOutput := strOutput + Format('%13.0n  ', [recSearch.Size + 0.1]);
           If clsShowAttribs In CommandLineSwitches Then
             Begin
-              If deaReadOnly In recSearch.srAttrs Then
+              If faReadOnly And recSearch.Attr > 0 Then
                 strOutput := strOutput + 'R'
               Else
                 strOutput := strOutput + '.';
-              If deaAltered In recSearch.srAttrs Then
+              If faArchive And recSearch.Attr > 0 Then
                 strOutput := strOutput + 'A'
               Else
                 strOutput := strOutput + '.';
-              If deaSystem In recSearch.srAttrs Then
+              If faSysFile And recSearch.Attr > 0 Then
                 strOutput := strOutput + 'S'
               Else
                 strOutput := strOutput + '.';
-              If deaHidden In recSearch.srAttrs Then
+              If faHidden And recSearch.Attr > 0 Then
                 strOutput := strOutput + 'H'
               Else
                 strOutput := strOutput + '.';
-              If detFile = recSearch.srType Then
+              If faAnyFile And recSearch.Attr > 0 Then
                 strOutput := strOutput + 'F'
               Else
                 strOutput := strOutput + '.';
-              If detDirectory = recSearch.srType Then
+              If faDirectory And recSearch.Attr > 0 Then
                 strOutput := strOutput + 'D'
               Else
                 strOutput := strOutput + '.';
-              If detVolumeID = recSearch.srType Then
+              If faVolumeID And recSearch.Attr > 0 Then
                 strOutput := strOutput + 'V  '
               Else
                 strOutput := strOutput + '.  ';
             End;
-          OutputLinesToConsole(strOutput + recSearch.srName);
+          OutputLinesToConsole(strOutput + recSearch.Name);
         End;
-      iResult := FindNextEx(recSearch);
+      iResult := FindNext(recSearch);
     End;
-  FindCloseEx(recSearch);
+  SysUtils.FindClose(recSearch);
   (*
     Search sub directories
   *)
   If clsSubDirectories In CommandLineSwitches Then
     Begin
-      iResult := FindFirstEx(strPath, '*', [detDirectory],
-        [deaNormal, deaAltered, deaReadOnly, deaHidden, deaSystem], recSearch);
-      While iResult = 0 Do
+      iResult := FindFirst(strPath + '*', faDirectory, recSearch);
+      While (iResult = 0) And (recSearch.Attr And faDirectory > 0) Do
         Begin
-          If (recSearch.srName <> '.') And (recSearch.srName <> '..') Then
-            SearchDirectory(strPath + recSearch.srName + '\', strPattern);
-          iResult := FindNextEx(recSearch);
+          If (recSearch.Name <> '.') And (recSearch.Name <> '..') Then
+            SearchDirectory(strPath + recSearch.Name + '\', strPattern);
+          iResult := FindNext(recSearch);
         End;
-      FindCloseEx(recSearch);
+      SysUtils.FindClose(recSearch);
     End;
 End;
 
-{ -------------------------------------------------------------------------
+(**
 
    Main Program body.
 
-  -------------------------------------------------------------------------- }
+**)
+
+Var
+  (** This is a loop iterator. **)
+  i : Integer;
+
+  iSwitch : TCommandLineSwitch;
 
 Begin
   Try
-    iLinesOutputted := 0;
-    GetConsoleInformation;
-    GetCommandLineSwitches;
-    PrintTitle;
-    For i := 1 To ParamCount Do
-      If ParamStr(i)[1] <> '/' Then
+    slSearchParams := TStringList.Create;
+    Try
+      iLinesOutputted := 0;
+      GetConsoleInformation;
+      GetCommandLineSwitches;
+      If Not (clsShowHelp In CommandLineSwitches) Then
         Begin
-          PrintHeader(strSearchPath, ParamStr(i));
-          SearchDirectory(strSearchPath, ParamStr(i));
-          PrintFooter;
-        End;
-    If clsDebug In CommandLineSwitches Then
-      Readln;
+          PrintTitle;
+          For i := 0 To slSearchParams.Count - 1 Do
+            Begin
+              OutputLinesToConsole(slSearchParams[i]);
+              //: @debug PrintHeader();
+              //: @debug SearchDirectory();
+              //: @debug PrintFooter;
+            End;
+          For iSwitch := Low(TCommandLineSwitch) To High(TCommandLineSwitch) Do
+            If iSwitch In CommandLineSwitches Then
+              Case iSwitch Of
+                clsDebug:          OutputLinesToConsole(' * Debug');
+                clsPause:          OutputLinesToConsole(' * Pause');
+                clsShowAttribs:    OutputLinesToConsole(' * Attribs');
+                clsShowHelp:       OutputLinesToConsole(' * Help');
+                clsSubDirectories: OutputLinesToConsole(' * Sub Dirs');
+                clsDateRange     : OutputLinesToConsole(' * Date Range ' +
+                  FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', dtLDate) + ' to ' +
+                  FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', dtUDate));
+                clsSizeRange     : OutputLinesToConsole(Format(' * Size Range %d to %d', [iLSize, iUSize]));
+                clsAttrRange     : OutputLinesToConsole(Format(' * Attr Range %d to %d', [ifileattrs, itypeattrs]));
+              End;
+        End Else
+          PrintHelp;
+    Finally
+      slSearchParams.Free;
+    End;
   Except
     On E : Exception Do
       Writeln(E.Message);
   End;
+  If clsDebug In CommandLineSwitches Then
+    Readln;
 End.
