@@ -1,35 +1,36 @@
+(**
+
+  This module defines the SearchRX Win32 console application. This application
+  is designed to provide regular expression search capabilities for files on
+  disk.
+
+  @Version 1.0
+  @Author  David Hoyle
+  @Date    26 Oct 2004
+
+**)
 Program SearchRX;
 
 {$APPTYPE CONSOLE}
 
 {$R *.RES}
 
-Uses
-  SysUtils, Windows,
-  FileDirX in 'FILEDIRX.PAS',
-  FileRegX in 'FILEREGX.PAS';
+uses
+  SysUtils,
+  Windows;
 
+Type
+  TCommandLineSwitch = (clsSubDirectories, clsDebug, clsShowDate, clsShowTime,
+    clsShowAttribs, clsPause, clsShowFileSize);
 
-{ -------------------------------------------------------------------------
-
-   Global Flags and Variables
-
-  -------------------------------------------------------------------------- }
+  TCommandLineSwitches = Set of TCommandLineSwitch;
 
 Var
-  boolSearchSubDirectories : Boolean;
-  boolDebug : Boolean;
-  boolShowDate : Boolean;
-  boolShowTime : Boolean;
-  boolShowAttributes : Boolean;
-  boolShowSize  : Boolean;
-  boolPause : Boolean;
+  CommandLineSwitches : TCommandLineSwitches;
   strSearchPath : String;
   i : Integer;
   iFiles : Integer;
   iDirectories : Integer;
-  FileAttrs : TdeAttrSet;
-  TypeAttrs : TdeTypeSet;
   iUSize : Integer;
   iLSize  :Integer;
   iLDate : Double;
@@ -55,7 +56,7 @@ Procedure OutputLinesToConsole(strText : String = '');
 Begin
   Writeln(strText);
   Inc(iLinesOutputted);
-  If boolPause And (iLinesOutputted >= (iHeight - 1)) Then
+  If (clsPause In CommandLineSwitches) And (iLinesOutputted >= (iHeight - 1)) Then
     Begin
       Write('Press any <Enter> to continue...');
       Readln;
@@ -94,7 +95,7 @@ End;
 
   -------------------------------------------------------------------------- }
 
-Function GetBuildNumber : String;
+Function GetBuildNumber(var iMajor, iMinor, iBugfix : Integer) : String;
 
 Var
   VerInfoSize: DWORD;
@@ -113,9 +114,12 @@ Begin
       VerQueryValue(VerInfo, '\', Pointer(VerValue), VerValueSize);
       with VerValue^ do
       begin
-        Result := IntToStr(dwFileVersionMS shr 16) +
-          '.' + IntToStr(dwFileVersionMS and $FFFF) +
-          '.' + IntToStr(dwFileVersionLS shr 16) +
+        iMajor := dwFileVersionMS shr 16;
+        iMinor := dwFileVersionMS and $FFFF;
+        iBugfix := dwFileVersionLS shr 16;
+        Result := IntToStr(iMajor) +
+          '.' + IntToStr(iMinor) +
+          '.' + IntToStr(iBugfix) +
           '.' + IntToStr(dwFileVersionLS and $FFFF);
       end;
       FreeMem(VerInfo, VerInfoSize);
@@ -134,9 +138,18 @@ End;
 
 Procedure PrintTitle;
 
+Const
+  strTitle = 'SearchRX %d.%d%s (Build %s) Regular Expression Search Tool.';
+  strBugFix = ' abcdefghijklmnopqrstuvwxyz';
+
+Var
+  iMajor, iMinor, iBugfix : Integer;
+  strBuildNumber  : String;
+
 Begin
-  OutputLinesToConsole('SearchRX 0.9 (Build ' + GetBuildNumber +
-    ') Regular Expression Search Tool.');
+  strBuildNumber := GetBuildNumber(iMajor, iMinor, iBugFix);
+  OutputLinesToConsole(Format(strTitle, [iMajor, iMinor, strBugFix[iBugFix + 1],
+    strBuildNumber]));
   OutputLinesToConsole('Written by David Hoyle - Portions copyright of Julian Bucknell');
   OutputLinesToConsole;
 End;
@@ -219,18 +232,28 @@ Begin
       OutputLinesToConsole('    /SIZE( lower bounding size in bytes - upper bounding size in bytes )');
       OutputLinesToConsole('');
       OutputLinesToConsole('NOTE: The date time input format is dependent on your local settings');
-      Raise Exception.Create('');;
+      OutputLinesToConsole('');;
     End;
   (*
     get and set standard switches /S /Debug /D /T /P /L /S /A
   *)
-  boolSearchSubDirectories := FindCmdLineSwitch('S', ['/'], True);
-  boolDebug := FindCmdLineSwitch('Debug', ['/'], True);
-  boolShowDate := FindCmdLineSwitch('D', ['/'], True);
-  boolPause := FindCmdLineSwitch('P', ['/'], True);
-  boolShowTime := FindCmdLineSwitch('T', ['/'], True);
-  boolShowAttributes := FindCmdLineSwitch('A', ['/'], True);
-  boolShowSize := FindCmdLineSwitch('L', ['/'], True);
+  //: @todo This needs refactroing and changeing to allow for - and / as well as
+  //:       compound switches like -sdp
+  CommandLineSwitches := [];
+  If FindCmdLineSwitch('S', ['/', '-'], True) Then
+    Include(CommandLineSwitches, clsSubDirectories);
+  If FindCmdLineSwitch('Debug', ['/', '-'], True) Then
+    Include(CommandLineSwitches, clsDebug);
+  If FindCmdLineSwitch('D', ['/', '-'], True) Then
+    Include(CommandLineSwitches, clsShowDate);
+  If FindCmdLineSwitch('P', ['/', '-'], True) Then
+    Include(CommandLineSwitches, clsPause);
+  If FindCmdLineSwitch('T', ['/', '-'], True) Then
+    Include(CommandLineSwitches, clsShowTime);
+  If FindCmdLineSwitch('A', ['/', '-'], True) Then
+    Include(CommandLineSwitches, clsShowAttribs);
+  If FindCmdLineSwitch('L', ['/', '-'], True) Then
+    Include(CommandLineSwitches, clsShowFileSize);
   (*
     Find out if a starting path has been specified
   *)
@@ -362,15 +385,15 @@ Begin
               boolDirPrinted := True;
             End;
           strOutput := '  ';
-          If boolShowDate Then
+          If clsShowDate In CommandLineSwitches Then
             strOutput := strOutput + FormatDateTime('ddd dd/mmm/yyyy  ',
               FileDateToDateTime(recSearch.srTime));
-          If boolShowTime Then
+          If clsShowTime In CommandLineSwitches Then
             strOutput := strOutput + FormatDateTime('hh:mm:ss  ',
               FileDateToDateTime(recSearch.srTime));
-          If boolShowSize Then
+          If clsShowFileSize In CommandLineSwitches Then
             strOutput := strOutput + Format('%11.0n  ', [recSearch.srSize + 0.1]);
-          If boolShowAttributes Then
+          If clsShowAttribs In CommandLineSwitches Then
             Begin
               If deaReadOnly In recSearch.srAttrs Then
                 strOutput := strOutput + 'R'
@@ -409,7 +432,7 @@ Begin
   (*
     Search sub directories
   *)
-  If boolSearchSubDirectories Then
+  If clsSubDirectories In CommandLineSwitches Then
     Begin
       iResult := FindFirstEx(strPath, '*', [detDirectory],
         [deaNormal, deaAltered, deaReadOnly, deaHidden, deaSystem], recSearch);
@@ -442,7 +465,7 @@ Begin
           SearchDirectory(strSearchPath, ParamStr(i));
           PrintFooter;
         End;
-    If boolDebug Then
+    If clsDebug In CommandLineSwitches Then
       Readln;
   Except
     On E : Exception Do
