@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    30 Oct 2004
+  @Date    31 Oct 2004
 
 **)
 Program Search;
@@ -854,7 +854,8 @@ Begin
     Begin
       If (iLevel > 0) And (iLevel <= iSummaryLevel) Then
         If Not ((Result = 0) And (clsSupressZeros In CommandLineSwitches)) Then
-        OutputLinesToConsole(Format('  %13.0n  %s', [Result + 0.1, strPath]));
+        OutputLinesToConsole(Format('  %13.0n%s%s', [
+          Result + 0.1, StringOfChar(#32, 2 * iLevel), strPath]));
     End Else
       If iDirFiles > 0 Then
         OutputLinesToConsole;
