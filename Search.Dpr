@@ -511,7 +511,7 @@ Begin
     End;
   If ParamCount = 0 Then
     Include(CommandLineSwitches, clsShowHelp);
-  If slSearchParams.Count = 0 Then
+  If (slSearchParams.Count = 0) And Not (ClsShowHelp In CommandLineSwitches) Then
     Raise Exception.Create('You need to specify at least one search criteria.');
 End;
 
