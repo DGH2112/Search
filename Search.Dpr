@@ -360,7 +360,7 @@ End;
 Procedure OutputLinesToConsole(strText : String = '');
 
 Begin
-  Writeln(strText);
+  Writeln(strText + StringOfChar(#32, iWidth - Length(strText) - 1));
   Inc(iLinesOutputted);
   If (clsPause In CommandLineSwitches) And (iLinesOutputted >= (iHeight - 1)) Then
     Begin
@@ -389,6 +389,19 @@ Begin
   iWidth := ConsoleInfo.dwSize.X;
   iHeight := ConsoleInfo.dwSize.Y;
 End;
+
+Procedure OutputCurrentSearchPath(strPath : String);
+
+Var
+  C : CONSOLE_SCREEN_BUFFER_INFO;
+
+Begin
+  GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), C);
+  strpath := 'Searching... ' + strPath;
+  Write(strPath + StringOfChar(#32, iWidth - Length(strPath)));
+  SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), C.dwCursorPosition);
+End;
+
 
 (**
 
@@ -492,12 +505,25 @@ End;
   @precon  None.
   @postcon Prints a footer after the search displaying stats on the search.
 
+  @param   strPath as a String
+
 **)
-Procedure PrintFooter;
+Procedure PrintFooter(strPath : String);
+
+Const
+  strMsg = '%15.0n bytes in %1.0n Files in %1.0n Directories and %15.0n bytes Free.';
+
+Var
+  i : Integer;
 
 Begin
-  OutputLinesToConsole(Format('%1.0n bytes in %1.0n Files in %1.0n Directories.',
-    [iFileSize + 0.1, iFiles + 0.1, iDirectories + 0.1]));
+  i := 0;
+  If Length(strPath) >= 2 Then
+    If strPath[2] = ':' Then
+      i := Integer(strPath[1]) - Integer('A') + 1;
+  OutputLinesToConsole(Format(strMsg, [iFileSize + 0.1, iFiles + 0.1, iDirectories + 0.1,
+    DiskFree(i) + 0.1]));
+  OutputLinesToConsole;
 End;
 
 (**
@@ -570,6 +596,8 @@ End;
 
   @precon  None.
   @postcon Determines of a size range has been specified on the command line.
+
+  @bug     This method will only work on size that are integers because of Val().    
 
   @param   iSwitch as an Integer as a Reference
 
@@ -724,6 +752,8 @@ Begin
     End;
   If ParamCount = 0 Then
     Include(CommandLineSwitches, clsShowHelp);
+  If slSearchParams.Count = 0 Then
+    Raise Exception.Create('You need to specify at least one search criteria.');
 End;
 
 (**
@@ -784,8 +814,10 @@ Var
   strOutput : String;
   boolFound : Boolean;
   iDirFiles : Integer;
+  iSize : Int64;
 
 Begin
+  OutputCurrentSearchPath(strPath);
   Inc(iLevel);
   Result := 0;
   iDirFiles := 0;
@@ -796,6 +828,8 @@ Begin
   iResult := FindFirst(strPath + strPattern, faAnyFile, recSearch);
   While iResult = 0  Do
     Begin
+      With recSearch.FindData Do // Workaround for files larger than 2147483647
+        iSize := Int64(nFileSizeHigh * MAXDWORD) + nFileSizeLow;
       If clsAttrRange In CommandLineSwitches Then
         Begin
           boolFound := boolFound And (recSearch.Attr And iFileAttrs > 0);
@@ -803,8 +837,8 @@ Begin
         End;
       If clsSizeRange In CommandLineSwitches Then
         Begin
-          boolFound := boolFound And (recSearch.Size >= iLSize);
-          boolFound := boolFound And (recSearch.Size <= iUSize);
+          boolFound := boolFound And (iSize >= iLSize);
+          boolFound := boolFound And (iSize <= iUSize);
         End;
       If clsDateRange In CommandLineSwitches Then
         Begin
@@ -814,8 +848,8 @@ Begin
       If boolFound Then
         Begin
           Inc(iFiles);
-          Inc(iFileSize, recSearch.Size);
-          Inc(Result, recSearch.Size);
+          Inc(iFileSize, iSize);
+          Inc(Result, iSize);
           If Not (clsSummaryLevel In CommandLineSwitches) Then
             Begin
               Inc(iDirFiles);
@@ -824,9 +858,9 @@ Begin
                   OutputLinesToConsole(strPath);
                   boolDirPrinted := True;
                 End;
-              strOutput := Format('  %s  %13.0n  ', [
+              strOutput := Format('  %s  %15.0n  ', [
                 FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', FileDateToDateTime(recSearch.Time)),
-                recSearch.Size + 0.1]);
+                iSize + 0.1]);
               strOutput := strOutput + OutputAttributes(recSearch.Attr);
               OutputLinesToConsole(strOutput + recSearch.Name);
             End;
@@ -843,8 +877,8 @@ Begin
         Begin
           If recSearch.Attr And faDirectory > 0 Then
             If (recSearch.Name <> '.') And (recSearch.Name <> '..') Then
-              Result := Result  + SearchDirectory(
-                strPath + recSearch.Name + '\', strPattern, iLevel);
+              Inc(Result, SearchDirectory(strPath + recSearch.Name + '\', strPattern,
+                iLevel));
           iResult := FindNext(recSearch);
         End;
       SysUtils.FindClose(recSearch);
@@ -852,10 +886,10 @@ Begin
   (* Output directory summary levels *)
   If clsSummaryLevel In CommandLineSwitches Then
     Begin
-      If (iLevel > 0) And (iLevel <= iSummaryLevel) Then
+      If (iLevel > -1) And (iLevel <= iSummaryLevel) Then
         If Not ((Result = 0) And (clsSupressZeros In CommandLineSwitches)) Then
-        OutputLinesToConsole(Format('  %13.0n%s%s', [
-          Result + 0.1, StringOfChar(#32, 2 * iLevel), strPath]));
+        OutputLinesToConsole(Format('%15.0n%s%s', [
+          Result + 0.1, StringOfChar(#32, 2 + 2 * iLevel), strPath]));
     End Else
       If iDirFiles > 0 Then
         OutputLinesToConsole;
@@ -911,7 +945,9 @@ Begin
                 Length(slSearchParams[i]) - iPos);
               PrintHeader(strPath, strSearch);
               SearchDirectory(strPath, strSearch, iLevel);
-              PrintFooter;
+              If clsSummaryLevel In CommandLineSwitches Then
+                OutputLinesToConsole;
+              PrintFooter(strPath);
             End;
         End Else
           PrintHelp;
