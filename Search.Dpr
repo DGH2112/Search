@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    31 Oct 2004
+  @Date    05 Nov 2004
 
 **)
 Program Search;
@@ -16,7 +16,10 @@ Program Search;
 {$R *.RES}
 
 uses
-  SysUtils, Windows, Classes;
+  SysUtils,
+  Windows,
+  Classes,
+  DGHLibrary50 in '..\..\LIBRARY\DGHLibrary50.pas';
 
 Type
   (** This is a list of boolean on / off command line switches. **)
@@ -72,281 +75,6 @@ Var
 
 (**
 
-  This function returns true if the given word is in the supplied word list. It
-  uses a binary search, so the word lists need to be sorted.
-
-  @precon  strWord is the word to be searches for in the word list and
-           strWordList is a static array of words in lowercase and alphabetical
-           order.
-  @postcon Returns true if the word is found in the list.
-
-  @param   strWord     as a String
-  @param   strWordList as an Array Of String
-  @return  a Boolean
-
-**)
-function IsKeyWord(strWord : String; strWordList : Array Of String): Boolean;
-
-Var
-  l, m, r : Integer;
-  str : String;
-
-begin
-  Result := False;
-  str := LowerCase(strWord);
-  l := 0;
-  r := High(strWordList);
-  While l <= r Do
-    Begin
-      m := (l + r) Div 2;
-      If strWordList[m] < str Then
-        l := Succ(m)
-      Else If strWordList[m] > str Then
-        r:= Pred(m)
-      Else
-        Begin
-          Result := True;
-          Exit;
-        End;
-    End;
-end;
-
-(**
-
-  This function converts a freeform text string representing dates and times
-  in standard formats in to a TDateTime value.
-
-  @precon  strDate is the string to convert into a date.
-  @postcon Returns a valid TDateTime value.
-
-  @param   strDate as a String
-  @return  a TDateTime
-
-**)
-Function ConvertDate(Const strDate : String) : TDateTime;
-
-Type
-  TDateRec = Record
-    iDay, iMonth, iYear, iHour, iMinute, iSecond : Word;
-  End;
-
-Const
-  strErrMsg = 'Can not convert the date "%s" to a valid TDateTime value.';
-  Delimiters : Set Of Char = ['-', ' ', '\', '/', ':'];
-  Days : Array[1..7] Of String = ('fri', 'mon', 'sat', 'sun', 'thu', 'tue', 'wed');
-  Months : Array[1..24] Of String = (
-    'apr', 'april',
-    'aug', 'august',
-    'dec', 'december',
-    'feb', 'february',
-    'jan', 'january',
-    'jul', 'july',
-    'jun', 'june',
-    'mar', 'march',
-    'may', 'may',
-    'nov', 'november',
-    'oct', 'october',
-    'sep', 'september'
-    );
-  MonthIndexes : Array[1..24] Of Word = (
-    4, 4,
-    8, 8,
-    12, 12,
-    2, 2,
-    1, 1,
-    7, 7,
-    6, 6,
-    3, 3,
-    5, 5,
-    11, 11,
-    10, 10,
-    9, 9
-  );
-
-Var
-  i : Integer;
-  sl : TStringList;
-  strToken : String;
-  iTime : Integer;
-  recDate : TDateRec;
-  tmp : Word;
-  iIndex0, iIndex1, iIndex2 : Integer;
-
-  (**
-
-    This procedure adds the token to the specified string list and clears the
-    token.
-
-    @precon  StringList is the string list to add the token too and strToken is
-             the token to add to the list.
-    @postcon Adds the token to the specified string list and clears the
-             token.
-
-    @param   StringList as a TStringList
-    @param   strToken   as a String as a reference
-
-  **)
-  Procedure AddToken(StringList : TStringList; var strToken  : String);
-
-  Begin
-    If strToken <> '' Then
-      Begin
-        StringList.Add(strToken);
-        strToken := '';
-      End;
-  End;
-
-  (**
-
-    This procedure tries to extract the value from the indexed string list
-    item into the passed variable reference. It delete is true it remove the
-    item from the string list.
-
-    @precon  iIndex is the index of the item from the string list to extract,
-             iValue is a word variable to place the converted item into and
-             Delete determines whether the item is removed from the string list.
-    @postcon Tries to extract the value from the indexed string list item into
-             the passed variable reference. It delete is true it remove the
-             item from the string list.
-
-    @param   iIndex as an Integer
-    @param   iValue as a Word as a reference
-    @param   Delete as a Boolean
-
-  **)
-  Procedure ProcessValue(iIndex : Integer; var iValue : Word; Delete : Boolean);
-
-  Begin
-    If iIndex > sl.Count - 1 Then Exit;
-    Val(sl[iIndex], iValue, i);
-    If i <> 0 Then Raise Exception.CreateFmt(strErrMsg, [strDate]);
-    If Delete Then sl.Delete(iIndex);
-  End;
-
-  (**
-
-    This procedure assigns string list indexes to the three index values
-    according to the short date format and what information is supplied.
-
-    @precon  None.
-    @postcon Assigns string list indexes to the three index values
-             according to the short date format and what information is
-             supplied.
-
-  **)
-  Procedure AssignIndexes();
-
-  Var
-    slFormat : TStringList;
-    str : String;
-    j : Integer;
-
-  Begin
-    iIndex0 := 0; // Default Day / Month / Year
-    iIndex1 := 1;
-    iIndex2 := 2;
-    slFormat := TstringList.Create;
-    Try
-      str := '';
-      For j := 1 To Length(ShortDateFormat) Do
-        If ShortDateFormat[j] In Delimiters Then
-          AddToken(slFormat, str)
-        Else
-          str := str + ShortDateFormat[j];
-      AddToken(slFormat, str);
-      // Remove day of week
-      For j := slFormat.Count - 1 DownTo 0 Do
-        If (slFormat[j][1] In ['d', 'D']) And (Length(slFormat[j]) > 2) Then
-          slFormat.Delete(j);
-      For j := 0 To slFormat.Count - 1 Do
-        Begin
-          If slFormat[j][1] In ['d', 'D'] Then iIndex0 := j;
-          If slFormat[j][1] In ['m', 'M'] Then iIndex1 := j;
-          If slFormat[j][1] In ['y', 'Y'] Then iIndex2 := j;
-        End;
-    Finally
-      slFormat.Free;
-    End;
-  End;
-
-Begin
-  Result := 0;
-  sl := TStringList.Create;
-  Try
-    strToken := '';
-    iTime := -1;
-    For i := 1 To Length(strDate) Do
-      If strDate[i] In Delimiters Then
-        Begin
-          AddToken(sl, strToken);
-          If (strDate[i] = ':') And (iTime = -1) Then iTime := sl.Count - 1;
-        End Else
-          strToken := strToken + strDate[i];
-    AddToken(sl, strToken);
-    FillChar(recDate, SizeOf(recDate), 0);
-    // Decode time
-    If iTime > -1 Then
-      Begin
-        ProcessValue(iTime,recDate.iHour, True);
-        ProcessValue(iTime,recDate.iMinute, True);
-        ProcessValue(iTime,recDate.iSecond, True);
-      End;
-    // Remove day value if present
-    For i := sl.Count - 1 DownTo 0 Do
-      If IsKeyWord(sl[i], Days) Then
-        sl.Delete(i);
-    // Decode date
-    Case sl.Count Of
-      1 :
-        Begin
-          DecodeDate(Now, recDate.iYear, recDate.iMonth, tmp);
-          ProcessValue(0, recDate.iDay, False); // Day only
-        End;
-      2, 3 : // Day and Month (Year)
-        Begin
-          DecodeDate(Now, recDate.iYear, tmp, tmp);
-          AssignIndexes;
-          ProcessValue(iIndex0, recDate.iDay, False); // Get day
-          If IsKeyWord(sl[iIndex1], Months) Then
-            Begin
-              For i := Low(Months) To High(Months) Do
-                If AnsiCompareText(Months[i], sl[iIndex1]) = 0 Then
-                  Begin
-                    recDate.iMonth := MonthIndexes[i];
-                    Break;
-                  End;
-            End Else
-              ProcessValue(iIndex1, recDate.iMonth, False); // Get Month
-            If sl.Count = 3 Then
-              Begin
-                ProcessValue(iIndex2, recDate.iYear, False); // Get Year
-                If recDate.iYear < 1900 Then Inc(recDate.iYear, 2000);
-              End;
-        End;
-    Else
-      If sl.Count <> 0 Then Raise Exception.CreateFmt(strErrMsg, [strDate]);
-    End;
-    // Output result.
-    With recDate Do
-      Begin
-        If Not (iHour In [0..23]) Then Raise Exception.CreateFmt(strErrMsg, [strDate]);
-        If Not (iMinute In [0..59]) Then Raise Exception.CreateFmt(strErrMsg, [strDate]);
-        If Not (iSecond In [0..59]) Then Raise Exception.CreateFmt(strErrMsg, [strDate]);
-        Result := EncodeTime(iHour, iMinute, iSecond, 0);
-        If iYear * iMonth * iDay <> 0 Then
-          Begin
-            If Not (iDay In [1..31]) Then Raise Exception.CreateFmt(strErrMsg, [strDate]);
-            If Not (iMonth In [1..12]) Then Raise Exception.CreateFmt(strErrMsg, [strDate]);
-            Result := Result + EncodeDate(iYear, iMonth, iDay);
-          End;
-      End;
-  Finally
-    sl.Free;
-  End;
-End;
-
-(**
-
   This routine is used to output all the text to the screen. It monitors
   how many lines have been output and pauses after a full screen full.
 
@@ -390,6 +118,16 @@ Begin
   iHeight := ConsoleInfo.dwSize.Y;
 End;
 
+(**
+
+  This method outputs the currently being searched path to the screen.
+
+  @precon  None.
+  @postcon Outputs the currently being searched path to the screen.
+
+  @param   strPath as a String
+
+**)
 Procedure OutputCurrentSearchPath(strPath : String);
 
 Const
