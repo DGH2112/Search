@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    05 Nov 2004
+  @Date    06 Nov 2004
 
 **)
 Program Search;
@@ -136,11 +136,26 @@ Const
 
 Var
   C : CONSOLE_SCREEN_BUFFER_INFO;
+  i, j : Integer;
 
 Begin
   GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), C);
-  If Length(strPath) > (iWidth - iLength) Then
-    strPath := Copy(strPath, 1, iWidth - iLength);
+  While Length(strPath) > (iWidth - iLength) Do
+    Begin
+      If Pos('...', strPath) = 0 Then
+        Begin
+          i := PosOfNthChar('\', strPath, 1) + 1;
+          j := PosOfNthChar('\', strPath, 2);
+          If (i > 0) And (j > 0) Then
+            strPath := StringReplace(strPath, Copy(strPath, i, j - i), '...', []);
+        End Else
+        Begin
+          i := PosOfNthChar('\', strPath, 2);
+          j := PosOFNthChar('\', strPath, 3);
+          If (i > 0) And (j > 0) Then
+            strPath := StringReplace(strPath, Copy(strPath, i, j - i), '', []);
+        End;
+    End;
   strPath := Format('%s%-*s', [strLabel, iWidth - iLength, strPath]);
   Write(strPath);
   SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), C.dwCursorPosition);
