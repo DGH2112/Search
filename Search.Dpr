@@ -19,7 +19,7 @@ uses
   SysUtils,
   Windows,
   Classes,
-  DGHLibrary50 in '..\..\LIBRARY\DGHLibrary50.pas';
+  DGHLibrary50 in '..\..\library\DGHLibrary50.pas';
 
 Type
   (** This is a list of boolean on / off command line switches. **)
@@ -34,7 +34,8 @@ Type
     clsSupressZeros,     { /0 or -0 }
     clsDateRange,        { /d or -d }
     clsSizeRange,        { /z or -z }
-    clsAttrRange         { /t ot -t }
+    clsAttrRange,        { /t or -t }
+    clsQuiet             { /q or -q }
   );
 
   (** This is a set of boolean command line switches. **)
@@ -139,19 +140,20 @@ Var
   i, j : Integer;
 
 Begin
+  If clsQuiet In CommandLineSwitches Then Exit;
   GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), C);
   While Length(strPath) > (iWidth - iLength) Do
     Begin
       If Pos('...', strPath) = 0 Then
         Begin
-          i := PosOfNthChar('\', strPath, 1) + 1;
-          j := PosOfNthChar('\', strPath, 2);
+          i := PosOfNthChar(strPath, '\', 1) + 1;
+          j := PosOfNthChar(strPath, '\', 2);
           If (i > 0) And (j > 0) Then
             strPath := StringReplace(strPath, Copy(strPath, i, j - i), '...', []);
         End Else
         Begin
-          i := PosOfNthChar('\', strPath, 2);
-          j := PosOFNthChar('\', strPath, 3);
+          i := PosOfNthChar(strPath, '\', 2);
+          j := PosOFNthChar(strPath, '\', 3);
           If (i > 0) And (j > 0) Then
             strPath := StringReplace(strPath, Copy(strPath, i, j - i), '', []);
         End;
@@ -313,6 +315,7 @@ Begin
   OutputLinesToConsole('           D = Directory, and V=  Volume ID');
   OutputLinesToConsole('    /D     ( lower bounding date and time - upper bounding date and time )');
   OutputLinesToConsole('    /Z     ( lower bounding size in bytes - upper bounding size in bytes )');
+  OutputLinesToConsole('    /Q     Quiet mode');
   OutputLinesToConsole('');
   OutputLinesToConsole('NOTE: The date time input format is dependent on your local settings');
   OutputLinesToConsole('');;
@@ -496,6 +499,7 @@ Begin
               'd', 'D': GetDateRange(iSwitch);
               'z', 'Z': GetSizeRange(iSwitch);
               't', 'T': GetAttributes(iSwitch);
+              'q', 'Q': Include(CommandLineSwitches, clsQuiet);
             Else
               Raise Exception.CreateFmt(strInValidCommandLineSwitch,
                 [ParamStr(iSwitch)]);
