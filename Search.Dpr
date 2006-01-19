@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    06 Nov 2004
+  @Date    19 Jan 2006
 
 **)
 Program Search;
@@ -19,27 +19,285 @@ uses
   SysUtils,
   Windows,
   Classes,
-  DGHLibrary50 in '..\..\library\DGHLibrary50.pas';
+  ACCCTRL,
+  Contnrs,
+  DGHLibrary in '..\..\library\DGHLibrary.pas';
 
 Type
   (** This is a list of boolean on / off command line switches. **)
   TCommandLineSwitch = (
     clsShowHelp,         { /? or -? }
     clsSubDirectories,   { /s or -s }
-    clsDebug,            { /d or -d }
+    clsDebug,            { /!       }
     clsShowAttribs,      { /a or -a }
     clsPause,            { /p or -p }
-    clsUseRegex,         { /r or -r }
     clsSummaryLevel,     { /1..9 or -1..9 }
     clsSupressZeros,     { /0 or -0 }
     clsDateRange,        { /d or -d }
     clsSizeRange,        { /z or -z }
     clsAttrRange,        { /t or -t }
-    clsQuiet             { /q or -q }
+    clsQuiet,            { /q or -q }
+    clsOwner,            { /w or -w }
+    clsOrderBy           { /o or -o }
   );
 
   (** This is a set of boolean command line switches. **)
   TCommandLineSwitches = Set of TCommandLineSwitch;
+  
+  (** A type for a pointer to a PSID structure **)
+  PPSID = ^PSID;
+  
+  (** A class to hold a files information. **)
+  TFile = Class
+  Private
+    FDate : TDateTime;
+    FSize : Int64;
+    FAttr : String;
+    FOwner : String;
+    FName : String;
+  Public
+    (**
+      A property to read and write the files date and time.
+      @precon  None.
+      @postcon None.
+      @return  a TDateTime
+    **)
+    Property Date : TDateTime Read FDate Write FDate;
+    (**
+      A property to read and write the files size.
+      @precon  None.
+      @postcon None.
+      @return  an Int64
+    **)
+    Property Size : Int64 Read FSize Write FSize;
+    (**
+      A property to read and write the files Attributes.
+      @precon  None.
+      @postcon None.
+      @return  a String
+    **)
+    Property Attr : String Read FAttr Write FAttr;
+    (**
+      A property to read and write the files owner.
+      @precon  None.
+      @postcon None.
+      @return  a String
+    **)
+    Property Owner : String Read FOwner Write FOwner;
+    (**
+      A property to read and write the files name.
+      @precon  None.
+      @postcon None.
+      @return  a String
+    **)
+    Property Name : String Read FName Write FName;
+  End;
+  
+  (** An enumerate to define the order for sorting the files. **)
+  TOrderBy = (obNone, obName, obSize, obDate, obOwner, obAttribute);
+  (** An enumberate to define whether the files should be ascending or
+      descending **)
+  TOrderDirection = (odAscending, odDescending);
+
+  (** A class to hold a collection of files. **)
+  TFiles = Class
+  Private
+    FFiles : TObjectList;
+  Protected
+    Function GetFile(iIndex : Integer) : TFile;
+    Function GetCount : Integer;
+  Public
+    Constructor Create;
+    Destructor Destroy; Override;
+    Procedure Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
+      strName : String);
+    (**
+      A property to return a specific file from the collection.
+      @precon  iIndex must be a valid index.
+      @postcon The file identified ny the index is returned.
+      @param   iIndex as       an Integer
+      @return  a TFile
+    **)
+    Property FileInfo[iIndex : Integer] : TFile Read GetFile;
+    (**
+      A property to return the number of files in the collection.
+      @precon  None.
+      @postcon Returns the number of files in the collection.
+      @return  an Integer
+    **)
+    Property Count : Integer Read GetCount;
+    Function OwnerWidth : Integer;
+    Procedure OrderBy(OrderBy : TOrderBy; OrderDirection : TOrderDirection);
+  End;
+  
+  (**
+
+    This is the constructor method for the TFiles class.
+
+    @precon  None.
+    @postcon Creates the file list.
+
+  **)
+  Constructor TFiles.Create;
+  
+  Begin
+    FFiles := TObjectList.Create(True);
+  End;
+  
+  (**
+
+    This is the destructor method for the TFiles class.
+
+    @precon  None.
+    @postcon Frees the list of files.
+
+  **)
+  Destructor TFiles.Destroy;
+
+  Begin
+    FFiles.Free;
+    Inherited Destroy;
+  End;
+  
+  (**
+
+    This method added a file and its attributes to the collection.
+
+    @precon  None.
+    @postcon Added a file and its attributes to the collection.
+
+    @param   dtDate   as a TDateTime
+    @param   iSize    as an Int64
+    @param   strAttr  as a String
+    @param   strOwner as a String
+    @param   strName  as a String
+
+  **)
+  Procedure TFiles.Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
+    strName : String);
+
+  Var
+    FFile : TFile;
+
+  Begin
+    FFile := TFile.Create;
+    FFiles.Add(FFile);
+    FFile.Date := dtDate;
+    FFile.Size := iSize;
+    FFile.Attr := strAttr;
+    FFile.Owner := strOwner;
+    FFile.Name := strName;
+  End;
+
+  (**
+
+    This is a getter method for the File property.
+
+    @precon  iIndex must be a valid index.
+    @postcon Returns the file specified by the index.
+
+    @param   iIndex as an Integer
+    @return  a TFile
+
+  **)
+  Function TFiles.GetFile(iIndex : Integer) : TFile;
+
+  Begin
+    Result :=  FFiles.Items[iIndex] As TFile;
+  End;
+
+  (**
+
+    This is a getter method for the Count property.
+
+    @precon  None.
+    @postcon Returns the number of files in the collectionn.
+
+    @return  an Integer
+
+  **)
+  Function TFiles.GetCount : Integer;
+
+  Begin
+    Result := FFiles.Count;
+  End;
+
+  (**
+
+    This method determines the width of the widthest owner.
+
+    @precon  None.
+    @postcon Determines the width of the widthest owner.
+
+    @return  an Integer
+
+  **)
+  Function TFiles.OwnerWidth : Integer;
+
+  Var
+    i : Integer;
+
+  Begin
+    Result := 0;
+    For i := 0 To Count - 1 Do
+      If Length(FileInfo[i].Owner) > Result Then
+        Result := Length(FileInfo[i].Owner);
+  End;
+
+  (**
+
+    This method orders the files in the collection by the given direction and
+    attribute.
+
+    @precon  None.
+    @postcon Orders the files in the collection by the given direction and
+    attribute.
+
+    @param   OrderBy        as a TOrderBy
+    @param   OrderDirection as a TOrderDirection
+
+  **)
+  Procedure TFiles.OrderBy(OrderBy : TOrderBy; OrderDirection : TOrderDirection);
+
+  Var
+    i, j : Integer;
+    iMin : Integer;
+    iFirst, iSecond : Integer;
+
+  Begin
+    For i := 0 To Count - 1 Do
+      For j := i + 1 To Count - 1 Do
+        Begin
+          iMin := -1;
+          If OrderDirection = odAscending Then
+            Begin
+              iFirst := i;
+              iSecond := j;
+            End Else
+            Begin
+              iFirst := j;
+              iSecond := i;
+            End;
+          Case OrderBy Of
+            obName:
+              If CompareText(FileInfo[iSecond].Name, FileInfo[iFirst].Name) < 0 Then
+                iMin := j;
+            obDate:
+              If FileInfo[iSecond].Date < FileInfo[iFirst].Date Then
+                iMin := j;
+            obSize:
+              If FileInfo[iSecond].Size < FileInfo[iFirst].Size Then
+                iMin := j;
+            obAttribute:
+              If CompareText(FileInfo[iSecond].Attr,FileInfo[iFirst].Attr) < 0 Then
+                iMin := j;
+            obOwner:
+              If CompareText(FileInfo[iSecond].Owner, FileInfo[iFirst].Owner) < 0 Then
+                iMin := j;
+          End;
+          If iMin > -1 Then FFiles.Exchange(i, iMin);
+        End;
+  End;
 
 Var
   (** Define the applications command line switches. **)
@@ -73,6 +331,39 @@ Var
   slSearchParams : TStringList;
   (** This is the level of directory of summarisation required. **)
   iSummaryLevel : Integer;
+  (** A variable for a collection of files. **)
+  objFiles : TFiles;
+  (** A type to indicate the order of file sorting **)
+  OrderFilesBy : TOrderBy;
+  (** A type to indicate the direction of sorting of files. **)
+  OrderFilesDirection : TOrderDirection;
+  
+Const
+  (** A constant to define that only files should be listed. **)
+  iFileOnly = $0100;
+
+  (**
+
+     This method returns the security information for a specified file.
+
+     @precon  See Win32 Help.
+     @postcon Returns the security information for a specified file.
+
+     @param   pObjectName          as a PAnsiChar
+     @param   ObjectType           as a SE_OBJECT_TYPE
+     @param   SecurityInfo         as a SECURITY_INFORMATION
+     @param   ppsidOwner           as a PPSID
+     @param   ppsidGroup           as a PPSID
+     @param   ppDacl               as a PACL
+     @param   ppSacl               as a PACL
+     @param   ppSecurityDescriptor as a PSECURITY_DESCRIPTOR as a reference
+     @return  a DWORD
+
+   **)
+   Function GetNamedSecurityInfo(pObjectName: PAnsiChar; ObjectType: SE_OBJECT_TYPE;
+    SecurityInfo: SECURITY_INFORMATION; ppsidOwner, ppsidGroup: PPSID; ppDacl,
+    ppSacl: PACL; var ppSecurityDescriptor: PSECURITY_DESCRIPTOR): DWORD; Stdcall;
+         external 'advapi32.dll' name 'GetNamedSecurityInfoA';
 
 (**
 
@@ -227,15 +518,15 @@ Const
 Var
   iMajor, iMinor, iBugfix : Integer;
   strBuildNumber  : String;
+  dtDate : TDateTime;
 
 Begin
   strBuildNumber := GetBuildNumber(iMajor, iMinor, iBugFix);
   OutputLinesToConsole(Format(strTitle, [iMajor, iMinor, strBugFix[iBugFix + 1],
     strBuildNumber]));
+  FileAge(ParamStr(0), dtDate);
   OutputLinesToConsole(
-    Format(
-      'Written by David Hoyle (c) %s',
-      [FormatDateTime('mmm/yyyy', FileDateToDateTime(FileAge(ParamStr(0))))]));
+    Format('Written by David Hoyle (c) %s', [FormatDateTime('mmm/yyyy', dtDate)]));
   OutputLinesToConsole;
 End;
 
@@ -272,18 +563,21 @@ End;
 Procedure PrintFooter(strPath : String);
 
 Const
-  strMsg = '%15.0n bytes in %1.0n Files in %1.0n Directories and %15.0n bytes Free.';
+  strMsg1 = '  Found %15.0n bytes in %1.0n Files in %1.0n Directories.';
+  strMsg2 = '  Total space %15.0n bytes, and %15.0n bytes Free.';
 
 Var
-  i : Integer;
+  iFreeBytesAvailableToCaller,
+  iTotalNumberOfBytes,
+  iTotalNumberOfFreeBytes : Int64;
 
 Begin
-  i := 0;
-  If Length(strPath) >= 2 Then
-    If strPath[2] = ':' Then
-      i := Integer(strPath[1]) - Integer('A') + 1;
-  OutputLinesToConsole(Format(strMsg, [iFileSize + 0.1, iFiles + 0.1, iDirectories + 0.1,
-    DiskFree(i) + 0.1]));
+  GetDiskFreeSpaceEx(PChar(strPath), iFreeBytesAvailableToCaller,
+    iTotalNumberOfBytes, @iTotalNumberOfFreeBytes);
+  OutputLinesToConsole(Format(strMsg1, [iFileSize + 0.1, iFiles + 0.1,
+    iDirectories + 0.1]));
+  OutputLinesToConsole(Format(strMsg2, [iTotalNumberOfBytes + 0.1,
+    iTotalNumberOfFreeBytes + 0.1]));
   OutputLinesToConsole;
 End;
 
@@ -301,21 +595,28 @@ Procedure PrintHelp;
 
 Begin
   OutputLinesToConsole('Syntax:');
-  OutputLinesToConsole('  SearchRX searchparam1 [searchparam2...] [/A] [/S]');
+  OutputLinesToConsole('  Search searchparam1 [searchparam2...] [/A] [/S] [/Q] [/W]');
   OutputLinesToConsole('    [/T RASHFDV] [/D "(DD[/MM[/YY [HH:MM[:SS]]]]-DD[/MM[/YY [HH:MM[:SS]]]])"]');
-  OutputLinesToConsole('    [/Z LowerByteSize-UpperByteSize]');
+  OutputLinesToConsole('    [/Z LowerByteSize-UpperByteSize] [/O NDAOS]');
+  OutputLinesToConsole('');
+  OutputLinesToConsole('    searchparam# = [drive:\path\]filter1[;filter2[;filter3[;...]]]');
+  OutputLinesToConsole('    filter# can contain wildcards * and ? within the filename. ');
   OutputLinesToConsole('');
   OutputLinesToConsole('    /?     This help screen');
   OutputLinesToConsole('    /A     Show file and directory attributes');
   OutputLinesToConsole('    /P     Pause the results after each screen');
   OutputLinesToConsole('    /S     Recurse subdirectories');
   OutputLinesToConsole('    /1..9  Summarise subdirectories');
-  OutputLinesToConsole('');
-  OutputLinesToConsole('    /T     R = Read Only, A = Archive, S = System, H = Hidden, F = File,');
+  OutputLinesToConsole('    /0     Hide empty Summarised subdirectories');
+  OutputLinesToConsole('    /T     Show only files with certain attributes');
+  OutputLinesToConsole('           R = Read Only, A = Archive, S = System, H = Hidden, F = File,');
   OutputLinesToConsole('           D = Directory, and V=  Volume ID');
   OutputLinesToConsole('    /D     ( lower bounding date and time - upper bounding date and time )');
   OutputLinesToConsole('    /Z     ( lower bounding size in bytes - upper bounding size in bytes )');
   OutputLinesToConsole('    /Q     Quiet mode');
+  OutputLinesToConsole('    /W     Owner Information');
+  OutputLinesToConsole('    /O     Order files ascending [+] and descending [-]');
+  OutputLinesToConsole('           N = Name, A = Attribute, D = Date and Time, O = Owner, S = Size');
   OutputLinesToConsole('');
   OutputLinesToConsole('NOTE: The date time input format is dependent on your local settings');
   OutputLinesToConsole('');;
@@ -412,6 +713,8 @@ Var
 Begin
   Include(CommandLineSwitches, clsAttrRange);
   Inc(iSwitch); // Next parameter is the size range of the search
+  If iSwitch > ParamCount Then
+    Raise Exception.Create('Missing Attribute directive');
   iFileAttrs := 0;
   iTypeAttrs := 0;
   For i := 1 To Length(ParamStr(iSwitch)) Do
@@ -420,17 +723,59 @@ Begin
       'a', 'A' : iFileAttrs := iFileAttrs Or faArchive;
       's', 'S' : iFileAttrs := iFileAttrs Or faSysFile;
       'h', 'H' : iFileAttrs := iFileAttrs Or faHidden;
-      'f', 'F' : iTypeAttrs := iTypeAttrs Or faAnyFile;
+      'f', 'F' : iTypeAttrs := iTypeAttrs Or iFileOnly;
       'd', 'D' : iTypeAttrs := iTypeAttrs Or faDirectory;
       'v', 'V' : iTypeAttrs := iTypeAttrs Or faVolumeID;
     Else
       Raise Exception.CreateFmt(strNotAValidAttrList, [ParamStr(iSwitch)]);
     End;
-  If iFileAttrs = 0 Then
-    iFileAttrs := faArchive Or faReadOnly Or faHidden Or faSysFile Or
-      faDirectory Or faVolumeID;
   If iTypeAttrs = 0 Then
     iTypeAttrs := faDirectory Or faVolumeID;
+End;
+
+(**
+
+  This method gets the command line information for the ordering of the found
+  files.
+
+  @precon  None.
+  @postcon Gets the command line information for the ordering of the found
+           files.
+
+  @param   iSwitch as an Integer as a reference
+
+**)
+Procedure GetOrderBy(var iSwitch : Integer);
+
+Var
+  strOrderBy : String;
+  iIndex : Integer;
+
+Begin
+  Include(CommandLineSwitches, clsOrderBy);
+  Inc(iSwitch); // Next parameter is the order by
+  If iSwitch > ParamCount Then
+    Raise Exception.Create('Missing Order By directive');
+  strOrderBy := ParamStr(iSwitch);
+  iIndex := 1;
+  If Length(strOrderBy) < iIndex Then
+    Raise Exception.Create('Missing Order By directive.');
+  If strOrderBy[iIndex] = '-' Then
+    Begin
+      OrderFilesDirection := odDescending;
+      Inc(iIndex);
+    End;
+  If Length(strOrderBy) < iIndex Then
+    Raise Exception.Create('Missing Order By directive.');
+  Case strOrderBy[iIndex] Of
+    'n', 'N': OrderFilesBy := obName;
+    'd', 'D': OrderFilesBy := obDate;
+    's', 'S': OrderFilesBy := obSize;
+    'a', 'A': OrderFilesBy := obAttribute;
+    'o', 'O': OrderFilesBy := obOwner;
+  Else
+    Raise Exception.Create('Invalid Order By directive.')
+  End
 End;
 
 (**
@@ -482,6 +827,8 @@ Begin
   iSummaryLevel := 0;
   CommandLineSwitches := [];
   iSwitch := 1;
+  OrderFilesBy := obNone;
+  OrderFilesDirection := odAscending;
   While iSwitch <= ParamCount Do
     Begin
       If ParamStr(iSwitch)[1] In ['-', '/'] Then
@@ -493,13 +840,14 @@ Begin
               '!'     : Include(CommandLineSwitches, clsDebug);
               'a', 'A': Include(CommandLineSwitches, clsShowAttribs);
               'p', 'P': Include(CommandLineSwitches, clsPause);
-              'r', 'R': Include(CommandLineSwitches, clsUseRegex);
               '1'..'9': GetSummaryLevel(iSwitch, iSwitches);
               '0'     : Include(CommandLineSwitches, clsSupressZeros);
               'd', 'D': GetDateRange(iSwitch);
               'z', 'Z': GetSizeRange(iSwitch);
               't', 'T': GetAttributes(iSwitch);
               'q', 'Q': Include(CommandLineSwitches, clsQuiet);
+              'w', 'W': Include(CommandLineSwitches, clsOwner);
+              'o', 'O': GetOrderBy(iSwitch);
             Else
               Raise Exception.CreateFmt(strInValidCommandLineSwitch,
                 [ParamStr(iSwitch)]);
@@ -535,19 +883,74 @@ End;
 Function OutputAttributes(iAttr : Integer) : String;
 
 Begin
-  If clsShowAttribs In CommandLineSwitches Then
+  Result := '.......';
+  If faReadOnly And iAttr > 0 Then Result[1] := 'R';
+  If faArchive And iAttr > 0 Then Result[2] := 'A';
+  If faSysFile And iAttr > 0 Then Result[3] := 'S';
+  If faHidden And iAttr > 0 Then Result[4] := 'H';
+  If faDirectory And iAttr > 0 Then
+    Result[6] := 'D'
+  Else If faVolumeID And iAttr > 0 Then
+    Result[7] := 'V'
+  Else
+    Result[5] := 'F';
+End;
+
+(**
+
+  This method returns the owner of the files from a SID.
+
+  @precon  None.
+  @postcon Returns the owner of the files from a SID.
+
+  @param   SID as a PSID
+  @return  a String
+
+**)
+Function LookupAccountBySID(SID : PSID) : String;
+
+Var
+  Name, RefDomain : String;
+  NameSize, RefDomainSize : DWORD;
+  Use : SID_NAME_USE;
+  
+Begin
+  NameSize := 0;
+  RefDomainSize := 0;
+  LookupAccountSID(Nil, SID, Nil, NameSize, Nil, RefDomainSize, Use);
+  SetLength(Name, NameSize);
+  SetLength(RefDomain, RefDomainSize);
+  LookupAccountSID(Nil, SID, PChar(Name), NameSize, PChar(RefDomain),
+    RefDomainSize, Use);
+  If Name = '' Then
+    Name := '(Unknown)';
+  Result := PChar(RefDomain) + '/' + PChar(Name);
+End;
+
+(**
+
+  Outputs the owner of the filename.
+
+  @precon  None.
+  @postcon Outputs the owner of the file.
+
+  @param   strFileName as a String
+  @return  a String
+
+**)
+Function OutputOwner(strFileName : String) : String;
+
+Var
+  SD : PSecurityDescriptor;
+  Owner : PSID;
+
+Begin
+  If GetNamedSecurityInfo(PChar(strFileName), SE_FILE_OBJECT,
+    OWNER_SECURITY_INFORMATION, @Owner, Nil, Nil, Nil,
+    Pointer(SD)) = ERROR_SUCCESS Then
     Begin
-      Result := '.......  ';
-      If faReadOnly And iAttr > 0 Then Result[1] := 'R';
-      If faArchive And iAttr > 0 Then Result[2] := 'A';
-      If faSysFile And iAttr > 0 Then Result[3] := 'S';
-      If faHidden And iAttr > 0 Then Result[4] := 'H';
-      If faDirectory And iAttr > 0 Then
-        Result[6] := 'D'
-      Else If faVolumeID And iAttr > 0 Then
-        Result[7] := 'V'
-      Else
-        Result[5] := 'F';
+      Result := LookupAccountBySID(Owner);
+      LocalFree(Cardinal(SD));
     End;
 End;
 
@@ -563,12 +966,13 @@ End;
            those directories.
 
   @param   strPath    as a String
-  @param   strPattern as a String
+  @param   slPatterns  as a TStringList
   @param   iLevel     as an Integer as a Reference
-  @return  an Int64 
+  @return  an Int64
 
 **)
-Function SearchDirectory(strPath, strPattern : String; Var iLevel : Integer) : Int64;
+Function SearchDirectory(strPath: String; slPatterns : TStringList;
+  Var iLevel : Integer) : Int64;
 
 Var
   iResult : Integer;
@@ -578,6 +982,10 @@ Var
   boolFound : Boolean;
   iDirFiles : Integer;
   iSize : Int64;
+  iAttributes : Integer;
+  i : Integer;
+  iWidth : Integer;
+  iPattern: Integer;
 
 Begin
   OutputCurrentSearchPath(strPath);
@@ -588,50 +996,86 @@ Begin
   boolDirPrinted := False;
   (* Find Files *)
   boolFound := True;
-  iResult := FindFirst(strPath + strPattern, faAnyFile, recSearch);
-  While iResult = 0  Do
-    Begin
-      With recSearch.FindData Do // Workaround for files larger than 2147483647
-        iSize := Int64(nFileSizeHigh * MAXDWORD) + nFileSizeLow;
-      If clsAttrRange In CommandLineSwitches Then
-        Begin
-          boolFound := boolFound And (recSearch.Attr And iFileAttrs > 0);
-          boolFound := boolFound And (recSearch.Attr And iTypeAttrs > 0);
-        End;
-      If clsSizeRange In CommandLineSwitches Then
-        Begin
-          boolFound := boolFound And (iSize >= iLSize);
-          boolFound := boolFound And (iSize <= iUSize);
-        End;
-      If clsDateRange In CommandLineSwitches Then
-        Begin
-          boolFound := boolFound And (FileDateToDateTime(recSearch.Time) >= dtLDate);
-          boolFound := boolFound And (FileDateToDateTime(recSearch.Time) <= dtUDate);
-        End;
-      If boolFound Then
-        Begin
-          Inc(iFiles);
-          Inc(iFileSize, iSize);
-          Inc(Result, iSize);
-          If Not (clsSummaryLevel In CommandLineSwitches) Then
+  objFiles := TFiles.Create;
+  Try
+    For iPattern := 0 To slPatterns.Count - 1 Do
+      Begin
+        iResult := FindFirst(strPath + slPatterns[iPattern], faAnyFile, recSearch);
+        Try
+          While iResult = 0  Do
             Begin
-              Inc(iDirFiles);
-              If Not boolDirPrinted Then
+              With recSearch.FindData Do // Workaround for files larger than 2147483647
                 Begin
-                  OutputLinesToConsole(strPath);
-                  boolDirPrinted := True;
+                  iSize := Int64(nFileSizeHigh) * Int64(MAXDWORD);
+                  iSize := iSize + nFileSizeLow;
                 End;
-              strOutput := Format('  %s  %15.0n  ', [
-                FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', FileDateToDateTime(recSearch.Time)),
-                iSize + 0.1]);
-              strOutput := strOutput + OutputAttributes(recSearch.Attr);
-              OutputLinesToConsole(strOutput + recSearch.Name);
+              If clsAttrRange In CommandLineSwitches Then
+                Begin
+                  If faDirectory And recSearch.Attr > 0 Then
+                    iAttributes := faDirectory
+                  Else If faVolumeID And recSearch.Attr > 0 Then
+                    iAttributes := faVolumeID
+                  Else
+                    iAttributes := iFileOnly;
+                  boolFound := boolFound And (iAttributes And iTypeAttrs > 0);
+                  boolFound := boolFound And ((recSearch.Attr And iFileAttrs > 0) Or
+                    (iFileAttrs = 0));
+                End;
+              If clsSizeRange In CommandLineSwitches Then
+                Begin
+                  boolFound := boolFound And (iSize >= iLSize);
+                  boolFound := boolFound And (iSize <= iUSize);
+                End;
+              If clsDateRange In CommandLineSwitches Then
+                Begin
+                  boolFound := boolFound And (FileDateToDateTime(recSearch.Time) >= dtLDate);
+                  boolFound := boolFound And (FileDateToDateTime(recSearch.Time) <= dtUDate);
+                End;
+              If boolFound Then
+                Begin
+                  Inc(iFiles);
+                  Inc(iFileSize, iSize);
+                  Inc(Result, iSize);
+                  If Not (clsSummaryLevel In CommandLineSwitches) Then
+                    Begin
+                      Inc(iDirFiles);
+                      If Not boolDirPrinted Then
+                        Begin
+                          OutputLinesToConsole(strPath);
+                          boolDirPrinted := True;
+                        End;
+                      objFiles.Add(FileDateToDateTime(recSearch.Time), iSize,
+                        OutputAttributes(recSearch.Attr),
+                        OutputOwner(strPath + recSearch.name), recSearch.Name)
+                    End;
+                End;
+              iResult := FindNext(recSearch);
+              boolFound := True;
             End;
+        Finally
+          SysUtils.FindClose(recSearch);
         End;
-      iResult := FindNext(recSearch);
-      boolFound := True;
-    End;
-  SysUtils.FindClose(recSearch);
+      End;
+    If OrderFilesBy <> obNone Then
+      objFiles.OrderBy(OrderFilesBy, OrderFilesDirection);
+    For i := 0 To objFiles.Count - 1 Do
+      Begin
+        strOutput := Format('  %s  %15.0n  ', [
+          FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', objFiles.FileInfo[i].Date),
+          objFiles.FileInfo[i].Size + 0.1]);
+        If clsShowAttribs In CommandLineSwitches Then
+          strOutput := strOutput + Format('%s  ', [objFiles.FileInfo[i].Attr]);
+        If clsOwner In CommandLineSwitches Then
+          Begin
+            iWidth := objFiles.OwnerWidth;
+            strOutput := strOutput + Format('%-*s  ', [iWidth,
+              objFiles.FileInfo[i].Owner]);
+          End;
+        OutputLinesToConsole(strOutput + objFiles.FileInfo[i].Name);
+      End;
+  Finally
+    objFiles.Free;
+  End;
   If Not (clsSummaryLevel In CommandLineSwitches) Then
     If iDirFiles > 0 Then
       OutputLinesToConsole;
@@ -643,8 +1087,8 @@ Begin
         Begin
           If recSearch.Attr And faDirectory > 0 Then
             If (recSearch.Name <> '.') And (recSearch.Name <> '..') Then
-              Inc(Result, SearchDirectory(strPath + recSearch.Name + '\', strPattern,
-                iLevel));
+              Inc(Result, SearchDirectory(strPath + recSearch.Name + '\',
+                slPatterns, iLevel));
           iResult := FindNext(recSearch);
         End;
       SysUtils.FindClose(recSearch);
@@ -682,6 +1126,10 @@ Var
   strSearch : String;
   (** This is the starting level for summarise. **)
   iLevel : Integer;
+  (** A string list to hold the different search patterns. **)
+  slPatterns : TStringList;
+  (** A variable to iterate file filter patterns **)
+  iPattern : Integer;
 
 Begin
   iLevel := -1;
@@ -700,15 +1148,21 @@ Begin
               If iPos = 0 Then
                 Raise Exception.CreateFmt(strErrorInPathSearchParamString,
                   [slSearchParams[i]]);
-              strPath := Copy(slSearchParams[i], 1, iPos - 1);
+              strPath := slSearchParams.Names[i];
               If strPath = '' Then
                 strPath := GetCurrentDir;
               If strPath[Length(strPath)] <> '\' Then
                 strPath := strPath + '\';
-              strSearch := Copy(slSearchParams[i], iPos + 1,
-                Length(slSearchParams[i]) - iPos);
+              strSearch := slSearchParams.Values[slSearchParams.Names[i]];
               PrintHeader(strPath, strSearch);
-              SearchDirectory(strPath, strSearch, iLevel);
+              slPatterns := TStringList.Create;
+              Try
+                For iPattern := 1 To CharCount(';', strSearch) + 1 Do
+                  slPatterns.Add(GetField(strSearch, ';', iPattern));
+                SearchDirectory(strPath, slPatterns, iLevel);
+              Finally
+                slPatterns.Free;
+              End;
               If clsSummaryLevel In CommandLineSwitches Then
                 OutputLinesToConsole;
               PrintFooter(strPath);
