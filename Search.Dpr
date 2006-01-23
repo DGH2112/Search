@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    19 Jan 2006
+  @Date    23 Jan 2006
 
 **)
 Program Search;
@@ -380,7 +380,7 @@ Const
 Procedure OutputLinesToConsole(strText : String = '');
 
 Begin
-  Writeln(strText + StringOfChar(#32, iWidth - Length(strText) - 1));
+  Writeln(strText);
   Inc(iLinesOutputted);
   If (clsPause In CommandLineSwitches) And (iLinesOutputted >= (iHeight - 1)) Then
     Begin
