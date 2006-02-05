@@ -6,7 +6,9 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    23 Jan 2006
+  @Date    05 Feb 2006
+
+  @todo    Move all the GREP list search code to within the TFile class.
 
 **)
 Program Search;
@@ -21,7 +23,71 @@ uses
   Classes,
   ACCCTRL,
   Contnrs,
-  DGHLibrary in '..\..\library\DGHLibrary.pas';
+  DGHLibrary in '..\..\library\DGHLibrary.pas',
+  FileHandling in 'Source\FileHandling.pas';
+
+resourcestring
+  (** An exception message for a missing colon in the order by definition. **)
+  strColonExpectedInOrderBy = 'Colon expected in Order By definition.';
+  (** An execption message for a missing criteria in the order by definition. **)
+  strMissingOrderByDirective = 'Missing Order By definition.';
+  (** An exception message for an invalid order by criteria. **)
+  strInvalidOrderByDirective = 'Invalid Order By definition.';
+  (** An exception message for a missing colon in an attribute definition. **)
+  strColonExpectedInAttribDef = 'Colon Expected in Attribute definition.';
+  (** An exception message for a missing Attribute definition. **)
+  strMissingAttribDirective = 'Missing Attribute directive';
+  (** An exception message for a missing ] in an attribute definition. **)
+  strCloseSquareExpectedInAttribDef = '"]" Expected in Attribute Definition';
+  (** An exception message for a missing [ in an attribute definition. **)
+  strOpenSquareExpectedInAttribDef = '"[" Expected in Attribute Definition.';
+  (** An exception message for an invalid Attribute criteria definition. **)
+  strNotAValidAttrList = '"%s" is not a valid attribute criteria.';
+  (** An exception message for a missing [ in a Date Range. **)
+  strOpenSquareExpectedInDate = '"[" Expected in Date Range.';
+  (** An exception message for a missing date range separater. **)
+  strMissingDateRangeSeparater = 'Missing Start Date Range Separater "-".';
+  (** An exception message for a missing ] in the date range. **)
+  strCloseSquareExpectedInDate = '"]" Expected in Date Range.';
+  (** An exception message for a missing [ in a size Range. **)
+  strOpenSquareExpectedInSize = '"[" Expected in Size Range.';
+  (** An exception message for a missing size range separater. **)
+  strMissingSizeRangeSeparater = 'Missing Start Size Range Separater "-".';
+  (** An exception message for a missing ] in the size range. **)
+  strCloseSquareExpectedInSize = '"]" Expected in Size Range.';
+  (** An exception message for an invalid lower size range. **)
+  strInvalidLowerSizeRange = 'Invalid Lower Size Range';
+  (** An exception message for an invalid upper size range. **)
+  strInvalidUpperSizeRange = 'Invalid Upper Size Range';
+  (** An exception message for a missing colon in the date type definition. **)
+  strColonExpectedInDateType = 'Colon expected in date Type definition.';
+  (** An execption message for a missing criteria in the Date Type definition. **)
+  strMissingDateTypeDirective = 'Missing Date Type definition.';
+  (** An exception message for an invalid Date Type criteria. **)
+  strInvalidDateTypeDirective = 'Invalid Date Type definition.';
+
+(**
+
+  This method increments the position of the index within the current command
+  line switch and checks to see if the index is valid else raise the exception
+  message provided.
+
+  @precon  None.
+  @postcon Checks the index to be valid else raises an exception.
+
+  @param   iIndex          as an Integer as a reference
+  @param   iSwitch         as an Integer as a reference
+  @param   strExceptionMsg as a String
+
+**)
+procedure IncrementSwitchPosition(var iIndex, iSwitch: Integer;
+  strExceptionMsg : String);
+
+begin
+  Inc(iIndex);
+  if Length(ParamStr(iSwitch)) < iIndex then
+    raise Exception.Create(strExceptionMsg);
+end;
 
 Type
   (** This is a list of boolean on / off command line switches. **)
@@ -38,266 +104,42 @@ Type
     clsAttrRange,        { /t or -t }
     clsQuiet,            { /q or -q }
     clsOwner,            { /w or -w }
-    clsOrderBy           { /o or -o }
+    clsOrderBy,          { /o or -o }
+    clsSearchIn,         { /i or -i }
+    clsDateType          { /e or -e }
   );
 
   (** This is a set of boolean command line switches. **)
   TCommandLineSwitches = Set of TCommandLineSwitch;
-  
+
+  (** An enumerate to define the type of date to display and search on. **)
+  TDateType = (dtCreation, dtLastAccess, dtLastWrite);
+
   (** A type for a pointer to a PSID structure **)
   PPSID = ^PSID;
-  
-  (** A class to hold a files information. **)
-  TFile = Class
-  Private
-    FDate : TDateTime;
-    FSize : Int64;
-    FAttr : String;
-    FOwner : String;
-    FName : String;
-  Public
-    (**
-      A property to read and write the files date and time.
-      @precon  None.
-      @postcon None.
-      @return  a TDateTime
-    **)
-    Property Date : TDateTime Read FDate Write FDate;
-    (**
-      A property to read and write the files size.
-      @precon  None.
-      @postcon None.
-      @return  an Int64
-    **)
-    Property Size : Int64 Read FSize Write FSize;
-    (**
-      A property to read and write the files Attributes.
-      @precon  None.
-      @postcon None.
-      @return  a String
-    **)
-    Property Attr : String Read FAttr Write FAttr;
-    (**
-      A property to read and write the files owner.
-      @precon  None.
-      @postcon None.
-      @return  a String
-    **)
-    Property Owner : String Read FOwner Write FOwner;
-    (**
-      A property to read and write the files name.
-      @precon  None.
-      @postcon None.
-      @return  a String
-    **)
-    Property Name : String Read FName Write FName;
-  End;
-  
-  (** An enumerate to define the order for sorting the files. **)
-  TOrderBy = (obNone, obName, obSize, obDate, obOwner, obAttribute);
-  (** An enumberate to define whether the files should be ascending or
-      descending **)
-  TOrderDirection = (odAscending, odDescending);
-
-  (** A class to hold a collection of files. **)
-  TFiles = Class
-  Private
-    FFiles : TObjectList;
-  Protected
-    Function GetFile(iIndex : Integer) : TFile;
-    Function GetCount : Integer;
-  Public
-    Constructor Create;
-    Destructor Destroy; Override;
-    Procedure Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
-      strName : String);
-    (**
-      A property to return a specific file from the collection.
-      @precon  iIndex must be a valid index.
-      @postcon The file identified ny the index is returned.
-      @param   iIndex as       an Integer
-      @return  a TFile
-    **)
-    Property FileInfo[iIndex : Integer] : TFile Read GetFile;
-    (**
-      A property to return the number of files in the collection.
-      @precon  None.
-      @postcon Returns the number of files in the collection.
-      @return  an Integer
-    **)
-    Property Count : Integer Read GetCount;
-    Function OwnerWidth : Integer;
-    Procedure OrderBy(OrderBy : TOrderBy; OrderDirection : TOrderDirection);
-  End;
-  
-  (**
-
-    This is the constructor method for the TFiles class.
-
-    @precon  None.
-    @postcon Creates the file list.
-
-  **)
-  Constructor TFiles.Create;
-  
-  Begin
-    FFiles := TObjectList.Create(True);
-  End;
-  
-  (**
-
-    This is the destructor method for the TFiles class.
-
-    @precon  None.
-    @postcon Frees the list of files.
-
-  **)
-  Destructor TFiles.Destroy;
-
-  Begin
-    FFiles.Free;
-    Inherited Destroy;
-  End;
-  
-  (**
-
-    This method added a file and its attributes to the collection.
-
-    @precon  None.
-    @postcon Added a file and its attributes to the collection.
-
-    @param   dtDate   as a TDateTime
-    @param   iSize    as an Int64
-    @param   strAttr  as a String
-    @param   strOwner as a String
-    @param   strName  as a String
-
-  **)
-  Procedure TFiles.Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
-    strName : String);
-
-  Var
-    FFile : TFile;
-
-  Begin
-    FFile := TFile.Create;
-    FFiles.Add(FFile);
-    FFile.Date := dtDate;
-    FFile.Size := iSize;
-    FFile.Attr := strAttr;
-    FFile.Owner := strOwner;
-    FFile.Name := strName;
-  End;
 
   (**
 
-    This is a getter method for the File property.
+     This method returns the security information for a specified file.
 
-    @precon  iIndex must be a valid index.
-    @postcon Returns the file specified by the index.
+     @precon  See Win32 Help.
+     @postcon Returns the security information for a specified file.
 
-    @param   iIndex as an Integer
-    @return  a TFile
+     @param   pObjectName          as a PAnsiChar
+     @param   ObjectType           as a SE_OBJECT_TYPE
+     @param   SecurityInfo         as a SECURITY_INFORMATION
+     @param   ppsidOwner           as a PPSID
+     @param   ppsidGroup           as a PPSID
+     @param   ppDacl               as a PACL
+     @param   ppSacl               as a PACL
+     @param   ppSecurityDescriptor as a PSECURITY_DESCRIPTOR as a reference
+     @return  a DWORD
 
-  **)
-  Function TFiles.GetFile(iIndex : Integer) : TFile;
-
-  Begin
-    Result :=  FFiles.Items[iIndex] As TFile;
-  End;
-
-  (**
-
-    This is a getter method for the Count property.
-
-    @precon  None.
-    @postcon Returns the number of files in the collectionn.
-
-    @return  an Integer
-
-  **)
-  Function TFiles.GetCount : Integer;
-
-  Begin
-    Result := FFiles.Count;
-  End;
-
-  (**
-
-    This method determines the width of the widthest owner.
-
-    @precon  None.
-    @postcon Determines the width of the widthest owner.
-
-    @return  an Integer
-
-  **)
-  Function TFiles.OwnerWidth : Integer;
-
-  Var
-    i : Integer;
-
-  Begin
-    Result := 0;
-    For i := 0 To Count - 1 Do
-      If Length(FileInfo[i].Owner) > Result Then
-        Result := Length(FileInfo[i].Owner);
-  End;
-
-  (**
-
-    This method orders the files in the collection by the given direction and
-    attribute.
-
-    @precon  None.
-    @postcon Orders the files in the collection by the given direction and
-    attribute.
-
-    @param   OrderBy        as a TOrderBy
-    @param   OrderDirection as a TOrderDirection
-
-  **)
-  Procedure TFiles.OrderBy(OrderBy : TOrderBy; OrderDirection : TOrderDirection);
-
-  Var
-    i, j : Integer;
-    iMin : Integer;
-    iFirst, iSecond : Integer;
-
-  Begin
-    For i := 0 To Count - 1 Do
-      For j := i + 1 To Count - 1 Do
-        Begin
-          iMin := -1;
-          If OrderDirection = odAscending Then
-            Begin
-              iFirst := i;
-              iSecond := j;
-            End Else
-            Begin
-              iFirst := j;
-              iSecond := i;
-            End;
-          Case OrderBy Of
-            obName:
-              If CompareText(FileInfo[iSecond].Name, FileInfo[iFirst].Name) < 0 Then
-                iMin := j;
-            obDate:
-              If FileInfo[iSecond].Date < FileInfo[iFirst].Date Then
-                iMin := j;
-            obSize:
-              If FileInfo[iSecond].Size < FileInfo[iFirst].Size Then
-                iMin := j;
-            obAttribute:
-              If CompareText(FileInfo[iSecond].Attr,FileInfo[iFirst].Attr) < 0 Then
-                iMin := j;
-            obOwner:
-              If CompareText(FileInfo[iSecond].Owner, FileInfo[iFirst].Owner) < 0 Then
-                iMin := j;
-          End;
-          If iMin > -1 Then FFiles.Exchange(i, iMin);
-        End;
-  End;
+   **)
+   Function GetNamedSecurityInfo(pObjectName: PAnsiChar; ObjectType: SE_OBJECT_TYPE;
+    SecurityInfo: SECURITY_INFORMATION; ppsidOwner, ppsidGroup: PPSID; ppDacl,
+    ppSacl: PACL; var ppSecurityDescriptor: PSECURITY_DESCRIPTOR): DWORD; Stdcall;
+         external 'advapi32.dll' name 'GetNamedSecurityInfoA';
 
 Var
   (** Define the applications command line switches. **)
@@ -307,9 +149,9 @@ Var
   (** The total number of directories found by the search. **)
   iDirectories : Integer;
   (** This is the upper limit of a file size search. **)
-  iUSize : Integer;
+  iUSize : Int64;
   (** This is the lower limit of a file size search. **)
-  iLSize  :Integer;
+  iLSize  :Int64;
   (** This is the lower limit of a file date search. **)
   dtLDate : Double;
   (** This is the upper limit of a file date search. **)
@@ -337,33 +179,14 @@ Var
   OrderFilesBy : TOrderBy;
   (** A type to indicate the direction of sorting of files. **)
   OrderFilesDirection : TOrderDirection;
-  
+  (** A string for which should be searched for inside text files. **)
+  strSearchInText : String;
+  (** A variable to hold the type of date to display and search for. **)
+  DateType : TDateType;
+
 Const
   (** A constant to define that only files should be listed. **)
   iFileOnly = $0100;
-
-  (**
-
-     This method returns the security information for a specified file.
-
-     @precon  See Win32 Help.
-     @postcon Returns the security information for a specified file.
-
-     @param   pObjectName          as a PAnsiChar
-     @param   ObjectType           as a SE_OBJECT_TYPE
-     @param   SecurityInfo         as a SECURITY_INFORMATION
-     @param   ppsidOwner           as a PPSID
-     @param   ppsidGroup           as a PPSID
-     @param   ppDacl               as a PACL
-     @param   ppSacl               as a PACL
-     @param   ppSecurityDescriptor as a PSECURITY_DESCRIPTOR as a reference
-     @return  a DWORD
-
-   **)
-   Function GetNamedSecurityInfo(pObjectName: PAnsiChar; ObjectType: SE_OBJECT_TYPE;
-    SecurityInfo: SECURITY_INFORMATION; ppsidOwner, ppsidGroup: PPSID; ppDacl,
-    ppSacl: PACL; var ppSecurityDescriptor: PSECURITY_DESCRIPTOR): DWORD; Stdcall;
-         external 'advapi32.dll' name 'GetNamedSecurityInfoA';
 
 (**
 
@@ -380,7 +203,10 @@ Const
 Procedure OutputLinesToConsole(strText : String = '');
 
 Begin
-  Writeln(strText);
+  If clsQuiet In CommandLineSwitches Then
+    Writeln(strText)
+  Else
+    Writeln(strText + StringOfChar(#32, iWidth - Length(strText) - 1));
   Inc(iLinesOutputted);
   If (clsPause In CommandLineSwitches) And (iLinesOutputted >= (iHeight - 1)) Then
     Begin
@@ -563,8 +389,8 @@ End;
 Procedure PrintFooter(strPath : String);
 
 Const
-  strMsg1 = '  Found %15.0n bytes in %1.0n Files in %1.0n Directories.';
-  strMsg2 = '  Total space %15.0n bytes, and %15.0n bytes Free.';
+  strMsg1 = '  Found %1.0n bytes in %1.0n Files in %1.0n Directories.';
+  strMsg2 = '  Total space %1.0n bytes, and %1.0n bytes Free.';
 
 Var
   iFreeBytesAvailableToCaller,
@@ -595,12 +421,14 @@ Procedure PrintHelp;
 
 Begin
   OutputLinesToConsole('Syntax:');
-  OutputLinesToConsole('  Search searchparam1 [searchparam2...] [/A] [/S] [/Q] [/W]');
-  OutputLinesToConsole('    [/T RASHFDV] [/D "(DD[/MM[/YY [HH:MM[:SS]]]]-DD[/MM[/YY [HH:MM[:SS]]]])"]');
-  OutputLinesToConsole('    [/Z LowerByteSize-UpperByteSize] [/O NDAOS]');
+  OutputLinesToConsole('  Search searchparam1 {searchparam2}... {/A} {/S} {/Q} {/W}');
+  OutputLinesToConsole('    {/T[RASHFDV]} {/D:[{DD{/MM{/YY {HH:MM{:SS}}}}}-{DD{/MM{/YY {HH:MM{:SS}}}}}]');
+  OutputLinesToConsole('    {/Z[{LowerByteSize}-{UpperByteSize}]} {/O:NDAOS} {/E:CAW} {/I[text]}');
   OutputLinesToConsole('');
-  OutputLinesToConsole('    searchparam# = [drive:\path\]filter1[;filter2[;filter3[;...]]]');
+  OutputLinesToConsole('    searchparam# = {drive:\path\}filter1{;filter2{;filter3{;...}}}');
   OutputLinesToConsole('    filter# can contain wildcards * and ? within the filename. ');
+  OutputLinesToConsole('');
+  OutputLinesToConsole('    { ... } denote option items.');
   OutputLinesToConsole('');
   OutputLinesToConsole('    /?     This help screen');
   OutputLinesToConsole('    /A     Show file and directory attributes');
@@ -617,9 +445,42 @@ Begin
   OutputLinesToConsole('    /W     Owner Information');
   OutputLinesToConsole('    /O     Order files ascending [+] and descending [-]');
   OutputLinesToConsole('           N = Name, A = Attribute, D = Date and Time, O = Owner, S = Size');
+  OutputLinesToConsole('    /E     Type of file date to display and search on:');
+  OutputLinesToConsole('           C = Creation, A = Last Access, W = Last Write');
+  OutputLinesToConsole('    /I     Search within files for text.');
   OutputLinesToConsole('');
   OutputLinesToConsole('NOTE: The date time input format is dependent on your local settings');
   OutputLinesToConsole('');;
+End;
+
+(**
+
+  This local function searches the current command line parameter for the
+  given end token while collecting the date string.
+
+  @precon  None.
+  @postcon Searches the current command line parameter for the given end token
+           while collecting the date string.
+
+  @param   chEndToken      as a Char
+  @param   strExceptionMsg as a String
+  @param   iIndex          as an Integer as a reference
+  @param   iSwitch         as an Integer as a reference
+  @param   strDate         as a String as a reference
+
+**)
+Procedure GetRangeString(chEndToken : Char; strExceptionMsg : String; var iIndex,
+  iSwitch : Integer; var strDate : String);
+
+Begin
+  strDate := '';
+  While (Length(ParamStr(iSwitch)) >= iIndex) And
+    (ParamStr(iSwitch)[iIndex] <> chEndToken) Do
+    Begin
+      IncrementSwitchPosition(iIndex, iSwitch, strExceptionMsg);
+      If ParamStr(iSwitch)[iIndex] <> chEndToken Then
+        strDate := strDate + ParamStr(iSwitch)[iIndex];
+    End;
 End;
 
 (**
@@ -630,27 +491,27 @@ End;
   @postcon Determines if a date range has been specified on the command line.
 
   @param   iSwitch as an Integer as a Reference
+  @param   iIndex as an Integer as a Reference
 
 **)
-Procedure GetDateRange(Var iSwitch : Integer);
-
-Const
-  strRangeException = 'The parameter "%s" does not contain a range delimiter (-).';
+Procedure GetDateRange(var iSwitch, iIndex : Integer);
 
 Var
-  iPos : Integer;
-  strTmp : String;
+  strDate : String;
 
 Begin
   Include(CommandLineSwitches, clsDateRange);
-  Inc(iSwitch); // Next parameter is the size range of the search
-  iPos := Pos('-', ParamStr(iSwitch));
-  If iPos = 0 Then
-    Raise Exception.CreateFmt(strRangeException, [ParamStr(iSwitch)]);
-  strTmp := Copy(ParamStr(iSwitch), 1, iPos - 1);
-  dtLDate := ConvertDate(strTmp);
-  strTmp := Copy(ParamStr(iSwitch), iPos + 1, Length(ParamStr(iSwitch)) - iPos);
-  dtUDate := ConvertDate(strTmp);
+  IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInDate);
+  If ParamStr(iSwitch)[iIndex] <> '[' Then
+    Raise Exception.Create(strOpenSquareExpectedInDate);
+  GetRangeString('-', strMissingDateRangeSeparater, iIndex, iSwitch, strDate);
+  If strDate <> '' Then
+    dtLDate := ConvertDate(strDate);
+  GetRangeString(']', strCloseSquareExpectedInDate, iIndex, iSwitch, strDate);
+  If strDate <> '' Then
+    dtUDate := ConvertDate(strDate)
+  Else
+    dtUDate := ConvertDate('31/Dec/2099');
 End;
 
 (**
@@ -660,37 +521,68 @@ End;
   @precon  None.
   @postcon Determines of a size range has been specified on the command line.
 
-  @bug     This method will only work on size that are integers because of Val().    
-
   @param   iSwitch as an Integer as a Reference
+  @param   iIndex  as an Integer as a Reference
 
 **)
-Procedure GetSizeRange(Var iSwitch : Integer);
-
-Const
-  strRangeException = 'The parameter "%s" does not contain a range delimiter (-).';
-  strLowerRangeException = 'The lower range value of "%s" is not a valid integer.';
-  strUpperRangeException = 'The upper range value of "%s" is not a valid integer.';
+Procedure GetSizeRange(Var iSwitch, iIndex : Integer);
 
 Var
-  iPos, iCode : Integer;
-  strTmp : String;
+  strSize : String;
+
+  (**
+
+    This method converts the size as a string into a Int64 in the passed
+    variable.
+
+    @precon  None.
+    @postcon Converts the size as a string into a Int64 in the passed variable.
+
+    @param   iSize           as an Int64 as a reference
+    @param   strExceptionMsg as a String
+    @param   iDefault        as an Int64
+
+  **)
+  Procedure GetSize(var iSize : Int64; strExceptionMsg : String;
+    iDefault : Int64);
+
+  Var
+    iErrorCode: Integer;
+    iFactor : Int64;
+
+  Begin
+    If strSize <> '' Then
+      Begin
+        Case strSize[Length(strSize)] Of
+          'K': iFactor := 1024;
+          'M': iFactor := 1024 * 1024;
+          'G': iFactor := 1024 * 1024 * 1024;
+        Else
+          iFactor := 1;
+        End;
+        If strSize[Length(strSize)] In ['K', 'M', 'G'] Then
+          strSize := Copy(strSize, 1, Length(strSize) - 1);
+        Val(strSize, iSize, iErrorCode);
+        If iErrorCode > 0 Then
+          Raise Exception.Create(strExceptionMsg);
+        iSize := iSize * iFactor;
+      End Else
+        iSize := iDefault;
+  End;
 
 Begin
   Include(CommandLineSwitches, clsSizeRange);
-  Inc(iSwitch); // Next parameter is the sieze range of the search
-  iPos := Pos('-', ParamStr(iSwitch));
-  If iPos = 0 Then
-    Raise Exception.CreateFmt(strRangeException, [ParamStr(iSwitch)]);
-  strTmp := Copy(ParamStr(iSwitch), 1, iPos - 1);
-  Val(strTmp, iLSize, iCode);
-  If iCode > 0 Then
-    Raise Exception.CreateFmt(strLowerRangeException, [ParamStr(iSwitch)]);
-  strTmp := Copy(ParamStr(iSwitch), iPos + 1, Length(ParamStr(iSwitch)) - iPos);
-  Val(strTmp, iUSize, iCode);
-  If iCode > 0 Then
-    Raise Exception.CreateFmt(strUpperRangeException, [ParamStr(iSwitch)]);
+  IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInSize);
+  If ParamStr(iSwitch)[iIndex] <> '[' Then
+    Raise Exception.Create(strOpenSquareExpectedInSize);
+  GetRangeString('-', strMissingSizeRangeSeparater, iIndex, iSwitch, strSize);
+  GetSize(iLSize, strInvalidLowerSizeRange, 0);
+  GetRangeString(']', strCloseSquareExpectedInDate, iIndex, iSwitch, strSize);
+  GetSize(iUSize, strInvalidUpperSizeRange, $7FFFFFFFFFFFFFFF);
 End;
+
+{$WARN SYMBOL_PLATFORM OFF}
+{$WARN SYMBOL_DEPRECATED OFF}
 
 (**
 
@@ -700,34 +592,34 @@ End;
   @postcon Determines the attribute range from the command line.
 
   @param   iSwitch as an Integer as a reference
+  @param   iIndex as an Integer as a reference
 
 **)
-Procedure GetAttributes(Var iSwitch : Integer);
-
-Const
-  strNotAValidAttrList = '"%s" is not a valid attribute list.';
-
-Var
-  i : Integer;
+Procedure GetAttributes(var iSwitch, iIndex : Integer);
 
 Begin
   Include(CommandLineSwitches, clsAttrRange);
-  Inc(iSwitch); // Next parameter is the size range of the search
-  If iSwitch > ParamCount Then
-    Raise Exception.Create('Missing Attribute directive');
+  IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInAttribDef);
+  If ParamStr(iSwitch)[iIndex] <> '[' Then
+    Raise Exception.Create(strColonExpectedInOrderBy);
+  IncrementSwitchPosition(iIndex, iSwitch, strMissingAttribDirective);
   iFileAttrs := 0;
   iTypeAttrs := 0;
-  For i := 1 To Length(ParamStr(iSwitch)) Do
-    Case ParamStr(iSwitch)[i] Of
-      'r', 'R' : iFileAttrs := iFileAttrs Or faReadOnly;
-      'a', 'A' : iFileAttrs := iFileAttrs Or faArchive;
-      's', 'S' : iFileAttrs := iFileAttrs Or faSysFile;
-      'h', 'H' : iFileAttrs := iFileAttrs Or faHidden;
-      'f', 'F' : iTypeAttrs := iTypeAttrs Or iFileOnly;
-      'd', 'D' : iTypeAttrs := iTypeAttrs Or faDirectory;
-      'v', 'V' : iTypeAttrs := iTypeAttrs Or faVolumeID;
-    Else
-      Raise Exception.CreateFmt(strNotAValidAttrList, [ParamStr(iSwitch)]);
+  While (iIndex <= Length(ParamStr(iSwitch))) And
+    (ParamStr(iSwitch)[iIndex] <> ']') Do
+    Begin
+      Case ParamStr(iSwitch)[iIndex] Of
+        'r', 'R' : iFileAttrs := iFileAttrs Or faReadOnly;
+        'a', 'A' : iFileAttrs := iFileAttrs Or faArchive;
+        's', 'S' : iFileAttrs := iFileAttrs Or faSysFile;
+        'h', 'H' : iFileAttrs := iFileAttrs Or faHidden;
+        'f', 'F' : iTypeAttrs := iTypeAttrs Or iFileOnly;
+        'd', 'D' : iTypeAttrs := iTypeAttrs Or faDirectory;
+        'v', 'V' : iTypeAttrs := iTypeAttrs Or faVolumeID;
+      Else
+        Raise Exception.CreateFmt(strNotAValidAttrList, [ParamStr(iSwitch)[iIndex]]);
+      End;
+      IncrementSwitchPosition(iIndex, iSwitch, strCloseSquareExpectedInAttribDef);
     End;
   If iTypeAttrs = 0 Then
     iTypeAttrs := faDirectory Or faVolumeID;
@@ -743,39 +635,83 @@ End;
            files.
 
   @param   iSwitch as an Integer as a reference
+  @param   iIndex as an Integer as a reference
 
 **)
-Procedure GetOrderBy(var iSwitch : Integer);
-
-Var
-  strOrderBy : String;
-  iIndex : Integer;
+Procedure GetOrderBy(var iSwitch, iIndex : Integer);
 
 Begin
   Include(CommandLineSwitches, clsOrderBy);
-  Inc(iSwitch); // Next parameter is the order by
-  If iSwitch > ParamCount Then
-    Raise Exception.Create('Missing Order By directive');
-  strOrderBy := ParamStr(iSwitch);
-  iIndex := 1;
-  If Length(strOrderBy) < iIndex Then
-    Raise Exception.Create('Missing Order By directive.');
-  If strOrderBy[iIndex] = '-' Then
+  IncrementSwitchPosition(iIndex, iSwitch, strColonExpectedInOrderBy);
+  If ParamStr(iSwitch)[iIndex] <> ':' Then
+    Raise Exception.Create(strColonExpectedInOrderBy);
+  IncrementSwitchPosition(iIndex, iSwitch, strMissingOrderByDirective);
+  If ParamStr(iSwitch)[iIndex] = '-' Then
     Begin
       OrderFilesDirection := odDescending;
-      Inc(iIndex);
+      IncrementSwitchPosition(iIndex, iSwitch, strMissingOrderByDirective);
     End;
-  If Length(strOrderBy) < iIndex Then
-    Raise Exception.Create('Missing Order By directive.');
-  Case strOrderBy[iIndex] Of
+  Case ParamStr(iSwitch)[iIndex] Of
     'n', 'N': OrderFilesBy := obName;
     'd', 'D': OrderFilesBy := obDate;
     's', 'S': OrderFilesBy := obSize;
     'a', 'A': OrderFilesBy := obAttribute;
     'o', 'O': OrderFilesBy := obOwner;
   Else
-    Raise Exception.Create('Invalid Order By directive.')
+    Raise Exception.Create(strInvalidOrderByDirective);
   End
+End;
+
+(**
+
+  This method gets the command line information for the date type of the found
+  files.
+
+  @precon  None.
+  @postcon Gets the command line information for the date type of the found
+           files.
+
+  @param   iSwitch as an Integer as a reference
+  @param   iIndex as an Integer as a reference
+
+**)
+Procedure GetDateType(var iSwitch, iIndex : Integer);
+
+Begin
+  Include(CommandLineSwitches, clsDateType);
+  IncrementSwitchPosition(iIndex, iSwitch, strColonExpectedInDateType);
+  If ParamStr(iSwitch)[iIndex] <> ':' Then
+    Raise Exception.Create(strColonExpectedInDateType);
+  IncrementSwitchPosition(iIndex, iSwitch, strMissingDateTypeDirective);
+  Case ParamStr(iSwitch)[iIndex] Of
+    'c', 'C': DateType := dtCreation;
+    'a', 'A': DateType := dtLastAccess;
+    'w', 'W': DateType := dtLastWrite;
+  Else
+    Raise Exception.Create(strInvalidDateTypeDirective);
+  End
+End;
+
+(**
+
+  This method gets the command line parameter for the search in text file for
+  a text string option.
+
+  @precon  None.
+  @postcon Gets the command line parameter for the search in text file for
+           a text string option.
+
+  @param   iSwitch as an Integer as a reference
+
+**)
+Procedure GetSearchInInfo(var iSwitch : Integer);
+
+Begin
+  Include(CommandLineSwitches, clsSearchIn);
+  Inc(iSwitch); // Next parameter is the search text
+  If iSwitch > ParamCount Then
+    Raise Exception.Create('Missing search text.');
+  strSearchInText := Lowercase(ParamStr(iSwitch));
 End;
 
 (**
@@ -821,7 +757,7 @@ Const
   strInvalidCommandLineSwitch = 'Invalid command line switch "%s."';
 
 Var
-  iSwitch, iSwitches : Integer;
+  iSwitch, iIndex : Integer;
 
 Begin
   iSummaryLevel := 0;
@@ -829,28 +765,35 @@ Begin
   iSwitch := 1;
   OrderFilesBy := obNone;
   OrderFilesDirection := odAscending;
+  DateType := dtLastWrite;
   While iSwitch <= ParamCount Do
     Begin
       If ParamStr(iSwitch)[1] In ['-', '/'] Then
         Begin
-          For iSwitches := 2 To Length(ParamStr(iSwitch)) Do
-            Case ParamStr(iSwitch)[iSwitches] Of
-              '?'     : Include(CommandLineSwitches, clsShowHelp);
-              's', 'S': Include(CommandLineSwitches, clsSubDirectories);
-              '!'     : Include(CommandLineSwitches, clsDebug);
-              'a', 'A': Include(CommandLineSwitches, clsShowAttribs);
-              'p', 'P': Include(CommandLineSwitches, clsPause);
-              '1'..'9': GetSummaryLevel(iSwitch, iSwitches);
-              '0'     : Include(CommandLineSwitches, clsSupressZeros);
-              'd', 'D': GetDateRange(iSwitch);
-              'z', 'Z': GetSizeRange(iSwitch);
-              't', 'T': GetAttributes(iSwitch);
-              'q', 'Q': Include(CommandLineSwitches, clsQuiet);
-              'w', 'W': Include(CommandLineSwitches, clsOwner);
-              'o', 'O': GetOrderBy(iSwitch);
-            Else
-              Raise Exception.CreateFmt(strInValidCommandLineSwitch,
-                [ParamStr(iSwitch)]);
+          iIndex := 2;
+          While iIndex <= Length(ParamStr(iSwitch)) Do
+            Begin
+              Case ParamStr(iSwitch)[iIndex] Of
+                '?'     : Include(CommandLineSwitches, clsShowHelp);
+                's', 'S': Include(CommandLineSwitches, clsSubDirectories);
+                '!'     : Include(CommandLineSwitches, clsDebug);
+                'a', 'A': Include(CommandLineSwitches, clsShowAttribs);
+                'p', 'P': Include(CommandLineSwitches, clsPause);
+                '1'..'9': GetSummaryLevel(iSwitch, iIndex);
+                '0'     : Include(CommandLineSwitches, clsSupressZeros);
+                'd', 'D': GetDateRange(iSwitch, iIndex);
+                'z', 'Z': GetSizeRange(iSwitch, iIndex);
+                't', 'T': GetAttributes(iSwitch, iIndex);
+                'q', 'Q': Include(CommandLineSwitches, clsQuiet);
+                'w', 'W': Include(CommandLineSwitches, clsOwner);
+                'o', 'O': GetOrderBy(iSwitch, iIndex);
+                'i', 'I': GetSearchInInfo(iSwitch);
+                'e', 'E': GetDateType(iSwitch, iIndex);
+              Else
+                Raise Exception.CreateFmt(strInValidCommandLineSwitch,
+                  [ParamStr(iSwitch)]);
+              End;
+              Inc(iIndex);
             End;
         End Else
           slSearchParams.Add(
@@ -913,7 +856,7 @@ Var
   Name, RefDomain : String;
   NameSize, RefDomainSize : DWORD;
   Use : SID_NAME_USE;
-  
+
 Begin
   NameSize := 0;
   RefDomainSize := 0;
@@ -956,6 +899,299 @@ End;
 
 (**
 
+  This method outputs the lines of the file that match the search text.
+
+  @precon  None.
+  @postcon Outputs the lines of the file that match the search text.
+
+  @param   strFileName as a String
+  @param   slLines as a TStringList as a Reference
+
+**)
+Procedure OutputSearchInLines(strFileName : String; var slLines : TStringList);
+
+Var
+  slFile : TStringList;
+  iLine, i: Integer;
+
+Begin
+  slFile := TStringList.Create;
+  Try
+    slFile.LoadFromFile(strFileName);
+    For iLine := 0 To slFile.Count - 1 Do
+      If Pos(strSearchInText, Lowercase(slFile[iLine])) > 0 Then
+        For i := iLine - iSummaryLevel To iLine + iSummaryLevel Do
+          slLines.Add((Format('%8d %s', [i, slFile[iLine]])));
+  Finally
+    slFile.Free;
+  End;
+End;
+
+(**
+
+  This method adds the file to the collection and increments the various counters.
+
+  @precon  None.
+  @postcon Adds the file to the collection and increments the various counters.
+
+  @param   iSize     as an Int64
+  @param   recSearch as a TSearchRec
+  @param   iDirFiles as an Integer as a reference
+  @param   Result    as an Int64 as a reference
+  @param   strPath   as a string
+
+**)
+procedure CheckFiles(iSize: Int64; recSearch: TSearchRec; var iDirFiles: Integer; var Result: Int64; strPath: string);
+
+Var
+  dtDate, dtDateLocal : TFileTime;
+  iTime : Integer;
+
+begin
+  begin
+    Inc(iFiles);
+    Inc(iFileSize, iSize);
+    Inc(Result, iSize);
+    if not (clsSummaryLevel in CommandLineSwitches) then
+      begin
+        Inc(iDirFiles);
+        Case DateType Of
+          dtCreation: dtDate := recSearch.FindData.ftCreationTime;
+          dtLastAccess: dtDate := recSearch.FindData.ftLastAccessTime;
+          dtLastWrite: dtDate := recSearch.FindData.ftLastWriteTime;
+        End;
+        FileTimeToLocalFileTime(dtDate, dtDateLocal);
+        FileTimeToDosDateTime(dtDateLocal, LongRec(iTime).Hi, LongRec(iTime).Lo);
+        objFiles.Add(FileDateToDateTime(iTime), iSize,
+          OutputAttributes(recSearch.Attr), OutputOwner(strPath + recSearch.name),
+          recSearch.Name);
+      end;
+  end;
+end;
+
+(**
+
+  This method checks the currently found file information against the Date Range.
+
+  @precon  None.
+  @postcon Returns boolFound as true if the file date is within the date range.
+
+  @param   recSearch as a TSearchRec
+  @param   boolFound as a Boolean as a reference
+
+**)
+procedure CheckDateRange(recSearch: TSearchRec; var boolFound: Boolean);
+begin
+  if clsDateRange in CommandLineSwitches then
+  begin
+    boolFound := boolFound and (FileDateToDateTime(recSearch.Time) >= dtLDate);
+    boolFound := boolFound and (FileDateToDateTime(recSearch.Time) <= dtUDate);
+  end;
+end;
+
+(**
+
+  This method checks the currently found file against the size range.
+
+  @precon  None.
+  @postcon Returns boolFound as true if the file is in the range.
+
+  @param   iSize     as an Int64
+  @param   boolFound as a Boolean as a reference
+
+**)
+procedure CheckSizeRange(iSize: Int64; var boolFound: Boolean);
+begin
+  if clsSizeRange in CommandLineSwitches then
+  begin
+    boolFound := boolFound and (iSize >= iLSize);
+    boolFound := boolFound and (iSize <= iUSize);
+  end;
+end;
+
+(**
+
+  This method checks the currently found file against the file attributes.
+
+  @precon  None.
+  @postcon Returns boolFound as true is the file has the attributes.
+
+  @param   recSearch as a TSearchRec
+  @param   boolFound as a Boolean as a reference
+
+**)
+procedure CheckFileAttributes(recSearch: TSearchRec; var boolFound: Boolean);
+var
+  iAttributes: Integer;
+begin
+  if clsAttrRange in CommandLineSwitches then
+  begin
+    if faDirectory and recSearch.Attr > 0 then
+      iAttributes := faDirectory
+    else if faVolumeID and recSearch.Attr > 0 then
+      iAttributes := faVolumeID
+    else
+      iAttributes := iFileOnly;
+    boolFound := boolFound and (iAttributes and iTypeAttrs > 0);
+    boolFound := boolFound and ((recSearch.Attr and iFileAttrs > 0) or (iFileAttrs = 0));
+  end;
+end;
+
+(**
+
+  This method provides a workaround for identifying the size of large files.
+
+  @precon  None.
+  @postcon Provides a workaround for identifying the size of large files.
+
+  @param   iSize     as an Int64 as a reference
+  @param   recSearch as a TSearchRec
+
+**)
+procedure WorkaroundLargeFiles(var iSize: Int64; recSearch: TSearchRec);
+
+begin
+  with recSearch.FindData do
+  // Workaround for files larger than 2147483647
+  begin
+    iSize := Int64(nFileSizeHigh) * Int64(MAXDWORD);
+    iSize := iSize + nFileSizeLow;
+  end;
+end;
+
+(**
+
+  This method outputs the files that have met the criteria to the console.
+
+  @precon  None.
+  @postcon Outputs the files that have met the criteria to the console.
+
+  @param   strPath        as a string
+  @param   boolDirPrinted as a Boolean
+
+**)
+procedure OutputFilesToConsole(strPath: string; boolDirPrinted: Boolean);
+var
+  i: Integer;
+  iWidth: Integer;
+  strOutput: string;
+
+begin
+  For i := 0 to objFiles.Count - 1 Do
+    begin
+      strOutput := Format('  %s  %15.0n  ', [FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', objFiles.FileInfo[i].Date), objFiles.FileInfo[i].Size + 0.1]);
+      if clsShowAttribs in CommandLineSwitches then
+        strOutput := strOutput + Format('%s  ', [objFiles.FileInfo[i].Attr]);
+      if clsOwner in CommandLineSwitches then
+      begin
+        iWidth := objFiles.OwnerWidth;
+        strOutput := strOutput + Format('%-*s  ', [iWidth, objFiles.FileInfo[i].Owner]);
+      end;
+      if not boolDirPrinted then
+      begin
+        OutputLinesToConsole(strPath);
+        boolDirPrinted := True;
+      end;
+      OutputLinesToConsole(strOutput + objFiles.FileInfo[i].Name);
+    end;
+  If objFiles.Count > 0 Then
+    OutputLinesToConsole;
+end;
+
+(**
+
+  This method is a forward declaration for the SearchDirectory method so that it
+  can be used recursively.
+
+  @precon  None.
+  @postcon None.
+
+  @param   strPath    as a String
+  @param   slPatterns as a TStringList
+  @param   iLevel     as an Integer as a reference
+  @return  an Int64     
+
+**)
+Function SearchDirectory(strPath: String; slPatterns : TStringList;
+  Var iLevel : Integer) : Int64; Forward;
+
+(**
+
+  This method recurses the directories searching for additional files.
+
+  @precon  None.
+  @postcon Recurses the directories searching for additional files.
+
+  @param   strPath    as a string
+  @param   iLevel     as an Integer as a reference
+  @param   Result     as an Int64 as a reference
+  @param   iResult    as an Integer
+  @param   slPatterns as a TStringList
+  @param   recSearch  as a TSearchRec
+
+**)
+procedure RecurseDirectories(strPath: string; var iLevel: Integer; var Result: Int64; iResult: Integer; slPatterns: TStringList; recSearch: TSearchRec);
+begin
+  begin
+    iResult := FindFirst(strPath + '*.*', faDirectory, recSearch);
+    while (iResult = 0) do
+    begin
+      if recSearch.Attr and faDirectory > 0 then
+        if (recSearch.Name <> '.') and (recSearch.Name <> '..') then
+          Inc(Result, SearchDirectory(strPath + recSearch.Name + '\', slPatterns, iLevel));
+      iResult := FindNext(recSearch);
+    end;
+    SysUtils.FindClose(recSearch);
+  end;
+end;
+
+(**
+
+  This method search the current directory for files which match all the
+  specified search patterns.
+
+  @precon  None.
+  @postcon Search the current directory for files which match all the
+           specified search patterns.
+
+  @param   slPatterns as a TStringList
+  @param   iResult    as an Integer as a reference
+  @param   boolFound  as a Boolean
+  @param   iDirFiles  as an Integer
+  @param   Result     as an Int64 as a reference
+  @param   strPath    as a string
+  @param   recSearch  as a TSearchRec as a reference
+
+**)
+procedure SearchForPatterns(slPatterns: TStringList; var iResult: Integer; boolFound: Boolean; iDirFiles: Integer; var Result: Int64; strPath: string; var recSearch: TSearchRec);
+var
+  iPattern: Integer;
+  iSize: Int64;
+
+begin
+  for iPattern := 0 to slPatterns.Count - 1 do
+  begin
+    iResult := FindFirst(strPath + slPatterns[iPattern], faAnyFile, recSearch);
+    try
+      while iResult = 0 do
+      begin
+        WorkaroundLargeFiles(iSize, recSearch);
+        CheckFileAttributes(recSearch, boolFound);
+        CheckSizeRange(iSize, boolFound);
+        CheckDateRange(recSearch, boolFound);
+        if boolFound then
+          CheckFiles(iSize, recSearch, iDirFiles, Result, strPath);
+        iResult := FindNext(recSearch);
+        boolFound := True;
+      end;
+    finally
+      SysUtils.FindClose(recSearch);
+    end;
+  end;
+end;
+
+(**
+
   This is the main recursive routine that searches the currently passed
   directory for files and then if subdirectories are required calls
   its self on those directories.
@@ -978,14 +1214,8 @@ Var
   iResult : Integer;
   recSearch : TSearchRec;
   boolDirPrinted : Boolean;
-  strOutput : String;
   boolFound : Boolean;
   iDirFiles : Integer;
-  iSize : Int64;
-  iAttributes : Integer;
-  i : Integer;
-  iWidth : Integer;
-  iPattern: Integer;
 
 Begin
   OutputCurrentSearchPath(strPath);
@@ -998,81 +1228,11 @@ Begin
   boolFound := True;
   objFiles := TFiles.Create;
   Try
-    For iPattern := 0 To slPatterns.Count - 1 Do
-      Begin
-        iResult := FindFirst(strPath + slPatterns[iPattern], faAnyFile, recSearch);
-        Try
-          While iResult = 0  Do
-            Begin
-              With recSearch.FindData Do // Workaround for files larger than 2147483647
-                Begin
-                  iSize := Int64(nFileSizeHigh) * Int64(MAXDWORD);
-                  iSize := iSize + nFileSizeLow;
-                End;
-              If clsAttrRange In CommandLineSwitches Then
-                Begin
-                  If faDirectory And recSearch.Attr > 0 Then
-                    iAttributes := faDirectory
-                  Else If faVolumeID And recSearch.Attr > 0 Then
-                    iAttributes := faVolumeID
-                  Else
-                    iAttributes := iFileOnly;
-                  boolFound := boolFound And (iAttributes And iTypeAttrs > 0);
-                  boolFound := boolFound And ((recSearch.Attr And iFileAttrs > 0) Or
-                    (iFileAttrs = 0));
-                End;
-              If clsSizeRange In CommandLineSwitches Then
-                Begin
-                  boolFound := boolFound And (iSize >= iLSize);
-                  boolFound := boolFound And (iSize <= iUSize);
-                End;
-              If clsDateRange In CommandLineSwitches Then
-                Begin
-                  boolFound := boolFound And (FileDateToDateTime(recSearch.Time) >= dtLDate);
-                  boolFound := boolFound And (FileDateToDateTime(recSearch.Time) <= dtUDate);
-                End;
-              If boolFound Then
-                Begin
-                  Inc(iFiles);
-                  Inc(iFileSize, iSize);
-                  Inc(Result, iSize);
-                  If Not (clsSummaryLevel In CommandLineSwitches) Then
-                    Begin
-                      Inc(iDirFiles);
-                      If Not boolDirPrinted Then
-                        Begin
-                          OutputLinesToConsole(strPath);
-                          boolDirPrinted := True;
-                        End;
-                      objFiles.Add(FileDateToDateTime(recSearch.Time), iSize,
-                        OutputAttributes(recSearch.Attr),
-                        OutputOwner(strPath + recSearch.name), recSearch.Name)
-                    End;
-                End;
-              iResult := FindNext(recSearch);
-              boolFound := True;
-            End;
-        Finally
-          SysUtils.FindClose(recSearch);
-        End;
-      End;
+    SearchForPatterns(slPatterns, iResult, boolFound, iDirFiles, Result, strPath,
+      recSearch);
     If OrderFilesBy <> obNone Then
       objFiles.OrderBy(OrderFilesBy, OrderFilesDirection);
-    For i := 0 To objFiles.Count - 1 Do
-      Begin
-        strOutput := Format('  %s  %15.0n  ', [
-          FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', objFiles.FileInfo[i].Date),
-          objFiles.FileInfo[i].Size + 0.1]);
-        If clsShowAttribs In CommandLineSwitches Then
-          strOutput := strOutput + Format('%s  ', [objFiles.FileInfo[i].Attr]);
-        If clsOwner In CommandLineSwitches Then
-          Begin
-            iWidth := objFiles.OwnerWidth;
-            strOutput := strOutput + Format('%-*s  ', [iWidth,
-              objFiles.FileInfo[i].Owner]);
-          End;
-        OutputLinesToConsole(strOutput + objFiles.FileInfo[i].Name);
-      End;
+    OutputFilesToConsole(strPath, boolDirPrinted);
   Finally
     objFiles.Free;
   End;
@@ -1081,18 +1241,7 @@ Begin
       OutputLinesToConsole;
   (* Search sub directories *)
   If clsSubDirectories In CommandLineSwitches Then
-    Begin
-      iResult := FindFirst(strPath + '*.*', faDirectory, recSearch);
-      While (iResult = 0)  Do
-        Begin
-          If recSearch.Attr And faDirectory > 0 Then
-            If (recSearch.Name <> '.') And (recSearch.Name <> '..') Then
-              Inc(Result, SearchDirectory(strPath + recSearch.Name + '\',
-                slPatterns, iLevel));
-          iResult := FindNext(recSearch);
-        End;
-      SysUtils.FindClose(recSearch);
-    End;
+    RecurseDirectories(strPath, iLevel, Result, iResult, slPatterns, recSearch);
   (* Output directory summary levels *)
   If clsSummaryLevel In CommandLineSwitches Then
     Begin

@@ -120,7 +120,7 @@
 		</Linker>
 		<Directories>
 			<Directories Name="OutputDir"></Directories>
-			<Directories Name="UnitOutputDir"></Directories>
+			<Directories Name="UnitOutputDir">.\DCUs</Directories>
 			<Directories Name="PackageDLLOutputDir"></Directories>
 			<Directories Name="PackageDCPOutputDir"></Directories>
 			<Directories Name="SearchPath"></Directories>
@@ -130,7 +130,7 @@
 			<Directories Name="UsePackages">False</Directories>
 		</Directories>
 		<Parameters>
-			<Parameters Name="RunParams"></Parameters>
+			<Parameters Name="RunParams">"C:\documents and settings\hoyld\my documents\gtbbjv wcrm ole database\*.sql" /!d[01/Jan-]s</Parameters>
 			<Parameters Name="HostApplication"></Parameters>
 			<Parameters Name="Launcher"></Parameters>
 			<Parameters Name="UseLauncher">False</Parameters>
@@ -149,8 +149,8 @@
 			<VersionInfo Name="AutoIncBuild">True</VersionInfo>
 			<VersionInfo Name="MajorVer">1</VersionInfo>
 			<VersionInfo Name="MinorVer">0</VersionInfo>
-			<VersionInfo Name="Release">2</VersionInfo>
-			<VersionInfo Name="Build">116</VersionInfo>
+			<VersionInfo Name="Release">3</VersionInfo>
+			<VersionInfo Name="Build">161</VersionInfo>
 			<VersionInfo Name="Debug">False</VersionInfo>
 			<VersionInfo Name="PreRelease">False</VersionInfo>
 			<VersionInfo Name="Special">False</VersionInfo>
@@ -162,7 +162,7 @@
 		<VersionInfoKeys>
 			<VersionInfoKeys Name="CompanyName">Season's Fall Music Limited (c) 1989</VersionInfoKeys>
 			<VersionInfoKeys Name="FileDescription">SearchRX</VersionInfoKeys>
-			<VersionInfoKeys Name="FileVersion">1.0.2.116</VersionInfoKeys>
+			<VersionInfoKeys Name="FileVersion">1.0.3.161</VersionInfoKeys>
 			<VersionInfoKeys Name="InternalName">Search</VersionInfoKeys>
 			<VersionInfoKeys Name="LegalCopyright">Season's Fall Music Limited (c) 1989</VersionInfoKeys>
 			<VersionInfoKeys Name="LegalTrademarks">Season's Fall Music Limited (c) 1989</VersionInfoKeys>
@@ -172,4 +172,5 @@
 			<VersionInfoKeys Name="Comments">Search Command Line Tool</VersionInfoKeys>
 		</VersionInfoKeys>
 	</Delphi.Personality>
+	<ModelSupport>False</ModelSupport>
 </BorlandProject>
