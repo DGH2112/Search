@@ -5,15 +5,15 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    03 Feb 2006
-  
+  @Date    06 Feb 2006
+
 **)
 Unit FileHandling;
 
 Interface
 
 Uses
-  SysUtils, Contnrs;
+  SysUtils, Classes, Contnrs;
 
 Type
   (** An enumerate to define the order for sorting the files. **)
@@ -31,42 +31,65 @@ Type
     FAttr : String;
     FOwner : String;
     FName : String;
+    FGREPLines : TStringList;
+    function GetGREPLine(iIndex: Integer): String;
+    function GetGREPLines: Integer;
+  Protected
   Public
+    Constructor Create(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
+      strName : String);
+    Procedure AddGREPLine(strText : String);
+    Destructor Destroy; Override;
     (**
       A property to read and write the files date and time.
       @precon  None.
       @postcon None.
       @return  a TDateTime
     **)
-    Property Date : TDateTime Read FDate Write FDate;
+    Property Date : TDateTime Read FDate;
     (**
       A property to read and write the files size.
       @precon  None.
       @postcon None.
       @return  an Int64
     **)
-    Property Size : Int64 Read FSize Write FSize;
+    Property Size : Int64 Read FSize;
     (**
       A property to read and write the files Attributes.
       @precon  None.
       @postcon None.
       @return  a String
     **)
-    Property Attr : String Read FAttr Write FAttr;
+    Property Attr : String Read FAttr;
     (**
       A property to read and write the files owner.
       @precon  None.
       @postcon None.
       @return  a String
     **)
-    Property Owner : String Read FOwner Write FOwner;
+    Property Owner : String Read FOwner;
     (**
       A property to read and write the files name.
       @precon  None.
       @postcon None.
       @return  a String
     **)
-    Property Name : String Read FName Write FName;
+    Property Name : String Read FName;
+    (**
+      A property to returns the number of GREP lines found.
+      @precon  None.
+      @postcon Returns the number of GREP lines found.
+      @return  an Integer
+    **)
+    Property GREPLines : Integer Read GetGREPLines;
+    (**
+      A property to returns specific indexed GREP line.
+      @precon  iIndex must be a valid index.
+      @postcon Returns an indexed GREP line for the file.
+      @param   iIndex as       an Integer
+      @return  a String
+    **)
+    Property GREPLine[iIndex : Integer] : String Read GetGREPLine;
   End;
 
   (** A class to hold a collection of files. **)
@@ -79,12 +102,12 @@ Type
   Public
     Constructor Create;
     Destructor Destroy; Override;
-    Procedure Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
-      strName : String);
+    Function Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
+      strName, strGREPText : String) : Boolean;
     (**
       A property to return a specific file from the collection.
       @precon  iIndex must be a valid index.
-      @postcon The file identified ny the index is returned.
+      @postcon The file identified any the index is returned.
       @param   iIndex as       an Integer
       @return  a TFile
     **)
@@ -101,6 +124,92 @@ Type
   End;
 
 Implementation
+
+(**
+
+  This method adds the given text as a GREP line.
+
+  @precon  None.
+  @postcon Adds the given text as a GREP line.
+
+  @param   strText as a String
+
+**)
+procedure TFile.AddGREPLine(strText: String);
+begin
+  FGREPLines.Add(strText);
+end;
+
+(**
+
+  This is the constructor method for the TFile class.
+
+  @precon  None.
+  @postcon Constructs a TFile class.
+
+  @param   dtDate   as a TDateTime
+  @param   iSize    as an Int64
+  @param   strAttr  as a String
+  @param   strOwner as a String
+  @param   strName  as a String
+
+**)
+constructor TFile.Create(dtDate: TDateTime; iSize: Int64; strAttr, strOwner,
+  strName: String);
+begin
+  inherited Create;
+  FGREPLines := TStringList.Create;
+  FDate := dtDate;
+  FSize := iSize;
+  FAttr := strAttr;
+  FOwner := strOwner;
+  FName := strName;
+end;
+
+(**
+
+  This is the destructor method for the TFile class.
+
+  @precon  None.
+  @postcon Destroys the class instance.
+
+**)
+destructor TFile.Destroy;
+begin
+  FGREPLines.Free;
+  inherited Destroy;
+end;
+
+(**
+
+  This is a getter method for the GREPLine property.
+
+  @precon  iIndex must be a valid index.
+  @postcon Returns the GREP line specified by the index.
+
+  @param   iIndex as an Integer
+  @return  a String
+
+**)
+function TFile.GetGREPLine(iIndex: Integer): String;
+begin
+  Result := FGREPLines[iIndex];
+end;
+
+(**
+
+  This is a getter method for the GREPLines property.
+
+  @precon  None.
+  @postcon Returns the number of GREP lines in the file.
+
+  @return  an Integer
+
+**)
+function TFile.GetGREPLines: Integer;
+begin
+  Result := FGREPLines.Count;
+end;
 
 (**
 
@@ -138,27 +247,43 @@ End;
   @precon  None.
   @postcon Added a file and its attributes to the collection.
 
-  @param   dtDate   as a TDateTime
-  @param   iSize    as an Int64
-  @param   strAttr  as a String
-  @param   strOwner as a String
-  @param   strName  as a String
+  @param   dtDate      as a TDateTime
+  @param   iSize       as an Int64
+  @param   strAttr     as a String
+  @param   strOwner    as a String
+  @param   strName     as a String
+  @param   strGREPText as a String
+  @return  a Boolean
 
 **)
-Procedure TFiles.Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
-  strName : String);
+Function TFiles.Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
+  strName, strGREPText : String) : Boolean;
 
 Var
   FFile : TFile;
+  slFile: TStringList;
+  iLine: Integer;
 
 Begin
-  FFile := TFile.Create;
-  FFiles.Add(FFile);
-  FFile.Date := dtDate;
-  FFile.Size := iSize;
-  FFile.Attr := strAttr;
-  FFile.Owner := strOwner;
-  FFile.Name := strName;
+  Result := True;
+  FFile := TFile.Create(dtDate, iSize, strAttr, strOwner, strName);
+  If strGREPText <> '' Then
+    Begin
+      slFile := TStringList.Create;
+      Try
+        slFile.LoadFromFile(strName);
+        For iLine := 0 To slFile.Count - 1 Do
+          If Pos(strGREPText, Lowercase(slFile[iLine])) > 0 Then
+            FFile.AddGREPLine(Format('%8d %s', [iLine, slFile[iLine]]));
+      Finally
+        slFile.Free;
+      End;
+      If FFile.GetGREPLines > 0 Then
+        FFiles.Add(FFile)
+      Else
+        Result := False;
+    End Else
+      FFiles.Add(FFile);
 End;
 
 (**
