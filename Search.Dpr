@@ -6,9 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    05 Feb 2006
-
-  @todo    Move all the GREP list search code to within the TFile class.
+  @Date    08 Feb 2006
 
 **)
 Program Search;
@@ -33,8 +31,6 @@ resourcestring
   strMissingOrderByDirective = 'Missing Order By definition.';
   (** An exception message for an invalid order by criteria. **)
   strInvalidOrderByDirective = 'Invalid Order By definition.';
-  (** An exception message for a missing colon in an attribute definition. **)
-  strColonExpectedInAttribDef = 'Colon Expected in Attribute definition.';
   (** An exception message for a missing Attribute definition. **)
   strMissingAttribDirective = 'Missing Attribute directive';
   (** An exception message for a missing ] in an attribute definition. **)
@@ -65,6 +61,12 @@ resourcestring
   strMissingDateTypeDirective = 'Missing Date Type definition.';
   (** An exception message for an invalid Date Type criteria. **)
   strInvalidDateTypeDirective = 'Invalid Date Type definition.';
+  (** An exception message for a missing Search Text definition. **)
+  strMissingSearchText = 'Missing Search Text';
+  (** An exception message for a missing ] in an Search definition. **)
+  strCloseSquareExpectedInSearchDef = '"]" Expected in Search Definition';
+  (** An exception message for a missing [ in an Search definition. **)
+  strOpenSquareExpectedInSearchDef = '"[" Expected in Search Definition.';
 
 (**
 
@@ -106,7 +108,8 @@ Type
     clsOwner,            { /w or -w }
     clsOrderBy,          { /o or -o }
     clsSearchIn,         { /i or -i }
-    clsDateType          { /e or -e }
+    clsDateType,         { /e or -e }
+    clsDisplayCriteria   { /c or -c }
   );
 
   (** This is a set of boolean command line switches. **)
@@ -425,31 +428,33 @@ Begin
   OutputLinesToConsole('    {/T[RASHFDV]} {/D:[{DD{/MM{/YY {HH:MM{:SS}}}}}-{DD{/MM{/YY {HH:MM{:SS}}}}}]');
   OutputLinesToConsole('    {/Z[{LowerByteSize}-{UpperByteSize}]} {/O:NDAOS} {/E:CAW} {/I[text]}');
   OutputLinesToConsole('');
-  OutputLinesToConsole('    searchparam# = {drive:\path\}filter1{;filter2{;filter3{;...}}}');
-  OutputLinesToConsole('    filter# can contain wildcards * and ? within the filename. ');
+  OutputLinesToConsole('  searchparam# = {drive:\path\}filter1{;filter2{;filter3{;...}}}');
   OutputLinesToConsole('');
-  OutputLinesToConsole('    { ... } denote option items.');
+  OutputLinesToConsole('  filter# can contain wildcards * and ? within the filename. ');
   OutputLinesToConsole('');
-  OutputLinesToConsole('    /?     This help screen');
-  OutputLinesToConsole('    /A     Show file and directory attributes');
-  OutputLinesToConsole('    /P     Pause the results after each screen');
-  OutputLinesToConsole('    /S     Recurse subdirectories');
-  OutputLinesToConsole('    /1..9  Summarise subdirectories');
-  OutputLinesToConsole('    /0     Hide empty Summarised subdirectories');
-  OutputLinesToConsole('    /T     Show only files with certain attributes');
-  OutputLinesToConsole('           R = Read Only, A = Archive, S = System, H = Hidden, F = File,');
-  OutputLinesToConsole('           D = Directory, and V=  Volume ID');
-  OutputLinesToConsole('    /D     ( lower bounding date and time - upper bounding date and time )');
-  OutputLinesToConsole('    /Z     ( lower bounding size in bytes - upper bounding size in bytes )');
-  OutputLinesToConsole('    /Q     Quiet mode');
-  OutputLinesToConsole('    /W     Owner Information');
-  OutputLinesToConsole('    /O     Order files ascending [+] and descending [-]');
-  OutputLinesToConsole('           N = Name, A = Attribute, D = Date and Time, O = Owner, S = Size');
-  OutputLinesToConsole('    /E     Type of file date to display and search on:');
-  OutputLinesToConsole('           C = Creation, A = Last Access, W = Last Write');
-  OutputLinesToConsole('    /I     Search within files for text.');
+  OutputLinesToConsole('  { ... } denotes optional items.');
   OutputLinesToConsole('');
-  OutputLinesToConsole('NOTE: The date time input format is dependent on your local settings');
+  OutputLinesToConsole('  /?             This help screen');
+  OutputLinesToConsole('  /A             Show file and directory attributes');
+  OutputLinesToConsole('  /P             Pause the results after each screen');
+  OutputLinesToConsole('  /S             Recurse subdirectories');
+  OutputLinesToConsole('  /1..9          Summarise subdirectories');
+  OutputLinesToConsole('  /0             Hide empty Summarised subdirectories');
+  OutputLinesToConsole('  /T:[RASHFFDV]  Show only files with certain attributes');
+  OutputLinesToConsole('                 R = Read Only, A = Archive, S = System, H = Hidden,');
+  OutputLinesToConsole('                 F = File, D = Directory, and V=  Volume ID');
+  OutputLinesToConsole('  /D:[l-u]       l = lower bounding date and time,  u = upper bounding date and time');
+  OutputLinesToConsole('  /Z:[l-u]       l = lower bounding size in bytes, u = upper bounding size in bytes');
+  OutputLinesToConsole('  /Q             Quiet mode');
+  OutputLinesToConsole('  /W             Owner Information');
+  OutputLinesToConsole('  /O:NADOS       Order files ascending [+] and descending [-]');
+  OutputLinesToConsole('                 N = Name, A = Attribute, D = Date and Time, O = Owner, S = Size');
+  OutputLinesToConsole('  /E:CAW         Type of file date to display and search on:');
+  OutputLinesToConsole('                 C = Creation, A = Last Access, W = Last Write (Default)');
+  OutputLinesToConsole('  /I[text]       Search within files for text.');
+  OutputLinesToConsole('  /C             Display a list of Criteria and Command Line Options.');
+  OutputLinesToConsole('');
+  OutputLinesToConsole('  NOTE: The date time input format is dependent on your local settings');
   OutputLinesToConsole('');;
 End;
 
@@ -511,7 +516,7 @@ Begin
   If strDate <> '' Then
     dtUDate := ConvertDate(strDate)
   Else
-    dtUDate := ConvertDate('31/Dec/2099');
+    dtUDate := ConvertDate('31/Dec/2099 23:59:59');
 End;
 
 (**
@@ -554,13 +559,14 @@ Var
     If strSize <> '' Then
       Begin
         Case strSize[Length(strSize)] Of
-          'K': iFactor := 1024;
-          'M': iFactor := 1024 * 1024;
-          'G': iFactor := 1024 * 1024 * 1024;
+          'k', 'K': iFactor := $400;
+          'm', 'M': iFactor := $100000;
+          'g', 'G': iFactor := $40000000;
+          't', 'T': iFactor := $10000000000;
         Else
           iFactor := 1;
         End;
-        If strSize[Length(strSize)] In ['K', 'M', 'G'] Then
+        If strSize[Length(strSize)] In ['k', 'K', 'm', 'M', 'g', 'G', 't', 'T'] Then
           strSize := Copy(strSize, 1, Length(strSize) - 1);
         Val(strSize, iSize, iErrorCode);
         If iErrorCode > 0 Then
@@ -578,7 +584,7 @@ Begin
   GetRangeString('-', strMissingSizeRangeSeparater, iIndex, iSwitch, strSize);
   GetSize(iLSize, strInvalidLowerSizeRange, 0);
   GetRangeString(']', strCloseSquareExpectedInDate, iIndex, iSwitch, strSize);
-  GetSize(iUSize, strInvalidUpperSizeRange, $7FFFFFFFFFFFFFFF);
+  GetSize(iUSize, strInvalidUpperSizeRange, $F00000000000000);
 End;
 
 {$WARN SYMBOL_PLATFORM OFF}
@@ -601,7 +607,7 @@ Begin
   Include(CommandLineSwitches, clsAttrRange);
   IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInAttribDef);
   If ParamStr(iSwitch)[iIndex] <> '[' Then
-    Raise Exception.Create(strColonExpectedInOrderBy);
+    Raise Exception.Create(strOpenSquareExpectedInAttribDef);
   IncrementSwitchPosition(iIndex, iSwitch, strMissingAttribDirective);
   iFileAttrs := 0;
   iTypeAttrs := 0;
@@ -702,16 +708,23 @@ End;
            a text string option.
 
   @param   iSwitch as an Integer as a reference
+  @param   iIndex  as an Integer as a reference
 
 **)
-Procedure GetSearchInInfo(var iSwitch : Integer);
+Procedure GetSearchInInfo(var iSwitch, iIndex : Integer);
 
 Begin
   Include(CommandLineSwitches, clsSearchIn);
-  Inc(iSwitch); // Next parameter is the search text
-  If iSwitch > ParamCount Then
-    Raise Exception.Create('Missing search text.');
-  strSearchInText := Lowercase(ParamStr(iSwitch));
+  IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInSearchDef);
+  If ParamStr(iSwitch)[iIndex] <> '[' Then
+    Raise Exception.Create(strOpenSquareExpectedInSearchDef);
+  IncrementSwitchPosition(iIndex, iSwitch, strMissingSearchText);
+  While (iIndex <= Length(ParamStr(iSwitch))) And
+    (ParamStr(iSwitch)[iIndex] <> ']') Do
+    Begin
+      strSearchInText := strSearchInText + ParamStr(iSwitch)[iIndex];
+      IncrementSwitchPosition(iIndex, iSwitch, strCloseSquareExpectedInSearchDef);
+    End;
 End;
 
 (**
@@ -741,6 +754,155 @@ Begin
   Val(ParamStr(iSwitch)[iSwitches], iSummaryLevel, iCode);
   If iCode > 0 Then
     Raise Exception.CreateFmt(strSummaryLevelException, [ParamStr(iSwitch)]);
+End;
+
+(**
+
+  This method displays the criteria and command line options used during the
+  session.
+
+  @precon  None.
+  @postcon Displays the criteria and command line options used during the
+           session.
+
+**)
+Procedure DisplayCriteria();
+
+  (**
+
+    This method outputs a single switch and its correpsonding message.
+
+    @precon  None.
+    @postcon Outputs a single switch and its correpsonding message.
+
+    @param   strSwitch as a String
+    @param   strText   as a String
+
+  **)
+  Procedure DisplayText(strSwitch, strText : String);
+
+  Begin
+    Writeln(Format('  %2s) %s', [strSwitch, strText]));
+  End;
+
+  (**
+
+    This method tries to reduce the file size limit to a more manageable
+    length for reading using K, M and G.
+
+    @precon  None.
+    @postcon Tries to reduce the size to a factor of 1024.
+
+    @param   iSize as an Int64
+    @return  a String
+
+  **)
+  Function ReduceSize(iSize : Int64): String;
+
+  Const
+    strSizes = 'KMGT';
+
+  Var
+    iReductions : Integer;
+    strKMG: String;
+
+  Begin
+    iReductions := 0;
+    If iSize > 0 Then
+      While (iSize Mod 1024 = 0) And (iReductions < 4) Do
+        Begin
+          iSize := iSize Div 1024;
+          Inc(iReductions);
+        End;
+    If iSize > 0 Then
+      strKMG := strSizes[iReductions]
+    Else
+      strKMG := '';
+    Result := Format('%1.0n%s', [Int(iSize), strKMG]);
+  End;
+
+  (**
+
+    This method output a text relating to the attribute options used in the
+    search.
+
+    @precon  None.
+    @postcon Output a text relating to the attribute options used in the
+             search.
+
+  **)
+  Procedure DisplayAttributes;
+
+  Begin
+    DisplayText('t', 'Searching for files with the following attibutes:');
+    If iFileAttrs And faReadOnly > 0 Then
+      OutputLinesToConsole('        Read Only');
+    If iFileAttrs And faArchive > 0 Then
+      OutputLinesToConsole('        Archive');
+    If iFileAttrs And faSysFile > 0 Then
+      OutputLinesToConsole('        System File');
+    If iFileAttrs And faHidden > 0 Then
+      OutputLinesToConsole('        Hidden');
+    If iTypeAttrs And iFileOnly > 0 Then
+      OutputLinesToConsole('        File');
+    If iTypeAttrs And faDirectory > 0 Then
+      OutputLinesToConsole('        Directory');
+    If iTypeAttrs And faVolumeID > 0 Then
+      OutputLinesToConsole('        Volume');
+  End;
+
+Begin
+  Writeln('Search Criteria and Command Line Options Used in this Session.');
+  If clsSubDirectories In CommandLineSwitches Then
+    DisplayText('s', 'Recursing sub-directories.');
+  If clsDebug In CommandLineSwitches Then
+    DisplayText('!', 'DEBUG ReadLn; Pause after finish.');
+  If clsShowAttribs In CommandLineSwitches Then
+    DisplayText('a', 'Displaying File and Directory Attributes.');
+  If clsPause In CommandLineSwitches Then
+    DisplayText('p', 'Pause after a full console page of text.');
+  If (clsSummaryLevel In CommandLineSwitches) And
+    Not (clsSearchIn In CommandLineSwitches) Then
+    DisplayText(IntToStr(iSummaryLevel), Format(
+      'Summarising output to the %d level of detail from' +
+      ' the specified starting point.', [iSummaryLevel]));
+  If clsSupressZeros In CommandLineSwitches Then
+    DisplayText('0', 'Supressing summary information on directoies with zero files.');
+  If clsDateRange In CommandLineSwitches Then
+    DisplayText('d', 'Display files with dates between ' +
+      FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', dtLDate) + ' and ' +
+      FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', dtUDate) + '.');
+  If clsSizeRange In CommandLineSwitches Then
+    DisplayText('d', Format('Display files with sizes between %s and %s bytes.',
+      [ReduceSize(iLSize), ReduceSize(iUSize)]));
+  If clsAttrRange In CommandLineSwitches Then
+    DisplayAttributes;
+  If clsQuiet In CommandLineSwitches Then
+    DisplayText('q', 'Quiet mode - no progress updates.');
+  If clsOwner In CommandLineSwitches Then
+    DisplayText('w', 'Display the Owners of the files found.');
+  If clsOrderBy In CommandLineSwitches Then
+    Begin
+      Case OrderFilesBy Of
+        obName: DisplayText('o', 'Ordering files by Name.');
+        obSize: DisplayText('o', 'Ordering files by Size.');
+        obDate: DisplayText('o', 'Ordering files by Date.');
+        obOwner: DisplayText('o', 'Ordering files by Owner.');
+        obAttribute: DisplayText('o', 'Ordering files by their Attributes.');
+      End;
+      If OrderFilesDirection = odDescending Then
+        DisplayText(' ', 'Ordering files in Descending Order.');
+    End;
+  If clsDateType In CommandLineSwitches Then
+    Case DateType Of
+      dtCreation:   DisplayText('e', 'Displaying file Creation Dates.');
+      dtLastAccess: DisplayText('e', 'Displaying file Last Access Dates.');
+      dtLastWrite:  DisplayText('e', 'Displaying file Last Write Dates.');
+    End;
+  If clsSearchIn In CommandLineSwitches Then
+    DisplayText('i', Format('Search for the text "%s" within the files.',
+      [strSearchInText]));
+  Writeln;
 End;
 
 (**
@@ -787,8 +949,9 @@ Begin
                 'q', 'Q': Include(CommandLineSwitches, clsQuiet);
                 'w', 'W': Include(CommandLineSwitches, clsOwner);
                 'o', 'O': GetOrderBy(iSwitch, iIndex);
-                'i', 'I': GetSearchInInfo(iSwitch);
+                'i', 'I': GetSearchInInfo(iSwitch, iIndex);
                 'e', 'E': GetDateType(iSwitch, iIndex);
+                'c', 'C': Include(CommandLineSwitches, clsDisplayCriteria);
               Else
                 Raise Exception.CreateFmt(strInValidCommandLineSwitch,
                   [ParamStr(iSwitch)]);
@@ -808,6 +971,8 @@ Begin
     Include(CommandLineSwitches, clsShowHelp);
   If (slSearchParams.Count = 0) And Not (ClsShowHelp In CommandLineSwitches) Then
     Raise Exception.Create('You need to specify at least one search criteria.');
+  If clsDisplayCriteria In CommandLineSwitches Then
+    DisplayCriteria;
 End;
 
 (**
@@ -899,36 +1064,6 @@ End;
 
 (**
 
-  This method outputs the lines of the file that match the search text.
-
-  @precon  None.
-  @postcon Outputs the lines of the file that match the search text.
-
-  @param   strFileName as a String
-  @param   slLines as a TStringList as a Reference
-
-**)
-Procedure OutputSearchInLines(strFileName : String; var slLines : TStringList);
-
-Var
-  slFile : TStringList;
-  iLine, i: Integer;
-
-Begin
-  slFile := TStringList.Create;
-  Try
-    slFile.LoadFromFile(strFileName);
-    For iLine := 0 To slFile.Count - 1 Do
-      If Pos(strSearchInText, Lowercase(slFile[iLine])) > 0 Then
-        For i := iLine - iSummaryLevel To iLine + iSummaryLevel Do
-          slLines.Add((Format('%8d %s', [i, slFile[iLine]])));
-  Finally
-    slFile.Free;
-  End;
-End;
-
-(**
-
   This method adds the file to the collection and increments the various counters.
 
   @precon  None.
@@ -946,27 +1081,30 @@ procedure CheckFiles(iSize: Int64; recSearch: TSearchRec; var iDirFiles: Integer
 Var
   dtDate, dtDateLocal : TFileTime;
   iTime : Integer;
+  boolAdded: Boolean;
 
 begin
-  begin
-    Inc(iFiles);
-    Inc(iFileSize, iSize);
-    Inc(Result, iSize);
-    if not (clsSummaryLevel in CommandLineSwitches) then
-      begin
-        Inc(iDirFiles);
-        Case DateType Of
-          dtCreation: dtDate := recSearch.FindData.ftCreationTime;
-          dtLastAccess: dtDate := recSearch.FindData.ftLastAccessTime;
-          dtLastWrite: dtDate := recSearch.FindData.ftLastWriteTime;
-        End;
-        FileTimeToLocalFileTime(dtDate, dtDateLocal);
-        FileTimeToDosDateTime(dtDateLocal, LongRec(iTime).Hi, LongRec(iTime).Lo);
-        objFiles.Add(FileDateToDateTime(iTime), iSize,
-          OutputAttributes(recSearch.Attr), OutputOwner(strPath + recSearch.name),
-          recSearch.Name);
-      end;
-  end;
+  if not (clsSummaryLevel in CommandLineSwitches) then
+    begin
+      Inc(iDirFiles);
+      Case DateType Of
+        dtCreation: dtDate := recSearch.FindData.ftCreationTime;
+        dtLastAccess: dtDate := recSearch.FindData.ftLastAccessTime;
+        dtLastWrite: dtDate := recSearch.FindData.ftLastWriteTime;
+      End;
+      FileTimeToLocalFileTime(dtDate, dtDateLocal);
+      FileTimeToDosDateTime(dtDateLocal, LongRec(iTime).Hi, LongRec(iTime).Lo);
+      boolAdded := objFiles.Add(FileDateToDateTime(iTime), iSize,
+        OutputAttributes(recSearch.Attr), OutputOwner(strPath + recSearch.name),
+        strPath + recSearch.Name, strSearchInText);
+    end Else
+      boolAdded := True;
+  If boolAdded Then
+    Begin
+      Inc(iFiles);
+      Inc(iFileSize, iSize);
+      Inc(Result, iSize);
+    End;
 end;
 
 (**
@@ -1075,11 +1213,20 @@ var
   i: Integer;
   iWidth: Integer;
   strOutput: string;
+  iLine : Integer;
+  boolGREP: Boolean;
 
 begin
   For i := 0 to objFiles.Count - 1 Do
     begin
-      strOutput := Format('  %s  %15.0n  ', [FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', objFiles.FileInfo[i].Date), objFiles.FileInfo[i].Size + 0.1]);
+      If Pos('D', objFiles.FileInfo[i].Attr) = 0 Then
+        strOutput := Format('  %s  %15.0n  ', [
+          FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', objFiles.FileInfo[i].Date),
+          Int(objFiles.FileInfo[i].Size)])
+      Else
+        strOutput := Format('  %s  %15s  ', [
+          FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', objFiles.FileInfo[i].Date),
+          '<DIR>']);
       if clsShowAttribs in CommandLineSwitches then
         strOutput := strOutput + Format('%s  ', [objFiles.FileInfo[i].Attr]);
       if clsOwner in CommandLineSwitches then
@@ -1092,7 +1239,13 @@ begin
         OutputLinesToConsole(strPath);
         boolDirPrinted := True;
       end;
-      OutputLinesToConsole(strOutput + objFiles.FileInfo[i].Name);
+      boolGREP := (clsSearchIn In CommandLineSwitches) And
+        (objFiles.FileInfo[i].GREPLines > 0);
+      If Not (clsSearchIn In CommandLineSwitches) Or boolGREP Then
+        OutputLinesToConsole(strOutput + ExtractFileName(objFiles.FileInfo[i].Name));
+      If boolGREP Then
+        For iLine := 0 To objFiles.FileInfo[i].GREPLines - 1 Do
+          OutputLinesToConsole(objFiles.FileInfo[i].GREPLine[iLine]);
     end;
   If objFiles.Count > 0 Then
     OutputLinesToConsole;
