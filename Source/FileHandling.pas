@@ -1,11 +1,11 @@
 (**
-  
+
   This module contains the classes for handling the file information in each
   directory searched.
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    06 Feb 2006
+  @Date    03 Apr 2006
 
 **)
 Unit FileHandling;
@@ -267,6 +267,7 @@ Var
 Begin
   Result := True;
   FFile := TFile.Create(dtDate, iSize, strAttr, strOwner, strName);
+  strGREPText := Lowercase(strGREPText);
   If strGREPText <> '' Then
     Begin
       slFile := TStringList.Create;
