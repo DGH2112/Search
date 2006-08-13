@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    08 Feb 2006
+  @Date    11 Aug 2006
 
 **)
 Program Search;
@@ -142,7 +142,7 @@ Type
    Function GetNamedSecurityInfo(pObjectName: PAnsiChar; ObjectType: SE_OBJECT_TYPE;
     SecurityInfo: SECURITY_INFORMATION; ppsidOwner, ppsidGroup: PPSID; ppDacl,
     ppSacl: PACL; var ppSecurityDescriptor: PSECURITY_DESCRIPTOR): DWORD; Stdcall;
-         external 'advapi32.dll' name 'GetNamedSecurityInfoA';
+    external 'advapi32.dll' name 'GetNamedSecurityInfoA';
 
 Var
   (** Define the applications command line switches. **)
@@ -440,11 +440,11 @@ Begin
   OutputLinesToConsole('  /S             Recurse subdirectories');
   OutputLinesToConsole('  /1..9          Summarise subdirectories');
   OutputLinesToConsole('  /0             Hide empty Summarised subdirectories');
-  OutputLinesToConsole('  /T:[RASHFFDV]  Show only files with certain attributes');
+  OutputLinesToConsole('  /T[RASHFFDV]   Show only files with certain attributes');
   OutputLinesToConsole('                 R = Read Only, A = Archive, S = System, H = Hidden,');
   OutputLinesToConsole('                 F = File, D = Directory, and V=  Volume ID');
-  OutputLinesToConsole('  /D:[l-u]       l = lower bounding date and time,  u = upper bounding date and time');
-  OutputLinesToConsole('  /Z:[l-u]       l = lower bounding size in bytes, u = upper bounding size in bytes');
+  OutputLinesToConsole('  /D[l-u]        l = lower bounding date and time,  u = upper bounding date and time');
+  OutputLinesToConsole('  /Z[l-u]        l = lower bounding size in bytes, u = upper bounding size in bytes');
   OutputLinesToConsole('  /Q             Quiet mode');
   OutputLinesToConsole('  /W             Owner Information');
   OutputLinesToConsole('  /O:NADOS       Order files ascending [+] and descending [-]');
