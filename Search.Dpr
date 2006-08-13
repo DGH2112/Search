@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    11 Aug 2006
+  @Date    13 Aug 2006
 
 **)
 Program Search;
