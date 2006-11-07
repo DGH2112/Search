@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    13 Aug 2006
+  @Date    07 Nov 2006
 
 **)
 Program Search;
@@ -67,6 +67,8 @@ resourcestring
   strCloseSquareExpectedInSearchDef = '"]" Expected in Search Definition';
   (** An exception message for a missing [ in an Search definition. **)
   strOpenSquareExpectedInSearchDef = '"[" Expected in Search Definition.';
+  (** An exception message for the exclusions file not found. **)
+  strExclusionsNotFound = 'The filename "%s" was not found to process exclusions in the searches.';
 
 (**
 
@@ -109,7 +111,8 @@ Type
     clsOrderBy,          { /o or -o }
     clsSearchIn,         { /i or -i }
     clsDateType,         { /e or -e }
-    clsDisplayCriteria   { /c or -c }
+    clsDisplayCriteria,  { /c or -c }
+    clsExclusions        { /x or -x }
   );
 
   (** This is a set of boolean command line switches. **)
@@ -186,6 +189,10 @@ Var
   strSearchInText : String;
   (** A variable to hold the type of date to display and search for. **)
   DateType : TDateType;
+  (** A file name which hold exclusions which need to be applied to the searches. **)
+  strExlFileName : String;
+  (** A string list of exclusions to be applied to the searches. **)
+  slExclusions : TStringList;
 
 Const
   (** A constant to define that only files should be listed. **)
@@ -443,8 +450,8 @@ Begin
   OutputLinesToConsole('  /T[RASHFFDV]   Show only files with certain attributes');
   OutputLinesToConsole('                 R = Read Only, A = Archive, S = System, H = Hidden,');
   OutputLinesToConsole('                 F = File, D = Directory, and V=  Volume ID');
-  OutputLinesToConsole('  /D[l-u]        l = lower bounding date and time,  u = upper bounding date and time');
-  OutputLinesToConsole('  /Z[l-u]        l = lower bounding size in bytes, u = upper bounding size in bytes');
+  OutputLinesToConsole('  /D[l-{u}]      l = lower bounding date and time,  u = upper bounding date and time');
+  OutputLinesToConsole('  /Z[l-{u}]      l = lower bounding size in bytes, u = upper bounding size in bytes');
   OutputLinesToConsole('  /Q             Quiet mode');
   OutputLinesToConsole('  /W             Owner Information');
   OutputLinesToConsole('  /O:NADOS       Order files ascending [+] and descending [-]');
@@ -453,6 +460,7 @@ Begin
   OutputLinesToConsole('                 C = Creation, A = Last Access, W = Last Write (Default)');
   OutputLinesToConsole('  /I[text]       Search within files for text.');
   OutputLinesToConsole('  /C             Display a list of Criteria and Command Line Options.');
+  OutputLinesToConsole('  /X[FileName]   A list of exclusions to apply to paths and filenames.');
   OutputLinesToConsole('');
   OutputLinesToConsole('  NOTE: The date time input format is dependent on your local settings');
   OutputLinesToConsole('');;
@@ -511,7 +519,9 @@ Begin
     Raise Exception.Create(strOpenSquareExpectedInDate);
   GetRangeString('-', strMissingDateRangeSeparater, iIndex, iSwitch, strDate);
   If strDate <> '' Then
-    dtLDate := ConvertDate(strDate);
+    dtLDate := ConvertDate(strDate)
+  Else
+    dtUDate := ConvertDate('01/Jan/1900 00:00:01');
   GetRangeString(']', strCloseSquareExpectedInDate, iIndex, iSwitch, strDate);
   If strDate <> '' Then
     dtUDate := ConvertDate(strDate)
@@ -583,7 +593,7 @@ Begin
     Raise Exception.Create(strOpenSquareExpectedInSize);
   GetRangeString('-', strMissingSizeRangeSeparater, iIndex, iSwitch, strSize);
   GetSize(iLSize, strInvalidLowerSizeRange, 0);
-  GetRangeString(']', strCloseSquareExpectedInDate, iIndex, iSwitch, strSize);
+  GetRangeString(']', strCloseSquareExpectedInSize, iIndex, iSwitch, strSize);
   GetSize(iUSize, strInvalidUpperSizeRange, $F00000000000000);
 End;
 
@@ -758,6 +768,35 @@ End;
 
 (**
 
+  This method extracts from the command line switch the filename to be used
+  as the source of the exclusion list.
+
+  @precon  None.
+  @postcon Extracts from the command line switch the filename to be used
+           as the source of the exclusion list.
+
+  @param   iSwitch as an Integer as a reference
+  @param   iIndex  as an Integer as a reference
+
+**)
+Procedure GetExclusions(var iSwitch, iIndex : Integer);
+
+Begin
+  Include(CommandLineSwitches, clsExclusions);
+  IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInSearchDef);
+  If ParamStr(iSwitch)[iIndex] <> '[' Then
+    Raise Exception.Create(strOpenSquareExpectedInSearchDef);
+  IncrementSwitchPosition(iIndex, iSwitch, strMissingSearchText);
+  While (iIndex <= Length(ParamStr(iSwitch))) And
+    (ParamStr(iSwitch)[iIndex] <> ']') Do
+    Begin
+      strExlFileName := strExlFileName + ParamStr(iSwitch)[iIndex];
+      IncrementSwitchPosition(iIndex, iSwitch, strCloseSquareExpectedInSearchDef);
+    End;
+End;
+
+(**
+
   This method displays the criteria and command line options used during the
   session.
 
@@ -902,6 +941,9 @@ Begin
   If clsSearchIn In CommandLineSwitches Then
     DisplayText('i', Format('Search for the text "%s" within the files.',
       [strSearchInText]));
+  If clsExclusions In CommandLineSwitches Then
+    DisplayText('x', Format('Applying exclusions from the file "%s".',
+      [strExlFileName]));
   Writeln;
 End;
 
@@ -952,6 +994,7 @@ Begin
                 'i', 'I': GetSearchInInfo(iSwitch, iIndex);
                 'e', 'E': GetDateType(iSwitch, iIndex);
                 'c', 'C': Include(CommandLineSwitches, clsDisplayCriteria);
+                'x', 'X': GetExclusions(iSwitch, iIndex);
               Else
                 Raise Exception.CreateFmt(strInValidCommandLineSwitch,
                   [ParamStr(iSwitch)]);
@@ -1018,21 +1061,21 @@ End;
 Function LookupAccountBySID(SID : PSID) : String;
 
 Var
-  Name, RefDomain : String;
-  NameSize, RefDomainSize : DWORD;
+  strName, strRefDomain : String;
+  iNameSize, iRefDomainSize : DWORD;
   Use : SID_NAME_USE;
 
 Begin
-  NameSize := 0;
-  RefDomainSize := 0;
-  LookupAccountSID(Nil, SID, Nil, NameSize, Nil, RefDomainSize, Use);
-  SetLength(Name, NameSize);
-  SetLength(RefDomain, RefDomainSize);
-  LookupAccountSID(Nil, SID, PChar(Name), NameSize, PChar(RefDomain),
-    RefDomainSize, Use);
-  If Name = '' Then
-    Name := '(Unknown)';
-  Result := PChar(RefDomain) + '/' + PChar(Name);
+  iNameSize := 0;
+  iRefDomainSize := 0;
+  LookupAccountSID(Nil, SID, Nil, iNameSize, Nil, iRefDomainSize, Use);
+  SetLength(strName, iNameSize);
+  SetLength(strRefDomain, iRefDomainSize);
+  LookupAccountSID(Nil, SID, PChar(strName), iNameSize, PChar(strRefDomain),
+    iRefDomainSize, Use);
+  If strName = '' Then
+    strName := '(Unknown)';
+  Result := PChar(strRefDomain) + '/' + PChar(strName);
 End;
 
 (**
@@ -1093,6 +1136,7 @@ begin
         dtLastWrite: dtDate := recSearch.FindData.ftLastWriteTime;
       End;
       FileTimeToLocalFileTime(dtDate, dtDateLocal);
+      iTime := 0;
       FileTimeToDosDateTime(dtDateLocal, LongRec(iTime).Hi, LongRec(iTime).Lo);
       boolAdded := objFiles.Add(FileDateToDateTime(iTime), iSize,
         OutputAttributes(recSearch.Attr), OutputOwner(strPath + recSearch.name),
@@ -1211,7 +1255,7 @@ end;
 procedure OutputFilesToConsole(strPath: string; boolDirPrinted: Boolean);
 var
   i: Integer;
-  iWidth: Integer;
+  iOwnerWidth: Integer;
   strOutput: string;
   iLine : Integer;
   boolGREP: Boolean;
@@ -1231,8 +1275,8 @@ begin
         strOutput := strOutput + Format('%s  ', [objFiles.FileInfo[i].Attr]);
       if clsOwner in CommandLineSwitches then
       begin
-        iWidth := objFiles.OwnerWidth;
-        strOutput := strOutput + Format('%-*s  ', [iWidth, objFiles.FileInfo[i].Owner]);
+        iOwnerWidth := objFiles.OwnerWidth;
+        strOutput := strOutput + Format('%-*s  ', [iOwnerWidth, objFiles.FileInfo[i].Owner]);
       end;
       if not boolDirPrinted then
       begin
@@ -1242,7 +1286,7 @@ begin
       boolGREP := (clsSearchIn In CommandLineSwitches) And
         (objFiles.FileInfo[i].GREPLines > 0);
       If Not (clsSearchIn In CommandLineSwitches) Or boolGREP Then
-        OutputLinesToConsole(strOutput + ExtractFileName(objFiles.FileInfo[i].Name));
+        OutputLinesToConsole(strOutput + ExtractFileName(objFiles.FileInfo[i].FileName));
       If boolGREP Then
         For iLine := 0 To objFiles.FileInfo[i].GREPLines - 1 Do
           OutputLinesToConsole(objFiles.FileInfo[i].GREPLine[iLine]);
@@ -1300,6 +1344,33 @@ end;
 
 (**
 
+  This method check to see if the path and file name should be excluded from the
+  search.
+
+  @precon  recSearch must be a valid TSearchRec structure.
+  @postcon Sets or maintains boolFound as True if the file should NOT be excluded
+           else sets boolFound to False.
+
+  @param   strPath   as a String
+  @param   recSearch as a TSearchRec
+  @param   boolFound as a Boolean as a reference
+
+**)
+Procedure CheckExclusions(strPath : String; recSearch : TSearchRec;
+  var boolFound : Boolean);
+
+Var
+  strFileName : String;
+  j: Integer;
+
+Begin
+  strFileName := LowerCase(strPath + recSearch.Name);
+  For j := 0 To slExclusions.Count - 1 Do
+    boolFound := boolFound And (Pos(slExclusions[j], strFileName) = 0);
+End;
+
+(**
+
   This method search the current directory for files which match all the
   specified search patterns.
 
@@ -1332,6 +1403,7 @@ begin
         CheckFileAttributes(recSearch, boolFound);
         CheckSizeRange(iSize, boolFound);
         CheckDateRange(recSearch, boolFound);
+        CheckExclusions(strPath, recSearch, boolFound);
         if boolFound then
           CheckFiles(iSize, recSearch, iDirFiles, Result, strPath);
         iResult := FindNext(recSearch);
@@ -1442,35 +1514,48 @@ Begin
     Try
       iLinesOutputted := 0;
       GetCommandLineSwitches;
-      If Not (clsShowHelp In CommandLineSwitches) Then
-        Begin
-          For i := 0 To slSearchParams.Count - 1 Do
-            Begin
-              iPos := Pos('=', slSearchParams[i]);
-              If iPos = 0 Then
-                Raise Exception.CreateFmt(strErrorInPathSearchParamString,
-                  [slSearchParams[i]]);
-              strPath := slSearchParams.Names[i];
-              If strPath = '' Then
-                strPath := GetCurrentDir;
-              If strPath[Length(strPath)] <> '\' Then
-                strPath := strPath + '\';
-              strSearch := slSearchParams.Values[slSearchParams.Names[i]];
-              PrintHeader(strPath, strSearch);
-              slPatterns := TStringList.Create;
-              Try
-                For iPattern := 1 To CharCount(';', strSearch) + 1 Do
-                  slPatterns.Add(GetField(strSearch, ';', iPattern));
-                SearchDirectory(strPath, slPatterns, iLevel);
-              Finally
-                slPatterns.Free;
-              End;
-              If clsSummaryLevel In CommandLineSwitches Then
-                OutputLinesToConsole;
-              PrintFooter(strPath);
-            End;
-        End Else
-          PrintHelp;
+      slExclusions := TstringList.Create;
+      Try
+        If Not (clsExclusions In CommandLineSwitches) Or
+          ((clsExclusions In CommandLineSwitches) And FileExists(strExlFileName)) Then
+          Begin
+            If clsExclusions In CommandLineSwitches Then
+              slExclusions.LoadFromFile(strExlFileName);
+            slExclusions.Text := LowerCase(slExclusions.Text);
+            If Not (clsShowHelp In CommandLineSwitches) Then
+              Begin
+                For i := 0 To slSearchParams.Count - 1 Do
+                  Begin
+                    iPos := Pos('=', slSearchParams[i]);
+                    If iPos = 0 Then
+                      Raise Exception.CreateFmt(strErrorInPathSearchParamString,
+                        [slSearchParams[i]]);
+                    strPath := slSearchParams.Names[i];
+                    If strPath = '' Then
+                      strPath := GetCurrentDir;
+                    If strPath[Length(strPath)] <> '\' Then
+                      strPath := strPath + '\';
+                    strSearch := slSearchParams.Values[slSearchParams.Names[i]];
+                    PrintHeader(strPath, strSearch);
+                    slPatterns := TStringList.Create;
+                    Try
+                      For iPattern := 1 To CharCount(';', strSearch) + 1 Do
+                        slPatterns.Add(GetField(strSearch, ';', iPattern));
+                      SearchDirectory(strPath, slPatterns, iLevel);
+                    Finally
+                      slPatterns.Free;
+                    End;
+                    If clsSummaryLevel In CommandLineSwitches Then
+                      OutputLinesToConsole;
+                    PrintFooter(strPath);
+                  End;
+              End Else
+                PrintHelp;
+          End Else
+            Raise Exception.CreateFmt(strExclusionsNotFound, [strExlFileName]);
+      Finally
+        slExclusions.Free;
+      End;
     Finally
       slSearchParams.Free;
     End;
