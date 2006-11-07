@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    03 Apr 2006
+  @Date    07 Nov 2006
 
 **)
 Unit FileHandling;
@@ -74,7 +74,7 @@ Type
       @postcon None.
       @return  a String
     **)
-    Property Name : String Read FName;
+    Property FileName : String Read FName;
     (**
       A property to returns the number of GREP lines found.
       @precon  None.
@@ -378,7 +378,7 @@ Begin
           End;
         Case OrderBy Of
           obName:
-            If CompareText(FileInfo[iSecond].Name, FileInfo[iFirst].Name) < 0 Then
+            If CompareText(FileInfo[iSecond].FileName, FileInfo[iFirst].FileName) < 0 Then
               iMin := j;
           obDate:
             If FileInfo[iSecond].Date < FileInfo[iFirst].Date Then
