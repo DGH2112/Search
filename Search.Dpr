@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    07 Nov 2006
+  @Date    09 Dec 2006
 
 **)
 Program Search;
@@ -434,6 +434,7 @@ Begin
   OutputLinesToConsole('  Search searchparam1 {searchparam2}... {/A} {/S} {/Q} {/W}');
   OutputLinesToConsole('    {/T[RASHFDV]} {/D:[{DD{/MM{/YY {HH:MM{:SS}}}}}-{DD{/MM{/YY {HH:MM{:SS}}}}}]');
   OutputLinesToConsole('    {/Z[{LowerByteSize}-{UpperByteSize}]} {/O:NDAOS} {/E:CAW} {/I[text]}');
+  OutputLinesToConsole('    {/X[filename]}');
   OutputLinesToConsole('');
   OutputLinesToConsole('  searchparam# = {drive:\path\}filter1{;filter2{;filter3{;...}}}');
   OutputLinesToConsole('');
