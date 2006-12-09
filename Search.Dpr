@@ -451,8 +451,8 @@ Begin
   OutputLinesToConsole('  /T[RASHFFDV]   Show only files with certain attributes');
   OutputLinesToConsole('                 R = Read Only, A = Archive, S = System, H = Hidden,');
   OutputLinesToConsole('                 F = File, D = Directory, and V=  Volume ID');
-  OutputLinesToConsole('  /D[l-{u}]      l = lower bounding date and time,  u = upper bounding date and time');
-  OutputLinesToConsole('  /Z[l-{u}]      l = lower bounding size in bytes, u = upper bounding size in bytes');
+  OutputLinesToConsole('  /D[{l}-{u}]    l = lower bounding date and time,  u = upper bounding date and time');
+  OutputLinesToConsole('  /Z[{l}-{u}]    l = lower bounding size in bytes, u = upper bounding size in bytes');
   OutputLinesToConsole('  /Q             Quiet mode');
   OutputLinesToConsole('  /W             Owner Information');
   OutputLinesToConsole('  /O:NADOS       Order files ascending [+] and descending [-]');
