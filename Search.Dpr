@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    09 Dec 2006
+  @Date    18 Feb 2007
 
 **)
 Program Search;
@@ -293,52 +293,6 @@ End;
 
 (**
 
-  This routine extract the build number from the EXE resources for
-  display in the app title.
-
-  @precon  None.
-  @postcon Extract the build number from the EXE resources for display in the
-           app title.
-
-  @param   iMajor  as an Integer as a reference
-  @param   iMinor  as an Integer as a reference
-  @param   iBugfix as an Integer as a reference
-  @return  a String
-
-**)
-Function GetBuildNumber(var iMajor, iMinor, iBugfix : Integer) : String;
-
-Const
-  strBuild = '%d.%d.%d.%d';
-
-Var
-  VerInfoSize: DWORD;
-  VerInfo: Pointer;
-  VerValueSize: DWORD;
-  VerValue: PVSFixedFileInfo;
-  Dummy: DWORD;
-
-Begin
-  VerInfoSize := GetFileVersionInfoSize(PChar(ParamStr(0)), Dummy);
-  If VerInfoSize <> 0 Then
-    Begin
-      GetMem(VerInfo, VerInfoSize);
-      GetFileVersionInfo(PChar(ParamStr(0)), 0, VerInfoSize, VerInfo);
-      VerQueryValue(VerInfo, '\', Pointer(VerValue), VerValueSize);
-      with VerValue^ do
-      begin
-        iMajor := dwFileVersionMS shr 16;
-        iMinor := dwFileVersionMS and $FFFF;
-        iBugfix := dwFileVersionLS shr 16;
-        Result := Format(strBuild, [iMajor, iMinor, iBugfix, dwFileVersionLS and $FFFF]);
-      end;
-      FreeMem(VerInfo, VerInfoSize);
-    End Else
-      OutputLinesToConsole('This executable does not contain any version information.');
-End;
-
-(**
-
   Prints a Title for the application on the screen.
 
   @precon  None.
@@ -349,20 +303,9 @@ Procedure PrintTitle;
 
 Const
   strTitle = 'Search %d.%d%s (Build %s) File Find and Summary Tool.';
-  strBugFix = ' abcdefghijklmnopqrstuvwxyz';
-
-Var
-  iMajor, iMinor, iBugfix : Integer;
-  strBuildNumber  : String;
-  dtDate : TDateTime;
 
 Begin
-  strBuildNumber := GetBuildNumber(iMajor, iMinor, iBugFix);
-  OutputLinesToConsole(Format(strTitle, [iMajor, iMinor, strBugFix[iBugFix + 1],
-    strBuildNumber]));
-  FileAge(ParamStr(0), dtDate);
-  OutputLinesToConsole(
-    Format('Written by David Hoyle (c) %s', [FormatDateTime('mmm/yyyy', dtDate)]));
+  OutputLinesToConsole(GetConsoleTitle(strTitle));
   OutputLinesToConsole;
 End;
 
