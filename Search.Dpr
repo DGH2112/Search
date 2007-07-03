@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    18 Feb 2007
+  @Date    03 Jul 2007
 
 **)
 Program Search;
@@ -69,6 +69,8 @@ resourcestring
   strOpenSquareExpectedInSearchDef = '"[" Expected in Search Definition.';
   (** An exception message for the exclusions file not found. **)
   strExclusionsNotFound = 'The filename "%s" was not found to process exclusions in the searches.';
+  (** An exception message for the Owner Search Criteria being empty. **)
+  strOwnerSearchIsEmpty = 'You must specify a valid Owner Search Criteria.';
 
 (**
 
@@ -89,8 +91,8 @@ procedure IncrementSwitchPosition(var iIndex, iSwitch: Integer;
 
 begin
   Inc(iIndex);
-  if Length(ParamStr(iSwitch)) < iIndex then
-    raise Exception.Create(strExceptionMsg);
+  If Length(ParamStr(iSwitch)) < iIndex then
+    Raise Exception.Create(strExceptionMsg);
 end;
 
 Type
@@ -114,6 +116,12 @@ Type
     clsDisplayCriteria,  { /c or -c }
     clsExclusions        { /x or -x }
   );
+  
+  (** This is an enumerate to defines whether the owner should be searched. **)
+  TOwnerSearch = (osNone, osEquals, osNotEquals);
+  
+  (** This is an enumerate to defines where the owner should be searched. **)
+  TOwnerSearchPos = (ospExact, ospStart, ospMiddle, ospEnd);
 
   (** This is a set of boolean command line switches. **)
   TCommandLineSwitches = Set of TCommandLineSwitch;
@@ -193,6 +201,10 @@ Var
   strExlFileName : String;
   (** A string list of exclusions to be applied to the searches. **)
   slExclusions : TStringList;
+  (** A string to hold the owner search criteria. **)
+  strOwnerSearch : String;
+  OwnerSearch : TOwnerSearch;
+  OwnerSearchPos : TOwnerSearchPos;
 
 Const
   (** A constant to define that only files should be listed. **)
@@ -397,7 +409,7 @@ Begin
   OutputLinesToConsole('  /D[{l}-{u}]    l = lower bounding date and time,  u = upper bounding date and time');
   OutputLinesToConsole('  /Z[{l}-{u}]    l = lower bounding size in bytes, u = upper bounding size in bytes');
   OutputLinesToConsole('  /Q             Quiet mode');
-  OutputLinesToConsole('  /W             Owner Information');
+  OutputLinesToConsole('  /W {[Owner]}   Owner Information');
   OutputLinesToConsole('  /O:NADOS       Order files ascending [+] and descending [-]');
   OutputLinesToConsole('                 N = Name, A = Attribute, D = Date and Time, O = Owner, S = Size');
   OutputLinesToConsole('  /E:CAW         Type of file date to display and search on:');
@@ -541,8 +553,10 @@ Begin
   GetSize(iUSize, strInvalidUpperSizeRange, $F00000000000000);
 End;
 
+{$IFDEF VER180}
 {$WARN SYMBOL_PLATFORM OFF}
 {$WARN SYMBOL_DEPRECATED OFF}
+{$ENDIF}
 
 (**
 
@@ -801,7 +815,7 @@ Procedure DisplayCriteria();
       strKMG := strSizes[iReductions]
     Else
       strKMG := '';
-    Result := Format('%1.0n%s', [Int(iSize), strKMG]);
+    Result := Format('%1.0n%s', [Int64(iSize), strKMG]);
   End;
 
   (**
@@ -893,6 +907,62 @@ End;
 
 (**
 
+  This method obtains the owner search information from the command line.
+
+  @precon  None.
+  @postcon Obtains the owner search information from the command line.
+
+  @param   iSwitch as an Integer as a reference
+  @param   iIndex  as an Integer as a reference
+
+**)
+Procedure GetOwnerSwitch(var iSwitch, iIndex : Integer);
+
+Begin
+  Include(CommandLineSwitches, clsOwner);
+  OwnerSearch := osNone;
+  OwnerSearchPos := ospExact;
+  If Length(ParamStr(iSwitch)) = iIndex Then
+    Exit;
+  IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInSearchDef);
+  If ParamStr(iSwitch)[iIndex] = '[' Then
+    Begin
+      IncrementSwitchPosition(iIndex, iSwitch, strMissingSearchText);
+      While (iIndex <= Length(ParamStr(iSwitch))) And
+        (ParamStr(iSwitch)[iIndex] <> ']') Do
+        Begin
+          strOwnerSearch := strOwnerSearch + ParamStr(iSwitch)[iIndex];
+          IncrementSwitchPosition(iIndex, iSwitch, strCloseSquareExpectedInSearchDef);
+        End;
+      OwnerSearch := osEquals;
+      If Length(strOwnerSearch) > 0 Then
+        Begin
+          If strOwnerSearch[1] = '!' Then
+            Begin
+              OwnerSearch := osNotEquals;
+              Delete(strOwnerSearch, 1, 1);
+            End;
+          If strOwnerSearch[1] = '*' Then
+            Begin
+              OwnerSearchPos := ospStart;
+              Delete(strOwnerSearch, 1, 1);
+            End;
+          If strOwnerSearch[Length(strOwnerSearch)] = '*' Then
+            Begin
+              If OwnerSearchPos = ospStart Then
+                OwnerSearchPos := ospMiddle
+              Else
+                OwnerSearchPos := ospEnd;
+              Delete(strOwnerSearch, Length(strOwnerSearch), 1);
+            End;
+        End;
+      If Length(strOwnerSearch) = 0 Then
+        Raise Exception.Create(strOwnerSearchIsEmpty);
+    End;
+End;
+
+(**
+
   This gets all the command lines switches and sets numerous flags.
 
   @precon  None.
@@ -933,7 +1003,7 @@ Begin
                 'z', 'Z': GetSizeRange(iSwitch, iIndex);
                 't', 'T': GetAttributes(iSwitch, iIndex);
                 'q', 'Q': Include(CommandLineSwitches, clsQuiet);
-                'w', 'W': Include(CommandLineSwitches, clsOwner);
+                'w', 'W': GetOwnerSwitch(iSwitch, iIndex);
                 'o', 'O': GetOrderBy(iSwitch, iIndex);
                 'i', 'I': GetSearchInInfo(iSwitch, iIndex);
                 'e', 'E': GetDateType(iSwitch, iIndex);
@@ -1040,6 +1110,7 @@ Var
   Owner : PSID;
 
 Begin
+  Result := '';
   If GetNamedSecurityInfo(PChar(strFileName), SE_FILE_OBJECT,
     OWNER_SECURITY_INFORMATION, @Owner, Nil, Nil, Nil,
     Pointer(SD)) = ERROR_SUCCESS Then
@@ -1060,10 +1131,12 @@ End;
   @param   recSearch as a TSearchRec
   @param   iDirFiles as an Integer as a reference
   @param   Result    as an Int64 as a reference
-  @param   strPath   as a string
+  @param   strPath   as a String
+  @param   strOwner  as a String
 
 **)
-procedure CheckFiles(iSize: Int64; recSearch: TSearchRec; var iDirFiles: Integer; var Result: Int64; strPath: string);
+procedure CheckFiles(iSize: Int64; recSearch: TSearchRec; var iDirFiles: Integer;
+  var Result: Int64; strPath, strOwner: string);
 
 Var
   dtDate, dtDateLocal : TFileTime;
@@ -1083,7 +1156,7 @@ begin
       iTime := 0;
       FileTimeToDosDateTime(dtDateLocal, LongRec(iTime).Hi, LongRec(iTime).Lo);
       boolAdded := objFiles.Add(FileDateToDateTime(iTime), iSize,
-        OutputAttributes(recSearch.Attr), OutputOwner(strPath + recSearch.name),
+        OutputAttributes(recSearch.Attr), strOwner,
         strPath + recSearch.Name, strSearchInText);
     end Else
       boolAdded := True;
@@ -1210,7 +1283,7 @@ begin
       If Pos('D', objFiles.FileInfo[i].Attr) = 0 Then
         strOutput := Format('  %s  %15.0n  ', [
           FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', objFiles.FileInfo[i].Date),
-          Int(objFiles.FileInfo[i].Size)])
+          objFiles.FileInfo[i].Size + 0.1])
       Else
         strOutput := Format('  %s  %15s  ', [
           FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', objFiles.FileInfo[i].Date),
@@ -1315,6 +1388,39 @@ End;
 
 (**
 
+  This method check the owner of the file against the owner search criteria.
+
+  @precon  None.
+  @postcon Check the owner of the file against the owner search criteria.
+
+  @param   strOwner  as a String
+  @param   boolFound as a Boolean as a reference
+
+**)
+Procedure CheckOwner(strOwner : String; var boolFound : Boolean);
+
+Var
+  i : Integer;
+  bool : Boolean;
+
+Begin
+  i := Length(strOwnerSearch);
+  Case OwnerSearchPos Of
+    ospExact : bool := AnsiCompareText(strOwner, strOwnerSearch) = 0;
+    ospStart : bool := LowerCase(strOwnerSearch) = Copy(Lowercase(strOwnerSearch), 1, i);
+    ospMiddle: bool := Pos(LowerCase(strOwnerSearch), LowerCase(strOwner)) > 0;
+    ospEnd   : bool := LowerCase(strOwnerSearch) = Copy(Lowercase(strOwnerSearch),
+      Length(strOwner) - i, i);
+  Else
+    bool := True;
+  End;
+  If OwnerSearch = osNotEquals  Then
+    bool := Not bool;
+  boolFound := boolFound And bool
+End;
+
+(**
+
   This method search the current directory for files which match all the
   specified search patterns.
 
@@ -1335,6 +1441,7 @@ procedure SearchForPatterns(slPatterns: TStringList; var iResult: Integer; boolF
 var
   iPattern: Integer;
   iSize: Int64;
+  strOwner : String;
 
 begin
   for iPattern := 0 to slPatterns.Count - 1 do
@@ -1348,8 +1455,13 @@ begin
         CheckSizeRange(iSize, boolFound);
         CheckDateRange(recSearch, boolFound);
         CheckExclusions(strPath, recSearch, boolFound);
+        If clsOwner In CommandLineSwitches Then
+          Begin
+            strOwner := OutputOwner(strPath + recSearch.Name);
+            CheckOwner(strOwner, boolFound);
+          End;
         if boolFound then
-          CheckFiles(iSize, recSearch, iDirFiles, Result, strPath);
+          CheckFiles(iSize, recSearch, iDirFiles, Result, strPath, strOwner);
         iResult := FindNext(recSearch);
         boolFound := True;
       end;
