@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    07 Nov 2006
+  @Date    29 Jul 2007
 
 **)
 Unit FileHandling;
@@ -103,7 +103,7 @@ Type
     Constructor Create;
     Destructor Destroy; Override;
     Function Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
-      strName, strGREPText : String) : Boolean;
+      strName, strGREPText : String; iFileAttrs : Integer) : Boolean;
     (**
       A property to return a specific file from the collection.
       @precon  iIndex must be a valid index.
@@ -253,11 +253,12 @@ End;
   @param   strOwner    as a String
   @param   strName     as a String
   @param   strGREPText as a String
+  @param   iFileAttrs  as an Integer
   @return  a Boolean
 
 **)
 Function TFiles.Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
-  strName, strGREPText : String) : Boolean;
+  strName, strGREPText : String; iFileAttrs : Integer) : Boolean;
 
 Var
   FFile : TFile;
@@ -268,7 +269,7 @@ Begin
   Result := True;
   FFile := TFile.Create(dtDate, iSize, strAttr, strOwner, strName);
   strGREPText := Lowercase(strGREPText);
-  If strGREPText <> '' Then
+  If (strGREPText <> '') And (iFileAttrs And faDirectory = 0) Then
     Begin
       slFile := TStringList.Create;
       Try
