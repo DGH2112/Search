@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    03 Jul 2007
+  @Date    29 Jul 2007
 
 **)
 Program Search;
@@ -21,8 +21,12 @@ uses
   Classes,
   ACCCTRL,
   Contnrs,
+  Graphics,
+  ActiveX,
   DGHLibrary in '..\..\library\DGHLibrary.pas',
-  FileHandling in 'Source\FileHandling.pas';
+  FileHandling in 'Source\FileHandling.pas',
+  ConsoleCheckForUpdates in '..\..\LIBRARY\ConsoleCheckForUpdates.pas',
+  MSXML2_TLB in '..\..\LIBRARY\MSXML2_TLB.pas';
 
 resourcestring
   (** An exception message for a missing colon in the order by definition. **)
@@ -64,13 +68,142 @@ resourcestring
   (** An exception message for a missing Search Text definition. **)
   strMissingSearchText = 'Missing Search Text';
   (** An exception message for a missing ] in an Search definition. **)
-  strCloseSquareExpectedInSearchDef = '"]" Expected in Search Definition';
+  strCloseSquareExpectedInGREPSearchDef = '"]" Expected in GREP Search Definition';
   (** An exception message for a missing [ in an Search definition. **)
-  strOpenSquareExpectedInSearchDef = '"[" Expected in Search Definition.';
+  strOpenSquareExpectedInGREPSearchDef = '"[" Expected in GREP Search Definition.';
+  (** An exception message for a missing ] in an Search definition. **)
+  strCloseSquareExpectedInExclSearchDef = '"]" Expected in Exclusion Search Definition';
+  (** An exception message for a missing [ in an Search definition. **)
+  strOpenSquareExpectedInExclSearchDef = '"[" Expected in Exclusion Search Definition.';
+  (** An exception message for a missing ] in an Search definition. **)
+  strCloseSquareExpectedInOwnerSearchDef = '"]" Expected in Owner Search Definition';
+  (** An exception message for a missing [ in an Search definition. **)
+  strOpenSquareExpectedInOwnerSearchDef = '"[" Expected in Owner Search Definition.';
   (** An exception message for the exclusions file not found. **)
-  strExclusionsNotFound = 'The filename "%s" was not found to process exclusions in the searches.';
+  strExclusionsNotFound = 'The filename "%s" was not found to process exclusions ' +
+    'in the searches.';
   (** An exception message for the Owner Search Criteria being empty. **)
   strOwnerSearchIsEmpty = 'You must specify a valid Owner Search Criteria.';
+  strRegRoot = 'Software\Season''s Fall\Search\';
+  strException = 'Exception: %s';
+  strWebSiteURL = 'http://www.hoyld.freeserve.co.uk/HoylD.xml';
+  strAppID = 'Search';
+  (** This is a constant to represent a parameter string error. **)
+  strErrorInPathSearchParamString = 'There was an error in the path=search ' +
+    'param pairing. (%s)';
+  strDateFormat = 'ddd dd/mmm/yyyy hh:mm:ss';
+  strNeedToSpecifyCriteria = 'You need to specify at least one search criteria.';
+  strInvalidCommandLineSwitch = 'Invalid command line switch "%s" in parameter "%s."';
+  strForceACheckForUpdate = 'Force a check for updates to the software from ' +
+  'the Internet.';
+  strApplyingExclusions = 'Applying exclusions from the file "%s".';
+  strSearchForText = 'Search for the text "%s" within the files.';
+  strDisplayingFileLastWriteDates = 'Displaying file Last Write Dates.';
+  strDisplayingFileLastAccessDates = 'Displaying file Last Access Dates.';
+  strDisplayingFileCreationDates = 'Displaying file Creation Dates.';
+  strOrderingFilesInDescOrder = 'Descending Order';
+  strOrderingFilesByTheirAttrs = 'Ordering files by their Attributes';
+  strOrderingFilesByOwner = 'Ordering files by Owner';
+  strOrderingFilesByDate = 'Ordering files by Date';
+  strOrderingFilesBySize = 'Ordering files by Size';
+  strOrderingFilesByName = 'Ordering files by Name';
+  strDisplayTheOwners = 'Display the Owners of the files found';
+  strQuietMode = 'Quiet mode - no progress updates.';
+  strDisplayFilesWithSIzes = 'Display files with sizes between %s and %s byt' +
+  'es.';
+  strDisplayFilesWithDates = 'Display files with dates between %s and %s.';
+  strSupressingSummary = 'Supressing summary information on directories with' +
+  ' zero files.';
+  strSummarisingOutput = 'Summarising output to the %d level of detail from ' +
+  'the specified starting point.';
+  strDisplayingFileAttibs = 'Displaying File and Directory Attributes.';
+  strDEBUGReadLnPause = 'Pause after finish.';
+  strRecursingSubdirectories = 'Recursing sub-directories.';
+  strSearchCriteria = 'Search Criteria and Command Line Options Used in this' +
+  ' Session.';
+  strSearchingForFiles = 'Searching for files with the following attibutes:';
+  strReadOnly = '        Read Only';
+  strArchive = '        Archive';
+  strSystemFile = '        System File';
+  strHidden = '        Hidden';
+  strFile = '        File';
+  strDirectory = '        Directory';
+  strVolume = '        Volume';
+  strSummaryLevelException = 'The summary level "%s" is invalid.';
+  strSummaryAlreadySet = 'Then summary level is already set.';
+  strMsg1 = '  Found %1.0n bytes in %1.0n Files in %1.0n Directories.';
+  strMsg2 = '  Total space %1.0n bytes, and %1.0n bytes Free.';
+  strTitle = 'Search %d.%d%s (Build %s) File Find and Summary Tool.';
+  strPressEnterToFinish = 'Press <Enter> to finish.';
+  strSummaryFormat = '%15.0n%s%s';
+  strOwnerFormat = '%-*s  ';
+  strAttrFormat = '%s  ';
+  strDirFormat = '  %s  %15s  ';
+  strFileFormat = '  %s  %15.0n  ';
+  strOwnerAtTheEnd = ' at the end';
+  strOwnerInTheMiddle = ' in the middle';
+  strOwnerAtTheStart = ' at the start';
+  strOwnerExact = ' exactly';
+  strOwnerMatching = 'matching "%s"';
+  strOwnerNOT = 'NOT ';
+  strOwnerSearchingFor = ' Searching for Owners ';
+  strReduceSizeFormat = '%1.0n%s';
+  strDisplayTextSwitchFormat = '  %2s';
+  strDisplatTextInfoFormat = ') %s';
+  strSearchingForHeader = 'Searching "%s" for "%s".';
+  strOutputCurrPathFormat = '%s%-*s';
+  strSearchLabel = 'Searching: (%d) ';
+  strHelp0010 = 'Syntax:';
+  strHelp0020 = 'Search searchparam1 {searchparam2}... {/A} {/S} {/Q} {/W}';
+  strHelp0030 = '{/T[RASHFDV]} {/D:[{DD{/MM{/YY {HH:MM{:SS}}}}}-{DD{/MM{' +
+  '/YY {HH:MM{:SS}}}}}]';
+  strHelp0040 = '{/Z[{LowerByteSize}-{UpperByteSize}]} {/O:NDAOS} {/E:CA' +
+  'W} {/I[text]}';
+  strHelp0050 = '{/X[filename]}';
+  strHelp0060 = 'searchparam# = {drive:\path\}filter1{;filter2{;filter3{;.' +
+  '..}}}';
+  strHelp0070 = 'filter#';
+  strHelp0075 = 'can contain wildcards * and ? within the filename. ';
+  strHelp0080 = '{ ... } denotes optional items.';
+  strHelp0090 = '/?';
+  strHelp0095 = 'This help screen';
+  strHelp0100 = '/A';
+  strHelp0105 = 'Show file and directory attributes';
+  strHelp0110 = '/S';
+  strHelp0115 = 'Recurse subdirectories';
+  strHelp0120 = '/1..9';
+  strHelp0125 = 'Summarise subdirectories';
+  strHelp0130 = '/0';
+  strHelp0135 = 'Hide empty Summarised subdirectories';
+  strHelp0140 = '/T[RASHFFDV]';
+  strHelp0145 = 'Show only files with certain attributes';
+  strHelp0150 = 'R = Read Only, A = Archive, S = System, H = Hidden,';
+  strHelp0160 = 'F = File, D = Directory, and V = Volume ID';
+  strHelp0170 = '/D[{l}-{u}]';
+  strHelp0175 = 'Searches for files between dates (l) and (u).';
+  strHelp0177 = 'l = lower bounding date and time, u = upper bounding date and time';
+  strHelp0180 = '/Z[{l}-{u}]';
+  strHelp0185 = 'Searches for files between sizes (l) and (u).';
+  strHelp0187 = 'l = lower bounding size in bytes, u = upper bounding size in bytes';
+  strHelp0190 = '/Q';
+  strHelp0195 = 'Quiet mode';
+  strHelp0200 = '/W {[Owner]}';
+  strHelp0205 = 'Owner Information. The owner search can be a wildcard search with an *.';
+  strHelp0207 = 'Searches beginning with ! force a negated criteria.';
+  strHelp0210 = '/O:NADOS';
+  strHelp0215 = 'Order files ascending [+] and descending [-]';
+  strHelp0220 = 'N = Name, A = Attribute, D = Date and Time, O = Owner, S = Size';
+  strHelp0230 = '/E:CAW';
+  strHelp0235 = 'Type of file date to display and search on:';
+  strHelp0240 = 'C = Creation, A = Last Access, W = Last Write (Default)';
+  strHelp0250 = '/I[text]';
+  strHelp0255 = 'Search within files for text.';
+  strHelp0260 = '/C';
+  strHelp0265 = 'Display a list of Criteria and Command Line Options.';
+  strHelp0270 = '/X[FileName]';
+  strHelp0275 = 'A list of exclusions to apply to paths and filenames.';
+  strHelp0280 = 'NOTE: The date time input format is dependent on your loc' +
+  'al settings';
 
 (**
 
@@ -98,11 +231,10 @@ end;
 Type
   (** This is a list of boolean on / off command line switches. **)
   TCommandLineSwitch = (
-    clsShowHelp,         { /? or -? }
+    clsShowHelp,         { /? or -? or /h or -h }
     clsSubDirectories,   { /s or -s }
     clsDebug,            { /!       }
     clsShowAttribs,      { /a or -a }
-    clsPause,            { /p or -p }
     clsSummaryLevel,     { /1..9 or -1..9 }
     clsSupressZeros,     { /0 or -0 }
     clsDateRange,        { /d or -d }
@@ -114,14 +246,15 @@ Type
     clsSearchIn,         { /i or -i }
     clsDateType,         { /e or -e }
     clsDisplayCriteria,  { /c or -c }
-    clsExclusions        { /x or -x }
+    clsExclusions,       { /x or -x }
+    clsUpdate            { /u or -u }
   );
-  
+
   (** This is an enumerate to defines whether the owner should be searched. **)
-  TOwnerSearch = (osNone, osEquals, osNotEquals);
-  
+  TOwnerSearch = (osEquals, osNotEquals);
+
   (** This is an enumerate to defines where the owner should be searched. **)
-  TOwnerSearchPos = (ospExact, ospStart, ospMiddle, ospEnd);
+  TOwnerSearchPos = (ospNone, ospExact, ospStart, ospMiddle, ospEnd);
 
   (** This is a set of boolean command line switches. **)
   TCommandLineSwitches = Set of TCommandLineSwitch;
@@ -160,6 +293,7 @@ Var
   CommandLineSwitches : TCommandLineSwitches;
   (** The otal number of file found by the search. **)
   iFiles : Integer;
+  iTotalFiles : Integer;
   (** The total number of directories found by the search. **)
   iDirectories : Integer;
   (** This is the upper limit of a file size search. **)
@@ -176,8 +310,6 @@ Var
   iHeight : Integer;
   (** Width of the console. **)
   iWidth : Integer;
-  (** This is the current number of lines outputted to the console. **)
-  iLinesOutputted : Integer;
   (** This is a list of file attributes that are required in a search. **)
   iFileAttrs : Integer;
   (** This is a list of file type attributes that are required in a search. **)
@@ -205,38 +337,12 @@ Var
   strOwnerSearch : String;
   OwnerSearch : TOwnerSearch;
   OwnerSearchPos : TOwnerSearchPos;
+  FStd : THandle;
+  FErr : THandle;
 
 Const
   (** A constant to define that only files should be listed. **)
   iFileOnly = $0100;
-
-(**
-
-  This routine is used to output all the text to the screen. It monitors
-  how many lines have been output and pauses after a full screen full.
-
-  @precon  None.
-  @postcon Used to output all the text to the screen. It monitors how many lines
-           have been output and pauses after a full screen full.
-
-  @param   strText as a String
-
-**)
-Procedure OutputLinesToConsole(strText : String = '');
-
-Begin
-  If clsQuiet In CommandLineSwitches Then
-    Writeln(strText)
-  Else
-    Writeln(strText + StringOfChar(#32, iWidth - Length(strText) - 1));
-  Inc(iLinesOutputted);
-  If (clsPause In CommandLineSwitches) And (iLinesOutputted >= (iHeight - 1)) Then
-    Begin
-      Write('Press any <Enter> to continue...');
-      Readln;
-      iLinesOutputted := 0;
-    End;
-End;
 
 (**
 
@@ -250,10 +356,12 @@ End;
 Procedure GetConsoleInformation;
 
 Var
-  ConsoleInfo : _CONSOLE_SCREEN_BUFFER_INFO;
+  ConsoleInfo : TConsoleScreenBufferInfo;
 
 Begin
-  GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), ConsoleInfo);
+  FStd := GetStdHandle(STD_OUTPUT_HANDLE);
+  FErr := GetStdHandle(STD_ERROR_HANDLE);
+  GetConsoleScreenBufferInfo(FStd, ConsoleInfo);
   iWidth := ConsoleInfo.dwSize.X;
   iHeight := ConsoleInfo.dwSize.Y;
 End;
@@ -270,17 +378,15 @@ End;
 **)
 Procedure OutputCurrentSearchPath(strPath : String);
 
-Const
-  strLabel : String = 'Searching... ';
-  iLength : Integer = 14;
-
 Var
   C : CONSOLE_SCREEN_BUFFER_INFO;
   i, j : Integer;
+  iLength : Integer;
 
 Begin
   If clsQuiet In CommandLineSwitches Then Exit;
-  GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), C);
+  GetConsoleScreenBufferInfo(FStd, C);
+  iLength := Length(Format(strSearchLabel, [iTotalFiles]));
   While Length(strPath) > (iWidth - iLength) Do
     Begin
       If Pos('...', strPath) = 0 Then
@@ -297,9 +403,10 @@ Begin
             strPath := StringReplace(strPath, Copy(strPath, i, j - i), '', []);
         End;
     End;
-  strPath := Format('%s%-*s', [strLabel, iWidth - iLength, strPath]);
-  Write(strPath);
-  SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), C.dwCursorPosition);
+  strPath := Format(strOutputCurrPathFormat, [Format(strSearchLabel,
+    [iTotalFiles]), iWidth - iLength, strPath]);
+  OutputToConsoleLn(FStd, strPath, clMaroon, clNone, False);
+  SetConsoleCursorPosition(FStd, C.dwCursorPosition);
 End;
 
 
@@ -313,12 +420,9 @@ End;
 **)
 Procedure PrintTitle;
 
-Const
-  strTitle = 'Search %d.%d%s (Build %s) File Find and Summary Tool.';
-
 Begin
-  OutputLinesToConsole(GetConsoleTitle(strTitle));
-  OutputLinesToConsole;
+  OutputToConsoleLn(FStd, GetConsoleTitle(strTitle));
+  OutputToConsoleLn(FStd);
 End;
 
 (**
@@ -335,7 +439,8 @@ End;
 Procedure PrintHeader(strPath, strPattern : String);
 
 Begin
-  OutputLinesToConsole('Searching "' + strPath + '" for "' + strPattern + '".');
+  OutputToConsoleLn(FStd, Format(strSearchingForHeader, [strPath, strPattern]),
+    clYellow);
   iFiles := 0;
   iDirectories := 0;
   iFileSize := 0;
@@ -353,10 +458,6 @@ End;
 **)
 Procedure PrintFooter(strPath : String);
 
-Const
-  strMsg1 = '  Found %1.0n bytes in %1.0n Files in %1.0n Directories.';
-  strMsg2 = '  Total space %1.0n bytes, and %1.0n bytes Free.';
-
 Var
   iFreeBytesAvailableToCaller,
   iTotalNumberOfBytes,
@@ -365,11 +466,11 @@ Var
 Begin
   GetDiskFreeSpaceEx(PChar(strPath), iFreeBytesAvailableToCaller,
     iTotalNumberOfBytes, @iTotalNumberOfFreeBytes);
-  OutputLinesToConsole(Format(strMsg1, [iFileSize + 0.1, iFiles + 0.1,
-    iDirectories + 0.1]));
-  OutputLinesToConsole(Format(strMsg2, [iTotalNumberOfBytes + 0.1,
-    iTotalNumberOfFreeBytes + 0.1]));
-  OutputLinesToConsole;
+  OutputtoConsole(FStd, StringOfChar(#32, iWidth - 1), clNone, clNone, False);
+  OutputToConsoleLn(FStd, Format(strMsg1, [iFileSize + 0.1, iFiles + 0.1,
+    iDirectories + 0.1]), clWhite);
+  OutputToConsoleLn(FStd, Format(strMsg2, [iTotalNumberOfBytes + 0.1,
+    iTotalNumberOfFreeBytes + 0.1]), clWhite);
 End;
 
 (**
@@ -384,42 +485,85 @@ End;
 **)
 Procedure PrintHelp;
 
+  (**
+
+    This function formats the output information with indents and padding to a
+    specific width.
+
+    @precon  None.
+    @postcon Formats the output information with indents and padding to a
+             specific width.
+
+    @param   strText as a String
+    @param   iIndent as an Integer
+    @param   iWidth  as an Integer
+    @return  a String
+
+  **)
+  Function Indent(strText : String; iIndent, iWidth : Integer) : String;
+
+  Begin
+    Result := StringOfChar(#32, iIndent) + Format('%-*s', [iWidth, strText]);
+  End;
+
+Const
+  iWidth = 14;
+  iTextIndent = 16;
+
 Begin
-  OutputLinesToConsole('Syntax:');
-  OutputLinesToConsole('  Search searchparam1 {searchparam2}... {/A} {/S} {/Q} {/W}');
-  OutputLinesToConsole('    {/T[RASHFDV]} {/D:[{DD{/MM{/YY {HH:MM{:SS}}}}}-{DD{/MM{/YY {HH:MM{:SS}}}}}]');
-  OutputLinesToConsole('    {/Z[{LowerByteSize}-{UpperByteSize}]} {/O:NDAOS} {/E:CAW} {/I[text]}');
-  OutputLinesToConsole('    {/X[filename]}');
-  OutputLinesToConsole('');
-  OutputLinesToConsole('  searchparam# = {drive:\path\}filter1{;filter2{;filter3{;...}}}');
-  OutputLinesToConsole('');
-  OutputLinesToConsole('  filter# can contain wildcards * and ? within the filename. ');
-  OutputLinesToConsole('');
-  OutputLinesToConsole('  { ... } denotes optional items.');
-  OutputLinesToConsole('');
-  OutputLinesToConsole('  /?             This help screen');
-  OutputLinesToConsole('  /A             Show file and directory attributes');
-  OutputLinesToConsole('  /P             Pause the results after each screen');
-  OutputLinesToConsole('  /S             Recurse subdirectories');
-  OutputLinesToConsole('  /1..9          Summarise subdirectories');
-  OutputLinesToConsole('  /0             Hide empty Summarised subdirectories');
-  OutputLinesToConsole('  /T[RASHFFDV]   Show only files with certain attributes');
-  OutputLinesToConsole('                 R = Read Only, A = Archive, S = System, H = Hidden,');
-  OutputLinesToConsole('                 F = File, D = Directory, and V=  Volume ID');
-  OutputLinesToConsole('  /D[{l}-{u}]    l = lower bounding date and time,  u = upper bounding date and time');
-  OutputLinesToConsole('  /Z[{l}-{u}]    l = lower bounding size in bytes, u = upper bounding size in bytes');
-  OutputLinesToConsole('  /Q             Quiet mode');
-  OutputLinesToConsole('  /W {[Owner]}   Owner Information');
-  OutputLinesToConsole('  /O:NADOS       Order files ascending [+] and descending [-]');
-  OutputLinesToConsole('                 N = Name, A = Attribute, D = Date and Time, O = Owner, S = Size');
-  OutputLinesToConsole('  /E:CAW         Type of file date to display and search on:');
-  OutputLinesToConsole('                 C = Creation, A = Last Access, W = Last Write (Default)');
-  OutputLinesToConsole('  /I[text]       Search within files for text.');
-  OutputLinesToConsole('  /C             Display a list of Criteria and Command Line Options.');
-  OutputLinesToConsole('  /X[FileName]   A list of exclusions to apply to paths and filenames.');
-  OutputLinesToConsole('');
-  OutputLinesToConsole('  NOTE: The date time input format is dependent on your local settings');
-  OutputLinesToConsole('');;
+  OutputToConsoleLn(FStd, strHelp0010, clWhite);
+  OutputToConsoleLn(FStd, Indent(strHelp0020, 2, 0), clLime);
+  OutputToConsoleLn(FStd, Indent(strHelp0030, 4, 0), clLime);
+  OutputToConsoleLn(FStd, Indent(strHelp0040, 4, 0), clLime);
+  OutputToConsoleLn(FStd, Indent(strHelp0050, 4, 0), clLime);
+  OutputToConsoleLn(FStd);
+  OutputToConsoleLn(FStd, Indent(strHelp0060, 2, 0), clLime);
+  OutputToConsoleLn(FStd);
+  OutputToConsole(FStd, Indent(strHelp0070, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0075);
+  OutputToConsoleLn(FStd);
+  OutputToConsoleLn(FStd, Indent(strHelp0080, iTextIndent, 0));
+  OutputToConsoleLn(FStd);
+  OutputToConsole(FStd, Indent(strHelp0090, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0095);
+  OutputToConsole(FStd, Indent(strHelp0100, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0105);
+  OutputToConsole(FStd, Indent(strHelp0110, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0115);
+  OutputToConsole(FStd, Indent(strHelp0120, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0125);
+  OutputToConsole(FStd, Indent(strHelp0130, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0135);
+  OutputToConsole(FStd, Indent(strHelp0140, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0145);
+  OutputToConsoleLn(FStd, Indent(strHelp0150, iTextIndent + 2, 0), clLime);
+  OutputToConsoleLn(FStd, Indent(strHelp0160, iTextIndent + 2, 0), clLime);
+  OutputToConsole(FStd, Indent(strHelp0170, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0175);
+  OutputToConsoleLn(FStd, Indent(strHelp0177, iTextIndent + 2, 0), clLime);
+  OutputToConsole(FStd, Indent(strHelp0180, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0185);
+  OutputToConsoleLn(FStd, Indent(strHelp0187, iTextIndent + 2, 0), clLime);
+  OutputToConsole(FStd, Indent(strHelp0190, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0195);
+  OutputToConsole(FStd, Indent(strHelp0200, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0205);
+  OutputToConsoleLn(FStd, Indent(strHelp0207, iTextIndent, 0));
+  OutputToConsole(FStd, Indent(strHelp0210, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0215);
+  OutputToConsoleLn(FStd, Indent(strHelp0220, iTextIndent + 2, 0), clLime);
+  OutputToConsole(FStd, Indent(strHelp0230, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0235);
+  OutputToConsoleLn(FStd, Indent(strHelp0240, iTextIndent + 2, 0), clLime);
+  OutputToConsole(FStd, Indent(strHelp0250, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0255);
+  OutputToConsole(FStd, Indent(strHelp0260, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0265);
+  OutputToConsole(FStd, Indent(strHelp0270, 2, iWidth), clRed);
+  OutputToConsoleLn(FStd, strHelp0275);
+  OutputToConsoleLn(FStd);
+  OutputToConsoleLn(FStd, strHelp0280, clYellow);
+  OutputToConsoleLn(FStd);
 End;
 
 (**
@@ -553,11 +697,6 @@ Begin
   GetSize(iUSize, strInvalidUpperSizeRange, $F00000000000000);
 End;
 
-{$IFDEF VER180}
-{$WARN SYMBOL_PLATFORM OFF}
-{$WARN SYMBOL_DEPRECATED OFF}
-{$ENDIF}
-
 (**
 
   This method determines the attribute range from the command line.
@@ -683,15 +822,15 @@ Procedure GetSearchInInfo(var iSwitch, iIndex : Integer);
 
 Begin
   Include(CommandLineSwitches, clsSearchIn);
-  IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInSearchDef);
+  IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInGREPSearchDef);
   If ParamStr(iSwitch)[iIndex] <> '[' Then
-    Raise Exception.Create(strOpenSquareExpectedInSearchDef);
+    Raise Exception.Create(strOpenSquareExpectedInGREPSearchDef);
   IncrementSwitchPosition(iIndex, iSwitch, strMissingSearchText);
   While (iIndex <= Length(ParamStr(iSwitch))) And
     (ParamStr(iSwitch)[iIndex] <> ']') Do
     Begin
       strSearchInText := strSearchInText + ParamStr(iSwitch)[iIndex];
-      IncrementSwitchPosition(iIndex, iSwitch, strCloseSquareExpectedInSearchDef);
+      IncrementSwitchPosition(iIndex, iSwitch, strCloseSquareExpectedInGREPSearchDef);
     End;
 End;
 
@@ -707,10 +846,6 @@ End;
 
 **)
 Procedure GetSummaryLevel(Var iSwitch : Integer; iSwitches : Integer);
-
-Const
-  strSummaryLevelException = 'The summary level "%s" is invalid.';
-  strSummaryAlreadySet = 'Then summary level is already set.';
 
 Var
   iCode : Integer;
@@ -741,15 +876,15 @@ Procedure GetExclusions(var iSwitch, iIndex : Integer);
 
 Begin
   Include(CommandLineSwitches, clsExclusions);
-  IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInSearchDef);
+  IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInExclSearchDef);
   If ParamStr(iSwitch)[iIndex] <> '[' Then
-    Raise Exception.Create(strOpenSquareExpectedInSearchDef);
+    Raise Exception.Create(strOpenSquareExpectedInExclSearchDef);
   IncrementSwitchPosition(iIndex, iSwitch, strMissingSearchText);
   While (iIndex <= Length(ParamStr(iSwitch))) And
     (ParamStr(iSwitch)[iIndex] <> ']') Do
     Begin
       strExlFileName := strExlFileName + ParamStr(iSwitch)[iIndex];
-      IncrementSwitchPosition(iIndex, iSwitch, strCloseSquareExpectedInSearchDef);
+      IncrementSwitchPosition(iIndex, iSwitch, strCloseSquareExpectedInExclSearchDef);
     End;
 End;
 
@@ -772,14 +907,25 @@ Procedure DisplayCriteria();
     @precon  None.
     @postcon Outputs a single switch and its correpsonding message.
 
-    @param   strSwitch as a String
-    @param   strText   as a String
+    @param   ASwitch            as a TCommandLineSwitch
+    @param   strSwitch          as a String
+    @param   strText            as a String
+    @param   boolCarriageReturn as a Boolean
+    @return  a Boolean
 
   **)
-  Procedure DisplayText(strSwitch, strText : String);
+  Function DisplayText(ASwitch : TCommandLineSwitch; strSwitch,
+    strText : String; boolCarriageReturn : Boolean = True) : Boolean;
 
   Begin
-    Writeln(Format('  %2s) %s', [strSwitch, strText]));
+    Result := ASwitch In CommandLineSwitches;
+    If Result Then
+      Begin
+        OutputToConsole(FStd, Format(strDisplayTextSwitchFormat, [strSwitch]), clRed);
+        OutputToConsole(FStd, Format(strDisplatTextInfoFormat, [strText]));
+        If boolCarriageReturn Then
+          OutputToConsoleLn(FStd);
+      End;
   End;
 
   (**
@@ -815,7 +961,7 @@ Procedure DisplayCriteria();
       strKMG := strSizes[iReductions]
     Else
       strKMG := '';
-    Result := Format('%1.0n%s', [Int64(iSize), strKMG]);
+    Result := Format(strReduceSizeFormat, [Int64(iSize) + 0.1, strKMG]);
   End;
 
   (**
@@ -831,78 +977,85 @@ Procedure DisplayCriteria();
   Procedure DisplayAttributes;
 
   Begin
-    DisplayText('t', 'Searching for files with the following attibutes:');
-    If iFileAttrs And faReadOnly > 0 Then
-      OutputLinesToConsole('        Read Only');
-    If iFileAttrs And faArchive > 0 Then
-      OutputLinesToConsole('        Archive');
-    If iFileAttrs And faSysFile > 0 Then
-      OutputLinesToConsole('        System File');
-    If iFileAttrs And faHidden > 0 Then
-      OutputLinesToConsole('        Hidden');
-    If iTypeAttrs And iFileOnly > 0 Then
-      OutputLinesToConsole('        File');
-    If iTypeAttrs And faDirectory > 0 Then
-      OutputLinesToConsole('        Directory');
-    If iTypeAttrs And faVolumeID > 0 Then
-      OutputLinesToConsole('        Volume');
+    If DisplayText(clsAttrRange, 't', strSearchingForFiles) Then
+      Begin
+        If iFileAttrs And faReadOnly > 0 Then
+          OutputToConsoleLn(FStd, strReadOnly, clLime);
+        If iFileAttrs And faArchive > 0 Then
+          OutputToConsoleLn(Fstd, strArchive, clLime);
+        If iFileAttrs And faSysFile > 0 Then
+          OutputToConsoleLn(FStd, strSystemFile, clLime);
+        If iFileAttrs And faHidden > 0 Then
+          OutputToConsoleLn(FStd, strHidden, clLime);
+        If iTypeAttrs And iFileOnly > 0 Then
+          OutputToConsoleLn(FStd, strFile, clLime);
+        If iTypeAttrs And faDirectory > 0 Then
+          OutputToConsoleLn(FStd, strDirectory, clLime);
+        If iTypeAttrs And faVolumeID > 0 Then
+          OutputToConsoleLn(FStd, strVolume, clLime);
+      End;
   End;
 
 Begin
-  Writeln('Search Criteria and Command Line Options Used in this Session.');
-  If clsSubDirectories In CommandLineSwitches Then
-    DisplayText('s', 'Recursing sub-directories.');
-  If clsDebug In CommandLineSwitches Then
-    DisplayText('!', 'DEBUG ReadLn; Pause after finish.');
-  If clsShowAttribs In CommandLineSwitches Then
-    DisplayText('a', 'Displaying File and Directory Attributes.');
-  If clsPause In CommandLineSwitches Then
-    DisplayText('p', 'Pause after a full console page of text.');
-  If (clsSummaryLevel In CommandLineSwitches) And
-    Not (clsSearchIn In CommandLineSwitches) Then
-    DisplayText(IntToStr(iSummaryLevel), Format(
-      'Summarising output to the %d level of detail from' +
-      ' the specified starting point.', [iSummaryLevel]));
-  If clsSupressZeros In CommandLineSwitches Then
-    DisplayText('0', 'Supressing summary information on directoies with zero files.');
-  If clsDateRange In CommandLineSwitches Then
-    DisplayText('d', 'Display files with dates between ' +
-      FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', dtLDate) + ' and ' +
-      FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', dtUDate) + '.');
-  If clsSizeRange In CommandLineSwitches Then
-    DisplayText('d', Format('Display files with sizes between %s and %s bytes.',
-      [ReduceSize(iLSize), ReduceSize(iUSize)]));
-  If clsAttrRange In CommandLineSwitches Then
-    DisplayAttributes;
-  If clsQuiet In CommandLineSwitches Then
-    DisplayText('q', 'Quiet mode - no progress updates.');
-  If clsOwner In CommandLineSwitches Then
-    DisplayText('w', 'Display the Owners of the files found.');
+  OutputToConsoleLn(FStd, strSearchCriteria, clWhite);
+  DisplayText(clsDisplayCriteria, 'c', 'Displaying criteria used for this search.');
+  DisplayText(clsSubDirectories, 's', strRecursingSubdirectories);
+  DisplayText(clsDebug, '!', strDEBUGReadLnPause);
+  DisplayText(clsShowAttribs, 'a', strDisplayingFileAttibs);
+  If Not (clsSearchIn In CommandLineSwitches) Then
+    DisplayText(clsSummaryLevel, IntToStr(iSummaryLevel),
+      Format(strSummarisingOutput, [iSummaryLevel]));
+  DisplayText(clsSupressZeros, '0', strSupressingSummary);
+  DisplayText(clsDateRange, 'd', Format(strDisplayFilesWithDates,
+    [FormatDateTime(strDateFormat, dtLDate),
+    FormatDateTime(strDateFormat, dtUDate)]));
+  DisplayText(clsSizeRange, 'd', Format(strDisplayFilesWithSIzes,
+    [ReduceSize(iLSize), ReduceSize(iUSize)]));
+  DisplayAttributes;
+  DisplayText(clsQuiet, 'q', strQuietMode);
+  If DisplayText(clsOwner, 'w', strDisplayTheOwners, False) Then
+    Begin
+      If OwnerSearchPos In [ospExact..ospEnd] Then
+        Begin
+          OutputToConsole(FStd, strOwnerSearchingFor);
+          If OwnerSearch In [osNotEquals] Then
+            OutputToConsole(FStd, strOwnerNOT, clRed);
+          OutputToConsole(FStd, Format(strOwnerMatching, [strOwnerSearch]));
+          Case OwnerSearchPos Of
+            ospExact :OutputToConsole(FStd, strOwnerExact);
+            ospStart :OutputToConsole(FStd, strOwnerAtTheStart);
+            ospMiddle:OutputToConsole(FStd, strOwnerInTheMiddle);
+            ospEnd   :OutputToConsole(FStd, strOwnerAtTheEnd);
+          End;
+        End;
+      OutputToConsoleLn(FStd, '.');
+    End;
   If clsOrderBy In CommandLineSwitches Then
     Begin
       Case OrderFilesBy Of
-        obName: DisplayText('o', 'Ordering files by Name.');
-        obSize: DisplayText('o', 'Ordering files by Size.');
-        obDate: DisplayText('o', 'Ordering files by Date.');
-        obOwner: DisplayText('o', 'Ordering files by Owner.');
-        obAttribute: DisplayText('o', 'Ordering files by their Attributes.');
+        obName: DisplayText(clsOrderBy, 'o', strOrderingFilesByName, False);
+        obSize: DisplayText(clsOrderBy, 'o', strOrderingFilesBySize, False);
+        obDate: DisplayText(clsOrderBy, 'o', strOrderingFilesByDate, False);
+        obOwner: DisplayText(clsOrderBy, 'o', strOrderingFilesByOwner, False);
+        obAttribute: DisplayText(clsOrderBy, 'o', strOrderingFilesByTheirAttrs, False);
       End;
       If OrderFilesDirection = odDescending Then
-        DisplayText(' ', 'Ordering files in Descending Order.');
+        Begin
+          OutputToConsole(FStd, ' (');
+          OutputToConsole(FStd, strOrderingFilesInDescOrder, clYellow);
+          OutputToConsole(FStd, ')');
+        End;
+      OutputToConsoleLn(FStd, '.');
     End;
-  If clsDateType In CommandLineSwitches Then
-    Case DateType Of
-      dtCreation:   DisplayText('e', 'Displaying file Creation Dates.');
-      dtLastAccess: DisplayText('e', 'Displaying file Last Access Dates.');
-      dtLastWrite:  DisplayText('e', 'Displaying file Last Write Dates.');
-    End;
-  If clsSearchIn In CommandLineSwitches Then
-    DisplayText('i', Format('Search for the text "%s" within the files.',
-      [strSearchInText]));
-  If clsExclusions In CommandLineSwitches Then
-    DisplayText('x', Format('Applying exclusions from the file "%s".',
-      [strExlFileName]));
-  Writeln;
+  Case DateType Of
+    dtCreation:   DisplayText(clsDateType, 'e', strDisplayingFileCreationDates);
+    dtLastAccess: DisplayText(clsDateType, 'e', strDisplayingFileLastAccessDates);
+    dtLastWrite:  DisplayText(clsDateType, 'e', strDisplayingFileLastWriteDates);
+  End;
+  DisplayText(clsSearchIn, 'i', Format(strSearchForText, [strSearchInText]));
+  DisplayText(clsExclusions, 'x', Format(strApplyingExclusions, [strExlFileName]));
+  DisplayText(clsUpdate, 'u', strForceACheckForUpdate);
+  OutputToConsoleLn(FStd);
 End;
 
 (**
@@ -920,19 +1073,20 @@ Procedure GetOwnerSwitch(var iSwitch, iIndex : Integer);
 
 Begin
   Include(CommandLineSwitches, clsOwner);
-  OwnerSearch := osNone;
-  OwnerSearchPos := ospExact;
+  OwnerSearch := osEquals;
+  OwnerSearchPos := ospNone;
   If Length(ParamStr(iSwitch)) = iIndex Then
     Exit;
-  IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInSearchDef);
+  IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInOwnerSearchDef);
   If ParamStr(iSwitch)[iIndex] = '[' Then
     Begin
+      OwnerSearchPos := ospExact;
       IncrementSwitchPosition(iIndex, iSwitch, strMissingSearchText);
       While (iIndex <= Length(ParamStr(iSwitch))) And
         (ParamStr(iSwitch)[iIndex] <> ']') Do
         Begin
           strOwnerSearch := strOwnerSearch + ParamStr(iSwitch)[iIndex];
-          IncrementSwitchPosition(iIndex, iSwitch, strCloseSquareExpectedInSearchDef);
+          IncrementSwitchPosition(iIndex, iSwitch, strCloseSquareExpectedInOwnerSearchDef);
         End;
       OwnerSearch := osEquals;
       If Length(strOwnerSearch) > 0 Then
@@ -944,21 +1098,22 @@ Begin
             End;
           If strOwnerSearch[1] = '*' Then
             Begin
-              OwnerSearchPos := ospStart;
+              OwnerSearchPos := ospEnd;
               Delete(strOwnerSearch, 1, 1);
             End;
           If strOwnerSearch[Length(strOwnerSearch)] = '*' Then
             Begin
-              If OwnerSearchPos = ospStart Then
+              If OwnerSearchPos = ospEnd Then
                 OwnerSearchPos := ospMiddle
               Else
-                OwnerSearchPos := ospEnd;
+                OwnerSearchPos := ospStart;
               Delete(strOwnerSearch, Length(strOwnerSearch), 1);
             End;
         End;
       If Length(strOwnerSearch) = 0 Then
         Raise Exception.Create(strOwnerSearchIsEmpty);
-    End;
+    End Else
+      Dec(iIndex);
 End;
 
 (**
@@ -970,9 +1125,6 @@ End;
 
 **)
 Procedure GetCommandLineSwitches;
-
-Const
-  strInvalidCommandLineSwitch = 'Invalid command line switch "%s."';
 
 Var
   iSwitch, iIndex : Integer;
@@ -993,10 +1145,10 @@ Begin
             Begin
               Case ParamStr(iSwitch)[iIndex] Of
                 '?'     : Include(CommandLineSwitches, clsShowHelp);
+                'h', 'H': Include(CommandLineSwitches, clsShowHelp);
                 's', 'S': Include(CommandLineSwitches, clsSubDirectories);
                 '!'     : Include(CommandLineSwitches, clsDebug);
                 'a', 'A': Include(CommandLineSwitches, clsShowAttribs);
-                'p', 'P': Include(CommandLineSwitches, clsPause);
                 '1'..'9': GetSummaryLevel(iSwitch, iIndex);
                 '0'     : Include(CommandLineSwitches, clsSupressZeros);
                 'd', 'D': GetDateRange(iSwitch, iIndex);
@@ -1009,9 +1161,10 @@ Begin
                 'e', 'E': GetDateType(iSwitch, iIndex);
                 'c', 'C': Include(CommandLineSwitches, clsDisplayCriteria);
                 'x', 'X': GetExclusions(iSwitch, iIndex);
+                'u', 'U': Include(CommandLineSwitches, clsUpdate);
               Else
                 Raise Exception.CreateFmt(strInValidCommandLineSwitch,
-                  [ParamStr(iSwitch)]);
+                  [ParamStr(iSwitch)[iIndex], ParamStr(iSwitch)]);
               End;
               Inc(iIndex);
             End;
@@ -1027,7 +1180,7 @@ Begin
   If ParamCount = 0 Then
     Include(CommandLineSwitches, clsShowHelp);
   If (slSearchParams.Count = 0) And Not (ClsShowHelp In CommandLineSwitches) Then
-    Raise Exception.Create('You need to specify at least one search criteria.');
+    Raise Exception.Create(strNeedToSpecifyCriteria);
   If clsDisplayCriteria In CommandLineSwitches Then
     DisplayCriteria;
 End;
@@ -1157,7 +1310,7 @@ begin
       FileTimeToDosDateTime(dtDateLocal, LongRec(iTime).Hi, LongRec(iTime).Lo);
       boolAdded := objFiles.Add(FileDateToDateTime(iTime), iSize,
         OutputAttributes(recSearch.Attr), strOwner,
-        strPath + recSearch.Name, strSearchInText);
+        strPath + recSearch.Name, strSearchInText, recSearch.Attr);
     end Else
       boolAdded := True;
   If boolAdded Then
@@ -1166,6 +1319,7 @@ begin
       Inc(iFileSize, iSize);
       Inc(Result, iSize);
     End;
+  Inc(iTotalFiles);
 end;
 
 (**
@@ -1281,35 +1435,36 @@ begin
   For i := 0 to objFiles.Count - 1 Do
     begin
       If Pos('D', objFiles.FileInfo[i].Attr) = 0 Then
-        strOutput := Format('  %s  %15.0n  ', [
-          FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', objFiles.FileInfo[i].Date),
+        strOutput := Format(strFileFormat, [
+          FormatDateTime(strDateFormat, objFiles.FileInfo[i].Date),
           objFiles.FileInfo[i].Size + 0.1])
       Else
-        strOutput := Format('  %s  %15s  ', [
-          FormatDateTime('ddd dd/mmm/yyyy hh:mm:ss', objFiles.FileInfo[i].Date),
+        strOutput := Format(strDirFormat, [
+          FormatDateTime(strDateFormat, objFiles.FileInfo[i].Date),
           '<DIR>']);
       if clsShowAttribs in CommandLineSwitches then
-        strOutput := strOutput + Format('%s  ', [objFiles.FileInfo[i].Attr]);
+        strOutput := strOutput + Format(strAttrFormat, [objFiles.FileInfo[i].Attr]);
       if clsOwner in CommandLineSwitches then
       begin
         iOwnerWidth := objFiles.OwnerWidth;
-        strOutput := strOutput + Format('%-*s  ', [iOwnerWidth, objFiles.FileInfo[i].Owner]);
+        strOutput := strOutput + Format(strOwnerFormat, [iOwnerWidth, objFiles.FileInfo[i].Owner]);
       end;
       if not boolDirPrinted then
       begin
-        OutputLinesToConsole(strPath);
+        OutputtoConsole(FStd, StringOfChar(#32, iWidth - 1), clNone, clNone, False);
+        OutputToConsoleLn(FStd, strPath, clWhite);
         boolDirPrinted := True;
       end;
       boolGREP := (clsSearchIn In CommandLineSwitches) And
         (objFiles.FileInfo[i].GREPLines > 0);
       If Not (clsSearchIn In CommandLineSwitches) Or boolGREP Then
-        OutputLinesToConsole(strOutput + ExtractFileName(objFiles.FileInfo[i].FileName));
+        OutputToConsoleLn(FStd, strOutput + ExtractFileName(objFiles.FileInfo[i].FileName));
       If boolGREP Then
         For iLine := 0 To objFiles.FileInfo[i].GREPLines - 1 Do
-          OutputLinesToConsole(objFiles.FileInfo[i].GREPLine[iLine]);
+          OutputToConsoleLn(FStd, objFiles.FileInfo[i].GREPLine[iLine], clLime);
     end;
   If objFiles.Count > 0 Then
-    OutputLinesToConsole;
+    OutputToConsoleLn(FStd);
 end;
 
 (**
@@ -1323,7 +1478,7 @@ end;
   @param   strPath    as a String
   @param   slPatterns as a TStringList
   @param   iLevel     as an Integer as a reference
-  @return  an Int64     
+  @return  an Int64
 
 **)
 Function SearchDirectory(strPath: String; slPatterns : TStringList;
@@ -1407,10 +1562,10 @@ Begin
   i := Length(strOwnerSearch);
   Case OwnerSearchPos Of
     ospExact : bool := AnsiCompareText(strOwner, strOwnerSearch) = 0;
-    ospStart : bool := LowerCase(strOwnerSearch) = Copy(Lowercase(strOwnerSearch), 1, i);
+    ospStart : bool := AnsiCompareText(strOwnerSearch, Copy(strOwner, 1, i)) = 0;
     ospMiddle: bool := Pos(LowerCase(strOwnerSearch), LowerCase(strOwner)) > 0;
-    ospEnd   : bool := LowerCase(strOwnerSearch) = Copy(Lowercase(strOwnerSearch),
-      Length(strOwner) - i, i);
+    ospEnd   : bool := AnsiCompareText(strOwnerSearch, Copy(strOwner,
+      Length(strOwner) - i + 1, i)) = 0;
   Else
     bool := True;
   End;
@@ -1497,6 +1652,7 @@ Var
   boolDirPrinted : Boolean;
   boolFound : Boolean;
   iDirFiles : Integer;
+  strOutput : String;
 
 Begin
   OutputCurrentSearchPath(strPath);
@@ -1519,7 +1675,7 @@ Begin
   End;
   If Not (clsSummaryLevel In CommandLineSwitches) Then
     If iDirFiles > 0 Then
-      OutputLinesToConsole;
+      OutputToConsoleLn(FStd);
   (* Search sub directories *)
   If clsSubDirectories In CommandLineSwitches Then
     RecurseDirectories(strPath, iLevel, Result, iResult, slPatterns, recSearch);
@@ -1528,8 +1684,12 @@ Begin
     Begin
       If (iLevel > -1) And (iLevel <= iSummaryLevel) Then
         If Not ((Result = 0) And (clsSupressZeros In CommandLineSwitches)) Then
-        OutputLinesToConsole(Format('%15.0n%s%s', [
-          Result + 0.1, StringOfChar(#32, 2 + 2 * iLevel), strPath]));
+          Begin
+            strOutput := Format(strSummaryFormat, [Result + 0.1,
+              StringOfChar(#32, 2 + 2 * iLevel), strPath]);
+            OutputToConsoleLn(FStd, strOutput +
+              StringOfChar(#32, iWidth - 1 - Length(strOutput)));
+          End;
     End;
   Dec(iLevel);
 End;
@@ -1539,11 +1699,6 @@ End;
    Main Program body.
 
  -------------------------------------------------------------------------- **)
-
-Const
-  (** This is a constant to represent a parameter string error. **)
-  strErrorInPathSearchParamString =
-    'There was an error in the path=search param pairing. (%s)';
 
 Var
   (** This is a loop iterator. **)
@@ -1563,14 +1718,16 @@ Var
 
 Begin
   iLevel := -1;
-  PrintTitle;
   GetConsoleInformation;
   Try
+    PrintTitle;
+    CoInitialize(Nil);
     slSearchParams := TStringList.Create;
     Try
-      iLinesOutputted := 0;
       GetCommandLineSwitches;
-      slExclusions := TstringList.Create;
+      TConsoleCheckForupdates.Execute(strWebSiteURL, strAppID, strRegRoot,
+        clsUPdate In CommandLineSwitches);
+      slExclusions := TStringList.Create;
       Try
         If Not (clsExclusions In CommandLineSwitches) Or
           ((clsExclusions In CommandLineSwitches) And FileExists(strExlFileName)) Then
@@ -1602,7 +1759,7 @@ Begin
                       slPatterns.Free;
                     End;
                     If clsSummaryLevel In CommandLineSwitches Then
-                      OutputLinesToConsole;
+                      OutputToConsoleLn(FStd);
                     PrintFooter(strPath);
                   End;
               End Else
@@ -1617,8 +1774,12 @@ Begin
     End;
   Except
     On E : Exception Do
-      Writeln('Exception: ' + E.Message);
+      OutputToConsoleLn(FErr, Format(strException, [E.Message]), clRed);
   End;
   If clsDebug In CommandLineSwitches Then
-    Readln;
+    Begin
+      OutputToConsoleLn(FStd);
+      OutputToConsole(FStd, strPressEnterToFinish);
+      Readln;
+    End;
 End.
