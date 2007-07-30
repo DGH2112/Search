@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    29 Jul 2007
+  @Date    30 Jul 2007
 
 **)
 Unit FileHandling;
@@ -32,13 +32,14 @@ Type
     FOwner : String;
     FName : String;
     FGREPLines : TStringList;
-    function GetGREPLine(iIndex: Integer): String;
+    function GetGREPText(iIndex: Integer): String;
+    function GetGREPLine(iIndex: Integer): Integer;
     function GetGREPLines: Integer;
   Protected
   Public
     Constructor Create(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
       strName : String);
-    Procedure AddGREPLine(strText : String);
+    Procedure AddGREPLine(strText : String; iLine : Integer);
     Destructor Destroy; Override;
     (**
       A property to read and write the files date and time.
@@ -83,13 +84,21 @@ Type
     **)
     Property GREPLines : Integer Read GetGREPLines;
     (**
+      A property to returns specific indexed GREP Text.
+      @precon  iIndex must be a valid index.
+      @postcon Returns an indexed GREP Text for the file.
+      @param   iIndex as       an Integer
+      @return  a String
+    **)
+    Property GREPText[iIndex : Integer] : String Read GetGREPText;
+    (**
       A property to returns specific indexed GREP line.
       @precon  iIndex must be a valid index.
       @postcon Returns an indexed GREP line for the file.
       @param   iIndex as       an Integer
-      @return  a String
+      @return  an Integer
     **)
-    Property GREPLine[iIndex : Integer] : String Read GetGREPLine;
+    Property GREPLine[iIndex : Integer] : Integer Read GetGREPLine;
   End;
 
   (** A class to hold a collection of files. **)
@@ -133,11 +142,12 @@ Implementation
   @postcon Adds the given text as a GREP line.
 
   @param   strText as a String
+  @param   iLine   as an Integer
 
 **)
-procedure TFile.AddGREPLine(strText: String);
+procedure TFile.AddGREPLine(strText: String; iLine : Integer);
 begin
-  FGREPLines.Add(strText);
+  FGREPLines.AddObject(strText, TObject(iLine));
 end;
 
 (**
@@ -182,18 +192,34 @@ end;
 
 (**
 
+  This is a getter method for the GREPText property.
+
+  @precon  iIndex must be a valid index.
+  @postcon Returns the GREP text specified by the index.
+
+  @param   iIndex as an Integer
+  @return  a String
+
+**)
+function TFile.GetGREPText(iIndex: Integer): String;
+begin
+  Result := FGREPLines[iIndex];
+end;
+
+(**
+
   This is a getter method for the GREPLine property.
 
   @precon  iIndex must be a valid index.
   @postcon Returns the GREP line specified by the index.
 
   @param   iIndex as an Integer
-  @return  a String
+  @return  an Integer
 
 **)
-function TFile.GetGREPLine(iIndex: Integer): String;
+function TFile.GetGREPLine(iIndex: Integer): Integer;
 begin
-  Result := FGREPLines[iIndex];
+  Result := Integer(FGREPLines.Objects[iIndex]);
 end;
 
 (**
@@ -276,7 +302,7 @@ Begin
         slFile.LoadFromFile(strName);
         For iLine := 0 To slFile.Count - 1 Do
           If Pos(strGREPText, Lowercase(slFile[iLine])) > 0 Then
-            FFile.AddGREPLine(Format('%8d %s', [iLine, slFile[iLine]]));
+            FFile.AddGREPLine(slFile[iLine], iLine);
       Finally
         slFile.Free;
       End;
