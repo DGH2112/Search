@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    30 Jul 2007
+  @Date    31 Jul 2007
 
 **)
 Unit FileHandling;
@@ -295,21 +295,25 @@ Begin
   Result := True;
   FFile := TFile.Create(dtDate, iSize, strAttr, strOwner, strName);
   strGREPText := Lowercase(strGREPText);
-  If (strGREPText <> '') And (iFileAttrs And faDirectory = 0) Then
+  If strGREPText <> '' Then
     Begin
-      slFile := TStringList.Create;
-      Try
-        slFile.LoadFromFile(strName);
-        For iLine := 0 To slFile.Count - 1 Do
-          If Pos(strGREPText, Lowercase(slFile[iLine])) > 0 Then
-            FFile.AddGREPLine(slFile[iLine], iLine);
-      Finally
-        slFile.Free;
-      End;
-      If FFile.GetGREPLines > 0 Then
-        FFiles.Add(FFile)
-      Else
-        Result := False;
+      If  iFileAttrs And faDirectory = 0 Then
+        Begin
+          slFile := TStringList.Create;
+          Try
+            slFile.LoadFromFile(strName);
+            For iLine := 0 To slFile.Count - 1 Do
+              If Pos(strGREPText, Lowercase(slFile[iLine])) > 0 Then
+                FFile.AddGREPLine(slFile[iLine], iLine);
+          Finally
+            slFile.Free;
+          End;
+          If FFile.GetGREPLines > 0 Then
+            FFiles.Add(FFile)
+          Else
+            Result := False;
+        End Else
+          Result := False;
     End Else
       FFiles.Add(FFile);
 End;
