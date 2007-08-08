@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    29 Jul 2007
+  @Date    08 Aug 2007
 
 **)
 Program Search;
@@ -84,124 +84,227 @@ resourcestring
     'in the searches.';
   (** An exception message for the Owner Search Criteria being empty. **)
   strOwnerSearchIsEmpty = 'You must specify a valid Owner Search Criteria.';
+  (** A resource string to define the root key for the regostry entries. **)
   strRegRoot = 'Software\Season''s Fall\Search\';
+  (** A resource string to define the Exception output format. **)
   strException = 'Exception: %s';
-  strWebSiteURL = 'http://www.hoyld.freeserve.co.uk/HoylD.xml';
+  (** A resource string to define the URL to check for updates. **)
+  strWebSiteURL = 'http://www.hoyld.freeserve.co.uk/HoylD.xml|' +
+    'C:\Documents and Settings\HoylD\My Documents\Web Page\HoylD.xml';
+  (** A resource string to define the Application ID for updates. **)
   strAppID = 'Search';
   (** This is a constant to represent a parameter string error. **)
   strErrorInPathSearchParamString = 'There was an error in the path=search ' +
     'param pairing. (%s)';
+  (** A resource string to define the for of the date outputs. **)
   strDateFormat = 'ddd dd/mmm/yyyy hh:mm:ss';
+  (** An exception message to prompt for a criteria **)
   strNeedToSpecifyCriteria = 'You need to specify at least one search criteria.';
+  (** An exception message to notify of an invalid command line parameter. **)
   strInvalidCommandLineSwitch = 'Invalid command line switch "%s" in parameter "%s."';
+  (** A help message to define the use of the u switch. **)
   strForceACheckForUpdate = 'Force a check for updates to the software from ' +
   'the Internet.';
+  (** A help message to define the use of the x switch. **)
   strApplyingExclusions = 'Applying exclusions from the file "%s".';
+  (** A resource string to display the text being searched for. **)
   strSearchForText = 'Search for the text "%s" within the files.';
+  (** A resource string to display that Last Write Dates are being shown. **)
   strDisplayingFileLastWriteDates = 'Displaying file Last Write Dates.';
+  (** A resource string to display that Last Access Dates are being shown. **)
   strDisplayingFileLastAccessDates = 'Displaying file Last Access Dates.';
+  (** S resource string to define that file creation dates are being shown. **)
   strDisplayingFileCreationDates = 'Displaying file Creation Dates.';
+  (** A resource string to define that files are being ordered in decsending order **)
   strOrderingFilesInDescOrder = 'Descending Order';
+  (** A resource string to define that the file are being ordered by their attributes. **)
   strOrderingFilesByTheirAttrs = 'Ordering files by their Attributes';
+  (** A resource string to define ordering files by Owner. **)
   strOrderingFilesByOwner = 'Ordering files by Owner';
+  (** A resource string to define ordering files by Date. **)
   strOrderingFilesByDate = 'Ordering files by Date';
+  (** A resource string to define ordering files by Size. **)
   strOrderingFilesBySize = 'Ordering files by Size';
+  (** A resource string to define ordering files by Name. **)
   strOrderingFilesByName = 'Ordering files by Name';
+  (** A resource string to define that file owners are being displayed. **)
   strDisplayTheOwners = 'Display the Owners of the files found';
+  (** A resource string to define that no progress should be displayed. **)
   strQuietMode = 'Quiet mode - no progress updates.';
+  (** A resource string to define size filter by size. **)
   strDisplayFilesWithSIzes = 'Display files with sizes between %s and %s byt' +
   'es.';
+  (** A resource string to define size filter by date. **)
   strDisplayFilesWithDates = 'Display files with dates between %s and %s.';
+  (** A resource string to define the suppression of summary information = 0 **)
   strSupressingSummary = 'Supressing summary information on directories with' +
   ' zero files.';
+  (** A resource strig to define summary output to a specific depth of information. **)
   strSummarisingOutput = 'Summarising output to the %d level of detail from ' +
   'the specified starting point.';
+  (** A resource string to define the displaying of attributes. **)
   strDisplayingFileAttibs = 'Displaying File and Directory Attributes.';
+  (** A resource string to fine the debug pause. **)
   strDEBUGReadLnPause = 'Pause after finish.';
+  (** A resource string for recursing sub directories. **)
   strRecursingSubdirectories = 'Recursing sub-directories.';
+  (** A resource string to notify of output of command line options. **)
   strSearchCriteria = 'Search Criteria and Command Line Options Used in this' +
   ' Session.';
+  (** A resource string to denote search for file attributes. **)
   strSearchingForFiles = 'Searching for files with the following attibutes:';
+  (** A resource string to denote searching for readonly files. **)
   strReadOnly = '        Read Only';
+  (** A resource string to denote searching for archive files. **)
   strArchive = '        Archive';
+  (** A resource string to denote searching for System files. **)
   strSystemFile = '        System File';
+  (** A resource string to denote searching for Hidden files. **)
   strHidden = '        Hidden';
+  (** A resource string to denote searching for files. **)
   strFile = '        File';
+  (** A resource string to denote searching for directories. **)
   strDirectory = '        Directory';
+  (** A resource string to denote searching for volume labels. **)
   strVolume = '        Volume';
+  (** A resource string for formatting information. **)
   strSummaryLevelException = 'The summary level "%s" is invalid.';
+  (** A resource string for formatting information. **)
   strSummaryAlreadySet = 'Then summary level is already set.';
+  (** A resource string for formatting information. **)
   strMsg1 = '  Found %1.0n bytes in %1.0n Files in %1.0n Directories.';
+  (** A resource string for formatting information. **)
   strMsg2 = '  Total space %1.0n bytes, and %1.0n bytes Free.';
+  (** A resource string for formatting information. **)
   strTitle = 'Search %d.%d%s (Build %s) File Find and Summary Tool.';
+  (** A resource string for formatting information. **)
   strPressEnterToFinish = 'Press <Enter> to finish.';
+  (** A resource string for formatting information. **)
   strSummaryFormat = '%15.0n%s%s';
+  (** A resource string for formatting information. **)
   strOwnerFormat = '%-*s  ';
+  (** A resource string for formatting information. **)
   strAttrFormat = '%s  ';
+  (** A resource string for formatting information. **)
   strDirFormat = '  %s  %15s  ';
+  (** A resource string for formatting information. **)
   strFileFormat = '  %s  %15.0n  ';
   strOwnerAtTheEnd = ' at the end';
   strOwnerInTheMiddle = ' in the middle';
   strOwnerAtTheStart = ' at the start';
   strOwnerExact = ' exactly';
+  (** A resource string for formatting information. **)
   strOwnerMatching = 'matching "%s"';
   strOwnerNOT = 'NOT ';
   strOwnerSearchingFor = ' Searching for Owners ';
+  (** A resource string for formatting information. **)
   strReduceSizeFormat = '%1.0n%s';
+  (** A resource string for formatting information. **)
   strDisplayTextSwitchFormat = '  %2s';
+  (** A resource string for formatting information. **)
   strDisplatTextInfoFormat = ') %s';
+  (** A resource string for formatting information. **)
   strSearchingForHeader = 'Searching "%s" for "%s".';
+  (** A resource string for formatting information. **)
   strOutputCurrPathFormat = '%s%-*s';
-  strSearchLabel = 'Searching: (%d) ';
+  (** A resource string for formatting information. **)
+  strSearchLabel = 'Searching: (D:%d,F:%d) ';
+  (** A resource string for the console help information. **)
   strHelp0010 = 'Syntax:';
+  (** A resource string for the console help information. **)
   strHelp0020 = 'Search searchparam1 {searchparam2}... {/A} {/S} {/Q} {/W}';
+  (** A resource string for the console help information. **)
   strHelp0030 = '{/T[RASHFDV]} {/D:[{DD{/MM{/YY {HH:MM{:SS}}}}}-{DD{/MM{' +
   '/YY {HH:MM{:SS}}}}}]';
+  (** A resource string for the console help information. **)
   strHelp0040 = '{/Z[{LowerByteSize}-{UpperByteSize}]} {/O:NDAOS} {/E:CA' +
   'W} {/I[text]}';
+  (** A resource string for the console help information. **)
   strHelp0050 = '{/X[filename]}';
+  (** A resource string for the console help information. **)
   strHelp0060 = 'searchparam# = {drive:\path\}filter1{;filter2{;filter3{;.' +
   '..}}}';
+  (** A resource string for the console help information. **)
   strHelp0070 = 'filter#';
+  (** A resource string for the console help information. **)
   strHelp0075 = 'can contain wildcards * and ? within the filename. ';
+  (** A resource string for the console help information. **)
   strHelp0080 = '{ ... } denotes optional items.';
+  (** A resource string for the console help information. **)
   strHelp0090 = '/?';
+  (** A resource string for the console help information. **)
   strHelp0095 = 'This help screen';
+  (** A resource string for the console help information. **)
   strHelp0100 = '/A';
+  (** A resource string for the console help information. **)
   strHelp0105 = 'Show file and directory attributes';
+  (** A resource string for the console help information. **)
   strHelp0110 = '/S';
+  (** A resource string for the console help information. **)
   strHelp0115 = 'Recurse subdirectories';
+  (** A resource string for the console help information. **)
   strHelp0120 = '/1..9';
+  (** A resource string for the console help information. **)
   strHelp0125 = 'Summarise subdirectories';
+  (** A resource string for the console help information. **)
   strHelp0130 = '/0';
+  (** A resource string for the console help information. **)
   strHelp0135 = 'Hide empty Summarised subdirectories';
+  (** A resource string for the console help information. **)
   strHelp0140 = '/T[RASHFFDV]';
+  (** A resource string for the console help information. **)
   strHelp0145 = 'Show only files with certain attributes';
+  (** A resource string for the console help information. **)
   strHelp0150 = 'R = Read Only, A = Archive, S = System, H = Hidden,';
+  (** A resource string for the console help information. **)
   strHelp0160 = 'F = File, D = Directory, and V = Volume ID';
+  (** A resource string for the console help information. **)
   strHelp0170 = '/D[{l}-{u}]';
+  (** A resource string for the console help information. **)
   strHelp0175 = 'Searches for files between dates (l) and (u).';
+  (** A resource string for the console help information. **)
   strHelp0177 = 'l = lower bounding date and time, u = upper bounding date and time';
+  (** A resource string for the console help information. **)
   strHelp0180 = '/Z[{l}-{u}]';
+  (** A resource string for the console help information. **)
   strHelp0185 = 'Searches for files between sizes (l) and (u).';
+  (** A resource string for the console help information. **)
   strHelp0187 = 'l = lower bounding size in bytes, u = upper bounding size in bytes';
+  (** A resource string for the console help information. **)
   strHelp0190 = '/Q';
+  (** A resource string for the console help information. **)
   strHelp0195 = 'Quiet mode';
+  (** A resource string for the console help information. **)
   strHelp0200 = '/W {[Owner]}';
+  (** A resource string for the console help information. **)
   strHelp0205 = 'Owner Information. The owner search can be a wildcard search with an *.';
+  (** A resource string for the console help information. **)
   strHelp0207 = 'Searches beginning with ! force a negated criteria.';
+  (** A resource string for the console help information. **)
   strHelp0210 = '/O:NADOS';
+  (** A resource string for the console help information. **)
   strHelp0215 = 'Order files ascending [+] and descending [-]';
+  (** A resource string for the console help information. **)
   strHelp0220 = 'N = Name, A = Attribute, D = Date and Time, O = Owner, S = Size';
+  (** A resource string for the console help information. **)
   strHelp0230 = '/E:CAW';
+  (** A resource string for the console help information. **)
   strHelp0235 = 'Type of file date to display and search on:';
+  (** A resource string for the console help information. **)
   strHelp0240 = 'C = Creation, A = Last Access, W = Last Write (Default)';
+  (** A resource string for the console help information. **)
   strHelp0250 = '/I[text]';
+  (** A resource string for the console help information. **)
   strHelp0255 = 'Search within files for text.';
+  (** A resource string for the console help information. **)
   strHelp0260 = '/C';
+  (** A resource string for the console help information. **)
   strHelp0265 = 'Display a list of Criteria and Command Line Options.';
+  (** A resource string for the console help information. **)
   strHelp0270 = '/X[FileName]';
+  (** A resource string for the console help information. **)
   strHelp0275 = 'A list of exclusions to apply to paths and filenames.';
+  (** A resource string for the console help information. **)
   strHelp0280 = 'NOTE: The date time input format is dependent on your loc' +
   'al settings';
 
@@ -293,7 +396,6 @@ Var
   CommandLineSwitches : TCommandLineSwitches;
   (** The otal number of file found by the search. **)
   iFiles : Integer;
-  iTotalFiles : Integer;
   (** The total number of directories found by the search. **)
   iDirectories : Integer;
   (** This is the upper limit of a file size search. **)
@@ -335,9 +437,13 @@ Var
   slExclusions : TStringList;
   (** A string to hold the owner search criteria. **)
   strOwnerSearch : String;
+  (** An enumerate to determine if the search is positive or negated **)
   OwnerSearch : TOwnerSearch;
+  (** An enumerate to determine the position of the search **)
   OwnerSearchPos : TOwnerSearchPos;
+  (** A handle to the standard console output. **)
   FStd : THandle;
+  (** A handle to the error console output. **)
   FErr : THandle;
 
 Const
@@ -386,7 +492,7 @@ Var
 Begin
   If clsQuiet In CommandLineSwitches Then Exit;
   GetConsoleScreenBufferInfo(FStd, C);
-  iLength := Length(Format(strSearchLabel, [iTotalFiles]));
+  iLength := Length(Format(strSearchLabel, [iDirectories, iFiles]));
   While Length(strPath) > (iWidth - iLength) Do
     Begin
       If Pos('...', strPath) = 0 Then
@@ -404,7 +510,7 @@ Begin
         End;
     End;
   strPath := Format(strOutputCurrPathFormat, [Format(strSearchLabel,
-    [iTotalFiles]), iWidth - iLength, strPath]);
+    [iDirectories, iFiles]), iWidth - iLength, strPath]);
   OutputToConsoleLn(FStd, strPath, clMaroon, clNone, False);
   SetConsoleCursorPosition(FStd, C.dwCursorPosition);
 End;
@@ -1319,7 +1425,6 @@ begin
       Inc(iFileSize, iSize);
       Inc(Result, iSize);
     End;
-  Inc(iTotalFiles);
 end;
 
 (**
@@ -1461,7 +1566,11 @@ begin
         OutputToConsoleLn(FStd, strOutput + ExtractFileName(objFiles.FileInfo[i].FileName));
       If boolGREP Then
         For iLine := 0 To objFiles.FileInfo[i].GREPLines - 1 Do
-          OutputToConsoleLn(FStd, objFiles.FileInfo[i].GREPLine[iLine], clLime);
+          Begin
+            OutputToConsole(FStd,
+              Format('  %10.0n: ', [objFiles.FileInfo[i].GREPLine[iLine] + 0.1]), clMaroon);
+            OutputToConsoleLn(FStd, objFiles.FileInfo[i].GREPText[iLine], clLime, clNone, False);
+          End;
     end;
   If objFiles.Count > 0 Then
     OutputToConsoleLn(FStd);
