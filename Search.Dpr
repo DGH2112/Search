@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    08 Aug 2007
+  @Date    02 Jan 2008
 
 **)
 Program Search;
@@ -16,6 +16,7 @@ Program Search;
 {$R *.RES}
 
 uses
+  ExceptionLog,
   SysUtils,
   Windows,
   Classes,
@@ -25,8 +26,8 @@ uses
   ActiveX,
   DGHLibrary in '..\..\library\DGHLibrary.pas',
   FileHandling in 'Source\FileHandling.pas',
-  ConsoleCheckForUpdates in '..\..\LIBRARY\ConsoleCheckForUpdates.pas',
-  MSXML2_TLB in '..\..\LIBRARY\MSXML2_TLB.pas';
+  MSXML2_TLB in '..\..\LIBRARY\MSXML2_TLB.pas',
+  checkforupdates in '..\..\LIBRARY\checkforupdates.pas';
 
 resourcestring
   (** An exception message for a missing colon in the order by definition. **)
@@ -84,8 +85,6 @@ resourcestring
     'in the searches.';
   (** An exception message for the Owner Search Criteria being empty. **)
   strOwnerSearchIsEmpty = 'You must specify a valid Owner Search Criteria.';
-  (** A resource string to define the root key for the regostry entries. **)
-  strRegRoot = 'Software\Season''s Fall\Search\';
   (** A resource string to define the Exception output format. **)
   strException = 'Exception: %s';
   (** A resource string to define the URL to check for updates. **)
@@ -445,10 +444,43 @@ Var
   FStd : THandle;
   (** A handle to the error console output. **)
   FErr : THandle;
+  (** A string to store the loading and saving settings filename in. **)
+  strRootKey : String;
 
 Const
   (** A constant to define that only files should be listed. **)
   iFileOnly = $0100;
+
+(**
+
+  This method builds the root key INI filename for the loading and saving of
+  settings.
+
+  @precon  None.
+  @postcon Builds the root key INI filename for the loading and saving of
+           settings.
+
+**)
+procedure BuildRootKey;
+
+var
+  i: Cardinal;
+  strUserName: string;
+  strComputerName: string;
+
+begin
+  i := 1024;
+  SetLength(strUserName, i);
+  GetUserName(@strUserName[1], i);
+  Win32Check(LongBool(i));
+  SetLength(strUserName, i - 1);
+  i := 1024;
+  SetLength(strComputerName, i);
+  GetComputerName(@strComputerName[1], i);
+  Win32Check(LongBool(i));
+  SetLength(strComputerName, i);
+  strRootKey := ExtractFilePath(ParamStr(0)) + Format('Search Settings for %s on %s.INI', [strUserName, strComputerName]);
+end;
 
 (**
 
@@ -717,6 +749,7 @@ Procedure GetDateRange(var iSwitch, iIndex : Integer);
 
 Var
   strDate : String;
+  wH, wM, wS, wMS : Word;
 
 Begin
   Include(CommandLineSwitches, clsDateRange);
@@ -725,14 +758,22 @@ Begin
     Raise Exception.Create(strOpenSquareExpectedInDate);
   GetRangeString('-', strMissingDateRangeSeparater, iIndex, iSwitch, strDate);
   If strDate <> '' Then
-    dtLDate := ConvertDate(strDate)
-  Else
-    dtUDate := ConvertDate('01/Jan/1900 00:00:01');
+    Begin
+      dtLDate := ConvertDate(strDate);
+      DecodeTime(dtLDate, wH, wM, wS, wMS);
+      If (wH = 0) And (wM = 0) And (wS = 0) And (wMS = 0) Then
+        dtLDate := dtLDate + EncodeTime(0, 0, 0, 0);
+    End Else
+      dtUDate := ConvertDate('01/Jan/1900 00:00:01');
   GetRangeString(']', strCloseSquareExpectedInDate, iIndex, iSwitch, strDate);
   If strDate <> '' Then
-    dtUDate := ConvertDate(strDate)
-  Else
-    dtUDate := ConvertDate('31/Dec/2099 23:59:59');
+    Begin
+      dtUDate := ConvertDate(strDate);
+      DecodeTime(dtUDate, wH, wM, wS, wMS);
+      If (wH = 0) And (wM = 0) And (wS = 0) And (wMS = 0) Then
+        dtUDate := dtUDate + EncodeTime(23, 59, 59, 999);
+    End Else
+      dtUDate := ConvertDate('31/Dec/2099 23:59:59');
 End;
 
 (**
@@ -1611,7 +1652,8 @@ Function SearchDirectory(strPath: String; slPatterns : TStringList;
 procedure RecurseDirectories(strPath: string; var iLevel: Integer; var Result: Int64; iResult: Integer; slPatterns: TStringList; recSearch: TSearchRec);
 begin
   begin
-    iResult := FindFirst(strPath + '*.*', faDirectory, recSearch);
+    iResult := FindFirst(strPath + '*.*', faAnyFile Or faHidden Or faSysFile,
+      recSearch);
     while (iResult = 0) do
     begin
       if recSearch.Attr and faDirectory > 0 then
@@ -1826,6 +1868,7 @@ Var
   iPattern : Integer;
 
 Begin
+  BuildRootKey;
   iLevel := -1;
   GetConsoleInformation;
   Try
@@ -1834,7 +1877,7 @@ Begin
     slSearchParams := TStringList.Create;
     Try
       GetCommandLineSwitches;
-      TConsoleCheckForupdates.Execute(strWebSiteURL, strAppID, strRegRoot,
+      TCheckForupdates.Execute(strWebSiteURL, strAppID, strRootKey,
         clsUPdate In CommandLineSwitches);
       slExclusions := TStringList.Create;
       Try
