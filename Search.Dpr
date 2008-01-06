@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    02 Jan 2008
+  @Date    06 Jan 2008
 
 **)
 Program Search;
@@ -28,6 +28,11 @@ uses
   FileHandling in 'Source\FileHandling.pas',
   MSXML2_TLB in '..\..\LIBRARY\MSXML2_TLB.pas',
   checkforupdates in '..\..\LIBRARY\checkforupdates.pas';
+
+Type
+  (** A custom Exception for any exceptions raised by incorrect information
+      in the search criteria. **)
+  ESearchException = Class(Exception);
 
 resourcestring
   (** An exception message for a missing colon in the order by definition. **)
@@ -327,7 +332,7 @@ procedure IncrementSwitchPosition(var iIndex, iSwitch: Integer;
 begin
   Inc(iIndex);
   If Length(ParamStr(iSwitch)) < iIndex then
-    Raise Exception.Create(strExceptionMsg);
+    Raise ESearchException.Create(strExceptionMsg);
 end;
 
 Type
@@ -755,7 +760,7 @@ Begin
   Include(CommandLineSwitches, clsDateRange);
   IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInDate);
   If ParamStr(iSwitch)[iIndex] <> '[' Then
-    Raise Exception.Create(strOpenSquareExpectedInDate);
+    Raise ESearchException.Create(strOpenSquareExpectedInDate);
   GetRangeString('-', strMissingDateRangeSeparater, iIndex, iSwitch, strDate);
   If strDate <> '' Then
     Begin
@@ -827,7 +832,7 @@ Var
           strSize := Copy(strSize, 1, Length(strSize) - 1);
         Val(strSize, iSize, iErrorCode);
         If iErrorCode > 0 Then
-          Raise Exception.Create(strExceptionMsg);
+          Raise ESearchException.Create(strExceptionMsg);
         iSize := iSize * iFactor;
       End Else
         iSize := iDefault;
@@ -837,7 +842,7 @@ Begin
   Include(CommandLineSwitches, clsSizeRange);
   IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInSize);
   If ParamStr(iSwitch)[iIndex] <> '[' Then
-    Raise Exception.Create(strOpenSquareExpectedInSize);
+    Raise ESearchException.Create(strOpenSquareExpectedInSize);
   GetRangeString('-', strMissingSizeRangeSeparater, iIndex, iSwitch, strSize);
   GetSize(iLSize, strInvalidLowerSizeRange, 0);
   GetRangeString(']', strCloseSquareExpectedInSize, iIndex, iSwitch, strSize);
@@ -861,7 +866,7 @@ Begin
   Include(CommandLineSwitches, clsAttrRange);
   IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInAttribDef);
   If ParamStr(iSwitch)[iIndex] <> '[' Then
-    Raise Exception.Create(strOpenSquareExpectedInAttribDef);
+    Raise ESearchException.Create(strOpenSquareExpectedInAttribDef);
   IncrementSwitchPosition(iIndex, iSwitch, strMissingAttribDirective);
   iFileAttrs := 0;
   iTypeAttrs := 0;
@@ -877,7 +882,7 @@ Begin
         'd', 'D' : iTypeAttrs := iTypeAttrs Or faDirectory;
         'v', 'V' : iTypeAttrs := iTypeAttrs Or faVolumeID;
       Else
-        Raise Exception.CreateFmt(strNotAValidAttrList, [ParamStr(iSwitch)[iIndex]]);
+        Raise ESearchException.CreateFmt(strNotAValidAttrList, [ParamStr(iSwitch)[iIndex]]);
       End;
       IncrementSwitchPosition(iIndex, iSwitch, strCloseSquareExpectedInAttribDef);
     End;
@@ -904,7 +909,7 @@ Begin
   Include(CommandLineSwitches, clsOrderBy);
   IncrementSwitchPosition(iIndex, iSwitch, strColonExpectedInOrderBy);
   If ParamStr(iSwitch)[iIndex] <> ':' Then
-    Raise Exception.Create(strColonExpectedInOrderBy);
+    Raise ESearchException.Create(strColonExpectedInOrderBy);
   IncrementSwitchPosition(iIndex, iSwitch, strMissingOrderByDirective);
   If ParamStr(iSwitch)[iIndex] = '-' Then
     Begin
@@ -918,7 +923,7 @@ Begin
     'a', 'A': OrderFilesBy := obAttribute;
     'o', 'O': OrderFilesBy := obOwner;
   Else
-    Raise Exception.Create(strInvalidOrderByDirective);
+    Raise ESearchException.Create(strInvalidOrderByDirective);
   End
 End;
 
@@ -941,14 +946,14 @@ Begin
   Include(CommandLineSwitches, clsDateType);
   IncrementSwitchPosition(iIndex, iSwitch, strColonExpectedInDateType);
   If ParamStr(iSwitch)[iIndex] <> ':' Then
-    Raise Exception.Create(strColonExpectedInDateType);
+    Raise ESearchException.Create(strColonExpectedInDateType);
   IncrementSwitchPosition(iIndex, iSwitch, strMissingDateTypeDirective);
   Case ParamStr(iSwitch)[iIndex] Of
     'c', 'C': DateType := dtCreation;
     'a', 'A': DateType := dtLastAccess;
     'w', 'W': DateType := dtLastWrite;
   Else
-    Raise Exception.Create(strInvalidDateTypeDirective);
+    Raise ESearchException.Create(strInvalidDateTypeDirective);
   End
 End;
 
@@ -971,7 +976,7 @@ Begin
   Include(CommandLineSwitches, clsSearchIn);
   IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInGREPSearchDef);
   If ParamStr(iSwitch)[iIndex] <> '[' Then
-    Raise Exception.Create(strOpenSquareExpectedInGREPSearchDef);
+    Raise ESearchException.Create(strOpenSquareExpectedInGREPSearchDef);
   IncrementSwitchPosition(iIndex, iSwitch, strMissingSearchText);
   While (iIndex <= Length(ParamStr(iSwitch))) And
     (ParamStr(iSwitch)[iIndex] <> ']') Do
@@ -1000,10 +1005,10 @@ Var
 Begin
   Include(CommandLineSwitches, clsSummaryLevel);
   If iSummaryLevel > 0 Then
-    Raise Exception.Create(strSummaryAlreadySet);
+    Raise ESearchException.Create(strSummaryAlreadySet);
   Val(ParamStr(iSwitch)[iSwitches], iSummaryLevel, iCode);
   If iCode > 0 Then
-    Raise Exception.CreateFmt(strSummaryLevelException, [ParamStr(iSwitch)]);
+    Raise ESearchException.CreateFmt(strSummaryLevelException, [ParamStr(iSwitch)]);
 End;
 
 (**
@@ -1025,7 +1030,7 @@ Begin
   Include(CommandLineSwitches, clsExclusions);
   IncrementSwitchPosition(iIndex, iSwitch, strOpenSquareExpectedInExclSearchDef);
   If ParamStr(iSwitch)[iIndex] <> '[' Then
-    Raise Exception.Create(strOpenSquareExpectedInExclSearchDef);
+    Raise ESearchException.Create(strOpenSquareExpectedInExclSearchDef);
   IncrementSwitchPosition(iIndex, iSwitch, strMissingSearchText);
   While (iIndex <= Length(ParamStr(iSwitch))) And
     (ParamStr(iSwitch)[iIndex] <> ']') Do
@@ -1258,7 +1263,7 @@ Begin
             End;
         End;
       If Length(strOwnerSearch) = 0 Then
-        Raise Exception.Create(strOwnerSearchIsEmpty);
+        Raise ESearchException.Create(strOwnerSearchIsEmpty);
     End Else
       Dec(iIndex);
 End;
@@ -1310,7 +1315,7 @@ Begin
                 'x', 'X': GetExclusions(iSwitch, iIndex);
                 'u', 'U': Include(CommandLineSwitches, clsUpdate);
               Else
-                Raise Exception.CreateFmt(strInValidCommandLineSwitch,
+                Raise ESearchException.CreateFmt(strInValidCommandLineSwitch,
                   [ParamStr(iSwitch)[iIndex], ParamStr(iSwitch)]);
               End;
               Inc(iIndex);
@@ -1327,7 +1332,7 @@ Begin
   If ParamCount = 0 Then
     Include(CommandLineSwitches, clsShowHelp);
   If (slSearchParams.Count = 0) And Not (ClsShowHelp In CommandLineSwitches) Then
-    Raise Exception.Create(strNeedToSpecifyCriteria);
+    Raise ESearchException.Create(strNeedToSpecifyCriteria);
   If clsDisplayCriteria In CommandLineSwitches Then
     DisplayCriteria;
 End;
@@ -1893,14 +1898,19 @@ Begin
                   Begin
                     iPos := Pos('=', slSearchParams[i]);
                     If iPos = 0 Then
-                      Raise Exception.CreateFmt(strErrorInPathSearchParamString,
+                      Raise ESearchException.CreateFmt(strErrorInPathSearchParamString,
                         [slSearchParams[i]]);
                     strPath := slSearchParams.Names[i];
                     If strPath = '' Then
                       strPath := GetCurrentDir;
                     If strPath[Length(strPath)] <> '\' Then
-                      strPath := strPath + '\';
-                    strSearch := slSearchParams.Values[slSearchParams.Names[i]];
+                    // Coded like this to stop EurekaLog detecting a Memory Leak, was
+                    // strPath := strPath + '\';
+                      strPath := Format('%s\', [strPath]);
+                    strSearch := slSearchParams.Names[i];
+                    // Coded like this to stop EurekaLog detecting a Memory Leak, was
+                    // strSearch := slSearchParams.Values[strSearch];
+                    strSearch := Format('%s', [slSearchParams.Values[strSearch]]);
                     PrintHeader(strPath, strSearch);
                     slPatterns := TStringList.Create;
                     Try
@@ -1917,7 +1927,7 @@ Begin
               End Else
                 PrintHelp;
           End Else
-            Raise Exception.CreateFmt(strExclusionsNotFound, [strExlFileName]);
+            Raise ESearchException.CreateFmt(strExclusionsNotFound, [strExlFileName]);
       Finally
         slExclusions.Free;
       End;
@@ -1925,7 +1935,7 @@ Begin
       slSearchParams.Free;
     End;
   Except
-    On E : Exception Do
+    On E : ESearchException Do
       OutputToConsoleLn(FErr, Format(strException, [E.Message]), clRed);
   End;
   If clsDebug In CommandLineSwitches Then
