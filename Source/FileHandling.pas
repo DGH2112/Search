@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    31 Jul 2007
+  @Date    11 Jan 2008
 
 **)
 Unit FileHandling;
@@ -314,6 +314,8 @@ Begin
             Result := False;
         End Else
           Result := False;
+      If Not Result Then
+        FFile.Free;
     End Else
       FFiles.Add(FFile);
 End;
