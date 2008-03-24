@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    06 Jan 2008
+  @Date    24 Mar 2008
 
 **)
 unit ApplicationFunctions;
@@ -13,7 +13,7 @@ unit ApplicationFunctions;
 interface
 
 Uses
-  SysUtils, Classes, FileHandling;
+  SysUtils, Classes, Windows, FileHandling;
 
 Type
   (** A custom Exception for any exceptions raised by incorrect information
