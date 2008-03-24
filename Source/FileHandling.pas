@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    11 Jan 2008
+  @Date    24 Mar 2008
 
 **)
 Unit FileHandling;
@@ -101,15 +101,19 @@ Type
     Property GREPLine[iIndex : Integer] : Integer Read GetGREPLine;
   End;
 
+  (** This is a procedure declaration for an exception event handler. **)
+  TFilesExceptionHandler = Procedure(strException : String) Of Object;
+
   (** A class to hold a collection of files. **)
   TFiles = Class
   Private
     FFiles : TObjectList;
+    FExceptionHandler : TFilesExceptionHandler;
   Protected
     Function GetFile(iIndex : Integer) : TFile;
     Function GetCount : Integer;
   Public
-    Constructor Create;
+    Constructor Create(ExceptionHandler : TFilesExceptionHandler);
     Destructor Destroy; Override;
     Function Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
       strName, strGREPText : String; iFileAttrs : Integer) : Boolean;
@@ -244,11 +248,14 @@ end;
   @precon  None.
   @postcon Creates the file list.
 
+  @param   ExceptionHandler as a TFilesExceptionHandler
+
 **)
-Constructor TFiles.Create;
+Constructor TFiles.Create(ExceptionHandler : TFilesExceptionHandler);
 
 Begin
   FFiles := TObjectList.Create(True);
+  FExceptionHandler := ExceptionHandler;
 End;
 
 (**
@@ -301,10 +308,16 @@ Begin
         Begin
           slFile := TStringList.Create;
           Try
-            slFile.LoadFromFile(strName);
-            For iLine := 0 To slFile.Count - 1 Do
-              If Pos(strGREPText, Lowercase(slFile[iLine])) > 0 Then
-                FFile.AddGREPLine(slFile[iLine], iLine);
+            Try
+              slFile.LoadFromFile(strName);
+              For iLine := 0 To slFile.Count - 1 Do
+                If Pos(strGREPText, Lowercase(slFile[iLine])) > 0 Then
+                  FFile.AddGREPLine(slFile[iLine], iLine);
+            Except
+              On E : Exception Do
+                If Assigned(FExceptionHandler) Then
+                  FExceptionHandler(Format('%s (%s)', [E.Message, strName]));
+            End;
           Finally
             slFile.Free;
           End;
