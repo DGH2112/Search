@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    12 Jan 2008
+  @Date    26 Mar 2008
 
 **)
 Program Search;
@@ -107,7 +107,6 @@ Type
     FSummaryOutputColour: TColor;
     FExceptionColour : TColor;
   Protected
-    procedure BuildRootKey;
     procedure GetConsoleInformation;
     procedure OutputCurrentSearchPath(strPath: String);
     procedure PrintTitle;
@@ -132,6 +131,7 @@ Type
       var iLevel: Integer): Int64;
     Procedure LoadSettings;
     Procedure SaveSettings;
+    Procedure FilesExceptionHandler(strException : String);
   Public
     Constructor Create(Params : TstringList);
     Destructor Destroy; Override;
@@ -177,6 +177,7 @@ Resourcestring
     'in the searches.';
   (** A resource string to define the Exception output format. **)
   strException = 'ESearchException: %s';
+  strFilesException = 'Exception search files: %s';
   (** A resource string to define the URL to check for updates. **)
   strWebSiteURL = 'http://www.hoyld.freeserve.co.uk/HoylD.xml|' +
     'C:\Documents and Settings\HoylD\My Documents\Web Page\HoylD.xml';
@@ -395,38 +396,6 @@ Resourcestring
 
 (**
 
-  This method builds the root key INI filename for the loading and saving of
-  settings.
-
-  @precon  None.
-  @postcon Builds the root key INI filename for the loading and saving of
-           settings.
-
-**)
-procedure TSearch.BuildRootKey;
-
-var
-  i: Cardinal;
-  strUserName: string;
-  strComputerName: string;
-
-begin
-  i := 1024;
-  SetLength(strUserName, i);
-  GetUserName(@strUserName[1], i);
-  Win32Check(LongBool(i));
-  SetLength(strUserName, i - 1);
-  i := 1024;
-  SetLength(strComputerName, i);
-  GetComputerName(@strComputerName[1], i);
-  Win32Check(LongBool(i));
-  SetLength(strComputerName, i);
-  FRootKey := ExtractFilePath(ParamStr(0)) +
-    Format('Search Settings for %s on %s.INI', [strUserName, strComputerName]);
-end;
-
-(**
-
   This routine get and stores the current number of lines and columns
   in the console window.
 
@@ -443,7 +412,7 @@ Begin
   FStd := GetStdHandle(STD_OUTPUT_HANDLE);
   FErr := GetStdHandle(STD_ERROR_HANDLE);
   GetConsoleScreenBufferInfo(FStd, ConsoleInfo);
-  FWidth := ConsoleInfo.dwSize.X;
+  FWidth := ConsoleInfo.dwSize.X - 1;
   FHeight := ConsoleInfo.dwSize.Y;
 End;
 
@@ -460,13 +429,11 @@ End;
 Procedure TSearch.OutputCurrentSearchPath(strPath : String);
 
 Var
-  C : CONSOLE_SCREEN_BUFFER_INFO;
   i, j : Integer;
   iLength : Integer;
 
 Begin
   If clsQuiet In CommandLineSwitches Then Exit;
-  GetConsoleScreenBufferInfo(FStd, C);
   iLength := Length(Format(strSearchLabel, [FDirectories, FFiles]));
   While Length(strPath) > (FWidth - iLength) Do
     Begin
@@ -486,8 +453,7 @@ Begin
     End;
   strPath := Format(strOutputCurrPathFormat, [Format(strSearchLabel,
     [FDirectories, FFiles]), FWidth - iLength, strPath]);
-  OutputToConsoleLn(FStd, strPath, FSearchPathColour, clNone, False);
-  SetConsoleCursorPosition(FStd, C.dwCursorPosition);
+  OutputToConsole(FStd, strPath, FSearchPathColour, clNone, False);
 End;
 
 
@@ -835,6 +801,22 @@ End;
 
 (**
 
+  This method outputs exception from the TFiles class to the console.
+
+  @precon  None.
+  @postcon Outputs exception from the TFiles class to the console.
+
+  @param   strException as a String
+
+**)
+procedure TSearch.FilesExceptionHandler(strException: String);
+begin
+  OutputToConsoleLn(FStd, Format(strFilesException, [strException]),
+    FExceptionColour);
+end;
+
+(**
+
   This gets all the command lines switches and sets numerous flags.
 
   @precon  None.
@@ -900,7 +882,10 @@ Begin
   If FParams.Count = 0 Then
     Include(CommandLineSwitches, clsShowHelp);
   If (FSearchParams.Count = 0) And Not (ClsShowHelp In CommandLineSwitches) Then
-    Raise ESearchException.Create(strNeedToSpecifyCriteria);
+    If ParamCount = 0 Then
+      Include(CommandLineSwitches, clsShowHelp)
+    Else
+      Raise ESearchException.Create(strNeedToSpecifyCriteria);
   If clsDisplayCriteria In CommandLineSwitches Then
     DisplayCriteria;
 End;
@@ -1060,7 +1045,7 @@ begin
   FSearchParams := TStringList.Create;
   FExclusions := TStringList.Create;
   FParams := Params;
-  BuildRootKey;
+  FRootKey := BuildRootKey;
   LoadSettings;
   GetConsoleInformation;
   FLevel := -1;
@@ -1130,7 +1115,7 @@ begin
       end;
       if not boolDirPrinted then
       begin
-        OutputtoConsole(FStd, StringOfChar(#32, FWidth - 1), clNone, clNone, False);
+        OutputtoConsole(FStd, StringOfChar(#32, FWidth), clNone, clNone, False);
         OutputToConsoleLn(FStd, strPath, FFoundSearchPathColour);
         boolDirPrinted := True;
       end;
@@ -1373,7 +1358,7 @@ Begin
   boolDirPrinted := False;
   (* Find Files *)
   boolFound := True;
-  FFilesCollection := TFiles.Create;
+  FFilesCollection := TFiles.Create(FilesExceptionHandler);
   Try
     SearchForPatterns(slPatterns, iResult, boolFound, iDirFiles, Result, strPath,
       recSearch);
