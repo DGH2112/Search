@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    24 Mar 2008
+  @Date    26 Mar 2008
 
 **)
 unit ApplicationFunctions;
@@ -68,11 +68,11 @@ Var
   procedure IncrementSwitchPosition(slParams : TStringList; var iIndex,
     iSwitch: Integer; strExceptionMsg : String);
   Procedure GetRangeString(slParams : TstringList; chEndToken : Char;
-    strExceptionMsg : String; var iIndex, iSwitch : Integer; var strDate : String);
+    strExceptionMsg : String; var iIndex, iSwitch : Integer; var strValue : String);
   Procedure GetDateRange(slParams : TStringList; var iSwitch, iIndex : Integer;
     var dtLDate, dtUdate : Double);
   Procedure GetSummaryLevel(slParams : TStringList; Var iSwitch : Integer;
-    iSwitches : Integer; var iSummaryLevel : Integer);
+    iIndex : Integer; var iSummaryLevel : Integer);
   Procedure GetSizeRange(slParams : TStringList; Var iSwitch, iIndex : Integer;
     var iLSize, iUSize : Int64);
   Procedure GetAttributes(slParams : TStringList; var iSwitch, iIndex : Integer;
@@ -199,20 +199,20 @@ end;
   @param   strExceptionMsg as a String
   @param   iIndex          as an Integer as a reference
   @param   iSwitch         as an Integer as a reference
-  @param   strDate         as a String as a reference
+  @param   strValue        as a String as a reference
 
 **)
 Procedure GetRangeString(slParams : TstringList; chEndToken : Char;
-  strExceptionMsg : String; var iIndex, iSwitch : Integer; var strDate : String);
+  strExceptionMsg : String; var iIndex, iSwitch : Integer; var strValue : String);
 
 Begin
-  strDate := '';
+  strValue := '';
   While (Length(slParams[iSwitch]) >= iIndex) And
     (slParams[iSwitch][iIndex] <> chEndToken) Do
     Begin
       IncrementSwitchPosition(slParams, iIndex, iSwitch, strExceptionMsg);
       If slParams[iSwitch][iIndex] <> chEndToken Then
-        strDate := strDate + slParams[iSwitch][iIndex];
+        strValue := strValue + slParams[iSwitch][iIndex];
     End;
 End;
 
@@ -251,7 +251,7 @@ Begin
       If (wH = 0) And (wM = 0) And (wS = 0) And (wMS = 0) Then
         dtLDate := dtLDate + EncodeTime(0, 0, 0, 0);
     End Else
-      dtUDate := ConvertDate('01/Jan/1900 00:00:01');
+      dtLDate := ConvertDate('01/Jan/1900 00:00:00');
   GetRangeString(slParams, ']', strCloseSquareExpectedInDate, iIndex, iSwitch, strDate);
   If strDate <> '' Then
     Begin
@@ -260,7 +260,7 @@ Begin
       If (wH = 0) And (wM = 0) And (wS = 0) And (wMS = 0) Then
         dtUDate := dtUDate + EncodeTime(23, 59, 59, 999);
     End Else
-      dtUDate := ConvertDate('31/Dec/2099 23:59:59');
+      dtUDate := ConvertDate('31/Dec/2099 23:59:59.999');
 End;
 
 (**
@@ -380,7 +380,7 @@ Begin
         strCloseSquareExpectedInAttribDef);
     End;
   If iTypeAttrs = 0 Then
-    iTypeAttrs := faDirectory Or faVolumeID;
+    iTypeAttrs := iFileOnly;
 End;
 
 (**
@@ -408,6 +408,9 @@ Begin
   If slParams[iSwitch][iIndex] <> ':' Then
     Raise ESearchException.Create(strColonExpectedInOrderBy);
   IncrementSwitchPosition(slParams, iIndex, iSwitch, strMissingOrderByDirective);
+  OrderFilesDirection := odAscending;
+  If slParams[iSwitch][iIndex] = '+' Then
+    IncrementSwitchPosition(slParams, iIndex, iSwitch, strMissingOrderByDirective);
   If slParams[iSwitch][iIndex] = '-' Then
     Begin
       OrderFilesDirection := odDescending;
@@ -482,6 +485,7 @@ Begin
   If slParams[iSwitch][iIndex] <> '[' Then
     Raise ESearchException.Create(strOpenSquareExpectedInGREPSearchDef);
   IncrementSwitchPosition(slParams, iIndex, iSwitch, strMissingSearchText);
+  strSearchInText := '';
   While (iIndex <= Length(slParams[iSwitch])) And
     (slParams[iSwitch][iIndex] <> ']') Do
     Begin
@@ -500,12 +504,12 @@ End;
 
   @param   slParams      as a TStringList
   @param   iSwitch       as an Integer as a reference
-  @param   iSwitches     as an Integer
+  @param   iIndex        as an Integer
   @param   iSummaryLevel as an Integer as a reference
 
 **)
 Procedure GetSummaryLevel(slParams : TStringList; Var iSwitch : Integer;
-  iSwitches : Integer; var iSummaryLevel : Integer);
+  iIndex : Integer; var iSummaryLevel : Integer);
 
 Var
   iCode : Integer;
@@ -514,7 +518,7 @@ Begin
   Include(CommandLineSwitches, clsSummaryLevel);
   If iSummaryLevel > 0 Then
     Raise ESearchException.Create(strSummaryAlreadySet);
-  Val(slParams[iSwitch][iSwitches], iSummaryLevel, iCode);
+  Val(slParams[iSwitch][iIndex], iSummaryLevel, iCode);
   If iCode > 0 Then
     Raise ESearchException.CreateFmt(strSummaryLevelException, [slParams[iSwitch]]);
 End;
@@ -544,6 +548,7 @@ Begin
   If slParams[iSwitch][iIndex] <> '[' Then
     Raise ESearchException.Create(strOpenSquareExpectedInExclSearchDef);
   IncrementSwitchPosition(slParams, iIndex, iSwitch, strMissingSearchText);
+  strExlFileName := '';
   While (iIndex <= Length(slParams[iSwitch])) And
     (slParams[iSwitch][iIndex] <> ']') Do
     Begin
@@ -583,6 +588,7 @@ Begin
   If slParams[iSwitch][iIndex] = '[' Then
     Begin
       OwnerSearchPos := ospExact;
+      strOwnerSearch := '';
       IncrementSwitchPosition(slParams, iIndex, iSwitch, strMissingSearchText);
       While (iIndex <= Length(slParams[iSwitch])) And
         (slParams[iSwitch][iIndex] <> ']') Do
