@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    26 Mar 2008
+  @Date    11 May 2008
 
 **)
 Program Search;
@@ -178,9 +178,6 @@ Resourcestring
   (** A resource string to define the Exception output format. **)
   strException = 'ESearchException: %s';
   strFilesException = 'Exception search files: %s';
-  (** A resource string to define the URL to check for updates. **)
-  strWebSiteURL = 'http://www.hoyld.freeserve.co.uk/HoylD.xml|' +
-    'C:\Documents and Settings\HoylD\My Documents\Web Page\HoylD.xml';
   (** A resource string to define the Application ID for updates. **)
   strAppID = 'Search';
   (** This is a constant to represent a parameter string error. **)
@@ -1192,8 +1189,7 @@ Var
   
 begin
   GetCommandLineSwitches;
-  TCheckForupdates.Execute(strWebSiteURL, strAppID, FRootKey,
-    clsUPdate In CommandLineSwitches);
+  TCheckForupdates.Execute(strAppID, FRootKey, clsUPdate In CommandLineSwitches);
   If Not (clsExclusions In CommandLineSwitches) Or
     ((clsExclusions In CommandLineSwitches) And FileExists(FExlFileName)) Then
     Begin
