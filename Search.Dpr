@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    28 May 2008
+  @Date    14 Jul 2008
 
 **)
 Program Search;
@@ -132,8 +132,9 @@ Type
     Procedure LoadSettings;
     Procedure SaveSettings;
     Procedure FilesExceptionHandler(strException : String);
+    Procedure ExceptionProc(strMsg : String);
   Public
-    Constructor Create(Params : TstringList);
+    Constructor Create;
     Destructor Destroy; Override;
     Procedure Run;
     (**
@@ -430,7 +431,8 @@ Var
   iLength : Integer;
 
 Begin
-  If clsQuiet In CommandLineSwitches Then Exit;
+  If clsQuiet In CommandLineSwitches Then
+    Exit;
   iLength := Length(Format(strSearchLabel, [FDirectories, FFiles]));
   While Length(strPath) > (FWidth - iLength) Do
     Begin
@@ -450,7 +452,8 @@ Begin
     End;
   strPath := Format(strOutputCurrPathFormat, [Format(strSearchLabel,
     [FDirectories, FFiles]), FWidth - iLength, strPath]);
-  OutputToConsole(FStd, strPath, FSearchPathColour, clNone, False);
+  If CheckConsoleMode(FStd) Then
+    OutputToConsole(FStd, strPath, FSearchPathColour, clNone, False);
 End;
 
 
@@ -510,7 +513,8 @@ Var
 Begin
   GetDiskFreeSpaceEx(PChar(strPath), iFreeBytesAvailableToCaller,
     iTotalNumberOfBytes, @iTotalNumberOfFreeBytes);
-  OutputtoConsole(FStd, StringOfChar(#32, FWidth - 1), clNone, clNone, False);
+  If CheckConsoleMode(FStd) Then
+    OutputtoConsole(FStd, StringOfChar(#32, FWidth - 1), clNone, clNone, False);
   OutputToConsoleLn(FStd, Format(strMsg1, [FFileSize + 0.1, FFiles + 0.1,
     FDirectories + 0.1]), FFooterColour);
   OutputToConsoleLn(FStd, Format(strMsg2, [iTotalNumberOfBytes + 0.1,
@@ -623,6 +627,7 @@ begin
   SaveSettings;
   FExclusions.Free;
   FSearchParams.Free;
+  FParams.Free;
   Inherited Destroy;
 end;
 
@@ -798,6 +803,21 @@ End;
 
 (**
 
+  This is a exception handler for the BuildRootKey method.
+
+  @precon  None.
+  @postcon Raise the exception for termination.
+
+  @param   strMsg as a String
+
+**)
+procedure TSearch.ExceptionProc(strMsg: String);
+begin
+  Raise Exception.Create(strMsg);
+end;
+
+(**
+
   This method outputs exception from the TFiles class to the console.
 
   @precon  None.
@@ -828,7 +848,7 @@ Var
 Begin
   FSummaryLevel := 0;
   CommandLineSwitches := [];
-  iSwitch := 1;
+  iSwitch := 0;
   FOrderFilesBy := obNone;
   FOrderFilesDirection := odAscending;
   FDateType := dtLastWrite;
@@ -879,7 +899,7 @@ Begin
   If FParams.Count = 0 Then
     Include(CommandLineSwitches, clsShowHelp);
   If (FSearchParams.Count = 0) And Not (ClsShowHelp In CommandLineSwitches) Then
-    If ParamCount = 0 Then
+    If FParams.Count = 0 Then
       Include(CommandLineSwitches, clsShowHelp)
     Else
       Raise ESearchException.Create(strNeedToSpecifyCriteria);
@@ -1033,21 +1053,15 @@ end;
   @precon  None.
   @postcon Initialises the SearchParams and Exclusions stringlists.
 
-  @param   Params as a TstringList
-
 **)
-constructor TSearch.Create(Params : TstringList);
+constructor TSearch.Create;
 begin
-  FExceptionColour := clRed; 
+  FExceptionColour := clRed;
   FSearchParams := TStringList.Create;
   FExclusions := TStringList.Create;
-  FParams := Params;
-  FRootKey := BuildRootKey;
-  LoadSettings;
-  GetConsoleInformation;
-  FLevel := -1;
-  PrintTitle;
+  FParams := TStringList.Create;
   CoInitialize(Nil);
+  FLevel := -1;
 end;
 
 (**
@@ -1112,7 +1126,8 @@ begin
       end;
       if not boolDirPrinted then
       begin
-        OutputtoConsole(FStd, StringOfChar(#32, FWidth), clNone, clNone, False);
+        If CheckConsoleMode(FStd) Then
+          OutputtoConsole(FStd, StringOfChar(#32, FWidth), clNone, clNone, False);
         OutputToConsoleLn(FStd, strPath, FFoundSearchPathColour);
         boolDirPrinted := True;
       end;
@@ -1188,6 +1203,10 @@ Var
   iPattern : Integer;
   
 begin
+  GetConsoleInformation;
+  FRootKey := BuildRootKey(FParams, FilesExceptionHandler);
+  LoadSettings;
+  PrintTitle;
   GetCommandLineSwitches;
   TCheckForupdates.Execute(strAppID, FRootKey, clsUPdate In CommandLineSwitches);
   If Not (clsExclusions In CommandLineSwitches) Or
@@ -1392,35 +1411,31 @@ End;
  -------------------------------------------------------------------------- **)
 
 Var
-  (** This is a loop iterator. **)
-  i : Integer;
-  (** A string list to hold all the command line parameters - this make the
-      testing of the routines which use this information easier. **)
-  slParams : TStringList;
+  boolException : Boolean;
 
 Begin
-  slParams := TStringList.Create;
-  Try
-    With TSearch.Create(slParams) Do
+  boolException := False;
+  With TSearch.Create Do
+    Try
       Try
-        Try
-          For i := 0 To ParamCount Do
-            slParams.Add(ParamStr(i));
-          Run;
-        Except
-          On E : ESearchException Do
-            OutputToConsoleLn(FErr, Format(strException, [E.Message]), ExceptionColour);
-        End;
-        If clsDebug In CommandLineSwitches Then
+        Run;
+      Except
+        On E : ESearchException Do
           Begin
-            OutputToConsoleLn(FStd);
-            OutputToConsole(FStd, strPressEnterToFinish);
-            Readln;
+            OutputToConsoleLn(FErr, Format(strException, [E.Message]),
+              ExceptionColour);
+            boolException := True;
           End;
-      Finally
-        Free;
       End;
-  Finally
-    slParams.Free;
-  End;
+      If clsDebug In CommandLineSwitches Then
+        Begin
+          OutputToConsoleLn(FStd);
+          OutputToConsole(FStd, strPressEnterToFinish);
+          Readln;
+        End;
+    Finally
+      Free;
+    End;
+  If boolException Then
+    Halt(1);
 End.
