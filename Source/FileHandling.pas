@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    24 Mar 2008
+  @Date    14 Jul 2008
 
 **)
 Unit FileHandling;
@@ -312,7 +312,7 @@ Begin
               slFile.LoadFromFile(strName);
               For iLine := 0 To slFile.Count - 1 Do
                 If Pos(strGREPText, Lowercase(slFile[iLine])) > 0 Then
-                  FFile.AddGREPLine(slFile[iLine], iLine);
+                  FFile.AddGREPLine(slFile[iLine], iLine + 1);
             Except
               On E : Exception Do
                 If Assigned(FExceptionHandler) Then
