@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    14 Jul 2008
+  @Date    15 Jul 2008
 
 **)
 Program Search;
@@ -304,7 +304,7 @@ Resourcestring
   strHelp0040 = '{/Z[{LowerByteSize}-{UpperByteSize}]} {/O:NDAOS} {/E:CA' +
   'W} {/I[text]}';
   (** A resource string for the console help information. **)
-  strHelp0050 = '{/X[filename]}';
+  strHelp0050 = '{/X[filename]} {/@[Drive:\Path\FileName.INI]}';
   (** A resource string for the console help information. **)
   strHelp0060 = 'searchparam# = {drive:\path\}filter1{;filter2{;filter3{;.' +
   '..}}}';
@@ -391,6 +391,10 @@ Resourcestring
   (** A resource string for the console help information. **)
   strHelp0280 = 'NOTE: The date time input format is dependent on your loc' +
   'al settings';
+  (** A resource string for the console help information. **)
+  strHelp0276 = '/@[FileName]';
+  (** A resource string for the console help information. **)
+  strHelp0277 = 'Allows you to specify an alternate INI file.';
 
 (**
 
@@ -609,6 +613,8 @@ Begin
   OutputToConsoleLn(FStd, strHelp0265, FHelpTextColour);
   OutputToConsole(FStd, Indent(strHelp0270, 2, iWidth), FHelpSwitchColour);
   OutputToConsoleLn(FStd, strHelp0275, FHelpTextColour);
+  OutputToConsole(FStd, Indent(strHelp0276, 2, iWidth), FHelpSwitchColour);
+  OutputToConsoleLn(FStd, strHelp0277, FHelpTextColour);
   OutputToConsoleLn(FStd);
   OutputToConsoleLn(FStd, strHelp0280, FHelpFootNoteColour);
   OutputToConsoleLn(FStd);
