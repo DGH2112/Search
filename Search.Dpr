@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    15 Jul 2008
+  @Date    28 Apr 2009
 
 **)
 Program Search;
@@ -178,6 +178,7 @@ Resourcestring
     'in the searches.';
   (** A resource string to define the Exception output format. **)
   strException = 'ESearchException: %s';
+  (** A resource string to note an exception searching files. **)
   strFilesException = 'Exception search files: %s';
   (** A resource string to define the Application ID for updates. **)
   strAppID = 'Search';
@@ -273,13 +274,19 @@ Resourcestring
   strDirFormat = '  %s  %15s  ';
   (** A resource string for formatting information. **)
   strFileFormat = '  %s  %15.0n  ';
+  (** A resource string for matching owners at the end of the string. **)
   strOwnerAtTheEnd = ' at the end';
+  (** A resource string for matching owners in the middle of the string. **)
   strOwnerInTheMiddle = ' in the middle';
+  (** A resource string for matching owners at the start of the string. **)
   strOwnerAtTheStart = ' at the start';
+  (** A resource string for an exact pattern match for an owner. **)
   strOwnerExact = ' exactly';
   (** A resource string for formatting information. **)
   strOwnerMatching = 'matching "%s"';
+  (** A resource string for a negative pattern match. **)
   strOwnerNOT = 'NOT ';
+  (** A resource string for owner searches. **)
   strOwnerSearchingFor = ' Searching for Owners ';
   (** A resource string for formatting information. **)
   strReduceSizeFormat = '%1.0n%s';
@@ -1417,6 +1424,7 @@ End;
  -------------------------------------------------------------------------- **)
 
 Var
+  (** A variable to hold whether an exception has occurred. **)
   boolException : Boolean;
 
 Begin
