@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    26 Mar 2008
+  @Date    05 Mar 2010
 
 **)
 unit ApplicationFunctions;
@@ -38,7 +38,8 @@ Type
     clsDateType,         { /e or -e }
     clsDisplayCriteria,  { /c or -c }
     clsExclusions,       { /x or -x }
-    clsUpdate            { /u or -u }
+    clsUpdate,           { /u or -u }
+    clsSearchZip         { /p or -P }
   );
 
   (** This is a set of boolean command line switches. **)
@@ -89,12 +90,12 @@ Var
     var OwnerSearch : TOwnerSearch; var OwnerSearchPos : TOwnerSearchPos;
     var strOwnerSearch : String);
   Function OutputAttributes(iAttr : Integer) : String;
-  Procedure CheckDateRange(recSearch: TSearchRec; dtLDate, dtUDate : Double;
+  Procedure CheckDateRange(iDateTime : Integer; dtLDate, dtUDate : Double;
     var boolFound: Boolean);
   procedure CheckSizeRange(iSize, iLSize, iUSize: Int64; var boolFound: Boolean);
-  procedure CheckFileAttributes(recSearch: TSearchRec; iFileAttrs,
+  procedure CheckFileAttributes(SearchAttrs : Integer; iFileAttrs,
     iTypeAttrs : Integer; var boolFound: Boolean);
-  Procedure CheckExclusions(strPath : String; recSearch : TSearchRec;
+  Procedure CheckExclusions(strPath, strFilename : String; 
     var boolFound : Boolean; slExclusions : TStringList);
   Procedure CheckOwner(strOwner, strOwnerSearch : String;
     OwnerSearchPos : TOwnerSearchPos; OwnerSearch : TOwnerSearch;
@@ -656,25 +657,28 @@ End;
 
 (**
 
-  This method checks the currently found file information against the Date Range.
+  This method checks the currently found file information against the Date Range
+  .
 
   @precon  None.
   @postcon Returns boolFound as true if the file date is within the date range.
 
-  @param   recSearch as a TSearchRec
+  @bug     This only works on last access date!
+
+  @param   iDateTime as an Integer
   @param   dtLDate   as a Double
   @param   dtUDate   as a Double
   @param   boolFound as a Boolean as a reference
 
 **)
-Procedure CheckDateRange(recSearch: TSearchRec; dtLDate, dtUDate : Double;
+Procedure CheckDateRange(iDateTime : Integer; dtLDate, dtUDate : Double;
   var boolFound: Boolean);
 
 begin
   if clsDateRange in CommandLineSwitches then
   begin
-    boolFound := boolFound and (FileDateToDateTime(recSearch.Time) >= dtLDate);
-    boolFound := boolFound and (FileDateToDateTime(recSearch.Time) <= dtUDate);
+    boolFound := boolFound and (FileDateToDateTime(iDateTime) >= dtLDate);
+    boolFound := boolFound and (FileDateToDateTime(iDateTime) <= dtUDate);
   end;
 end;
 
@@ -708,27 +712,29 @@ end;
   @precon  None.
   @postcon Returns boolFound as true is the file has the attributes.
 
-  @param   recSearch  as a TSearchRec
-  @param   iFileAttrs as an Integer
-  @param   iTypeAttrs as an Integer
-  @param   boolFound  as a Boolean as a reference
+  @param   SearchAttrs as an Integer
+  @param   iFileAttrs  as an Integer
+  @param   iTypeAttrs  as an Integer
+  @param   boolFound   as a Boolean as a reference
 
 **)
-procedure CheckFileAttributes(recSearch: TSearchRec; iFileAttrs,
+procedure CheckFileAttributes(SearchAttrs : Integer; iFileAttrs,
   iTypeAttrs : Integer; var boolFound: Boolean);
+
 var
   iAttributes: Integer;
+
 begin
   if clsAttrRange in CommandLineSwitches then
   begin
-    if faDirectory and recSearch.Attr > 0 then
+    if faDirectory and SearchAttrs > 0 then
       iAttributes := faDirectory
-    else if faVolumeID and recSearch.Attr > 0 then
+    else if faVolumeID and SearchAttrs > 0 then
       iAttributes := faVolumeID
     else
       iAttributes := iFileOnly;
     boolFound := boolFound and (iAttributes and iTypeAttrs > 0);
-    boolFound := boolFound and ((recSearch.Attr and iFileAttrs > 0) Or
+    boolFound := boolFound and ((SearchAttrs and iFileAttrs > 0) Or
       (iFileAttrs = 0));
   end;
 end;
@@ -739,24 +745,23 @@ end;
   search.
 
   @precon  recSearch must be a valid TSearchRec structure.
-  @postcon Sets or maintains boolFound as True if the file should NOT be excluded
-           else sets boolFound to False.
+  @postcon Sets or maintains boolFound as True if the file should NOT be 
+           excluded else sets boolFound to False.
 
   @param   strPath      as a String
-  @param   recSearch    as a TSearchRec
+  @param   strFileName  as a String
   @param   boolFound    as a Boolean as a reference
   @param   slExclusions as a TStringList
 
 **)
-Procedure CheckExclusions(strPath : String; recSearch : TSearchRec;
+Procedure CheckExclusions(strPath, strFileName : String; 
   var boolFound : Boolean; slExclusions : TStringList);
 
 Var
-  strFileName : String;
   j: Integer;
 
 Begin
-  strFileName := LowerCase(strPath + recSearch.Name);
+  strFileName := LowerCase(strPath + strFileName);
   For j := 0 To slExclusions.Count - 1 Do
     boolFound := boolFound And (Pos(slExclusions[j], strFileName) = 0);
 End;
