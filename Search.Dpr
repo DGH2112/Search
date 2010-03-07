@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    28 Apr 2009
+  @Date    07 Mar 2010
 
 **)
 Program Search;
@@ -22,6 +22,7 @@ uses
   Classes,
   ACCCTRL,
   Contnrs,
+  ZipForge,
   Graphics,
   ActiveX,
   IniFiles,
@@ -106,6 +107,7 @@ Type
     FGREPLineOutputColour: TColor;
     FSummaryOutputColour: TColor;
     FExceptionColour : TColor;
+    FZipFileColour : TColor;
   Protected
     procedure GetConsoleInformation;
     procedure OutputCurrentSearchPath(strPath: String);
@@ -117,17 +119,21 @@ Type
     procedure GetCommandLineSwitches;
     function LookupAccountBySID(SID: PSID): String;
     function OutputOwner(strFileName: String): String;
-    procedure CheckFiles(iSize: Int64; recSearch: TSearchRec;
-      var iDirFiles: Integer; var Result: Int64; strPath, strOwner: string);
+    Function CheckFiles(recSearch: TSearchRec;
+      var iDirFiles: Integer; strPath, strOwner: string) : Int64;
+    Function CheckZipFiles(ZipArchive : TZipForge; ZFAI: TZFArchiveItem;
+      var iDirFiles: Integer; strPath, strOwner: string) : Int64;
     procedure WorkaroundLargeFiles(var iSize: Int64; recSearch: TSearchRec);
     procedure OutputFilesToConsole(strPath: string; boolDirPrinted: Boolean);
-    procedure RecurseDirectories(strPath: string; var iLevel: Integer;
-      var Result: Int64; iResult: Integer; slPatterns: TStringList;
-      recSearch: TSearchRec);
-    procedure SearchForPatterns(slPatterns: TStringList; var iResult: Integer;
-      boolFound: Boolean; iDirFiles: Integer; var Result: Int64;
-      strPath: string; var recSearch: TSearchRec);
+    Function RecurseDirectories(strPath: string; var iLevel: Integer;
+      slPatterns: TStringList) : Int64;
+    Function SearchForPatterns(slPatterns: TStringList; iDirFiles: Integer;
+      strPath: string) : Int64;
+    Function SearchForPatternsInZip(strFileName : String; slPatterns: TStringList;
+      iDirFiles: Integer; strPath: string) : Int64;
     function SearchDirectory(strPath: String; slPatterns: TStringList;
+      var iLevel: Integer): Int64;
+    function SearchZip(strFileName: String; slPatterns: TStringList;
       var iLevel: Integer): Int64;
     Procedure LoadSettings;
     Procedure SaveSettings;
@@ -402,6 +408,10 @@ Resourcestring
   strHelp0276 = '/@[FileName]';
   (** A resource string for the console help information. **)
   strHelp0277 = 'Allows you to specify an alternate INI file.';
+  (** A resource string for the console help information. **)
+  strHelp0281 = '/P';
+  (** A resource string for the console help information. **)
+  strHelp0282 = 'Enables the searching within ZIP archives.';
 
 (**
 
@@ -622,6 +632,8 @@ Begin
   OutputToConsoleLn(FStd, strHelp0275, FHelpTextColour);
   OutputToConsole(FStd, Indent(strHelp0276, 2, iWidth), FHelpSwitchColour);
   OutputToConsoleLn(FStd, strHelp0277, FHelpTextColour);
+  OutputToConsole(FStd, Indent(strHelp0281, 2, iWidth), FHelpSwitchColour);
+  OutputToConsoleLn(FStd, strHelp0282, FHelpTextColour);
   OutputToConsoleLn(FStd);
   OutputToConsoleLn(FStd, strHelp0280, FHelpFootNoteColour);
   OutputToConsoleLn(FStd);
@@ -867,7 +879,7 @@ Begin
   FDateType := dtLastWrite;
   While iSwitch <= FParams.Count - 1 Do
     Begin
-      If FParams[iSwitch][1] In ['-', '/'] Then
+      If CharInSet(FParams[iSwitch][1], ['-', '/']) Then
         Begin
           iIndex := 2;
           While iIndex <= Length(FParams[iSwitch]) Do
@@ -894,6 +906,7 @@ Begin
                 'c', 'C': Include(CommandLineSwitches, clsDisplayCriteria);
                 'x', 'X': GetExclusions(FParams, iSwitch, iIndex, FExlFileName);
                 'u', 'U': Include(CommandLineSwitches, clsUpdate);
+                'p', 'P': Include(CommandLineSwitches, clsSearchZip);
               Else
                 Raise ESearchException.CreateFmt(strInValidCommandLineSwitch,
                   [FParams[iSwitch][iIndex], FParams[iSwitch]]);
@@ -947,6 +960,7 @@ begin
       FGREPLineOutputColour := StringToColor(ReadString('Colours', 'GREPLineOutput', 'clLime'));
       FSummaryOutputColour := StringToColor(ReadString('Colours', 'SummaryOutput', 'clNone'));
       FExceptionColour := StringToColor(ReadString('Colours', 'Exception', 'clRed'));
+      FZipFileColour := StringToColor(ReadString('Colours', 'ZipFile', 'clFuchsia'));
     Finally
       Free;
     End;
@@ -980,7 +994,9 @@ Begin
     iRefDomainSize, Use);
   If strName = '' Then
     strName := '(Unknown)';
-  Result := PChar(strRefDomain) + '/' + PChar(strName);
+  SetLength(strName, Length(strName) - 1);
+  SetLength(strRefDomain, Length(strRefDomain) - 1);
+  Result := strRefDomain + '/' + strName;
 End;
 
 (**
@@ -1002,7 +1018,7 @@ Var
 
 Begin
   Result := '';
-  If GetNamedSecurityInfo(PChar(strFileName), SE_FILE_OBJECT,
+  If GetNamedSecurityInfo(PAnsiChar(AnsiString(strFileName)), SE_FILE_OBJECT,
     OWNER_SECURITY_INFORMATION, @Owner, Nil, Nil, Nil,
     Pointer(SD)) = ERROR_SUCCESS Then
     Begin
@@ -1013,21 +1029,52 @@ End;
 
 (**
 
-  This method adds the file to the collection and increments the various counters.
+  This method adds the file to the collection and increments the various
+  counters.
 
   @precon  None.
   @postcon Adds the file to the collection and increments the various counters.
 
-  @param   iSize     as an Int64
   @param   recSearch as a TSearchRec
   @param   iDirFiles as an Integer as a reference
-  @param   Result    as an Int64 as a reference
-  @param   strPath   as a String
-  @param   strOwner  as a String
+  @param   strPath   as a string
+  @param   strOwner  as a string
+  @return  an Int64
 
 **)
-procedure TSearch.CheckFiles(iSize: Int64; recSearch: TSearchRec; var iDirFiles: Integer;
-  var Result: Int64; strPath, strOwner: string);
+Function TSearch.CheckFiles(recSearch: TSearchRec; var iDirFiles: Integer;
+  strPath, strOwner: string) : Int64;
+
+  (**
+
+    This function returns the text of the text file IF GREP searching is
+    required.
+
+    @precon  None.
+    @postcon Returns the text of the text file IF GREP searching is
+             required else returns a null string
+
+    @return  a String
+
+  **)
+  Function GetFileText : String;
+
+  Var
+    sl : TStringList;
+
+  Begin
+    Result := '';
+    If clsSearchIn In CommandLineSwitches Then
+      Begin
+        sl := TStringList.Create;
+        Try
+          sl.LoadFromFile(strPath + recSearch.Name);
+          Result := sl.Text;
+        Finally
+          sl.Free;
+        End;
+      End;
+  End;
 
 Var
   dtDate, dtDateLocal : TFileTime;
@@ -1035,6 +1082,7 @@ Var
   boolAdded: Boolean;
 
 begin
+  Result := 0;
   if not (clsSummaryLevel in CommandLineSwitches) then
     begin
       Inc(iDirFiles);
@@ -1046,16 +1094,81 @@ begin
       FileTimeToLocalFileTime(dtDate, dtDateLocal);
       iTime := 0;
       FileTimeToDosDateTime(dtDateLocal, LongRec(iTime).Hi, LongRec(iTime).Lo);
-      boolAdded := FFilesCollection.Add(FileDateToDateTime(iTime), iSize,
-        OutputAttributes(recSearch.Attr), strOwner,
-        strPath + recSearch.Name, FSearchInText, recSearch.Attr);
+      boolAdded := FFilesCollection.Add(FileDateToDateTime(iTime), recSearch.Size,
+        OutputAttributes(recSearch.Attr), strOwner, recSearch.Name,
+        FSearchInText, GetFileText, recSearch.Attr);
     end Else
       boolAdded := True;
   If boolAdded Then
     Begin
       Inc(FFiles);
-      Inc(FFileSize, iSize);
-      Inc(Result, iSize);
+      Inc(FFileSize, recSearch.Size);
+      Inc(Result, recSearch.Size);
+    End;
+end;
+
+(**
+
+  This method adds the zip file to the collection and increments the various
+  counters.
+
+  @precon  None.
+  @postcon Adds the zip file to the collection and increments the various
+           counters.
+
+  @param   ZipArchive as a TZipForge
+  @param   ZFAI       as a TZFArchiveItem
+  @param   iDirFiles  as an Integer as a reference
+  @param   strPath    as a string
+  @param   strOwner   as a string
+  @return  an Int64
+
+**)
+function TSearch.CheckZipFiles(ZipArchive : TZipForge; ZFAI: TZFArchiveItem;
+  var iDirFiles: Integer; strPath, strOwner: string): Int64;
+
+  (**
+
+    This function returns the text of the zip file IF GREP searching is
+    required.
+
+    @precon  None.
+    @postcon Returns the text of the zip file IF GREP searching is
+             required else returns a null string
+
+    @return  a String
+
+  **)
+  Function GetZipFileText : String;
+
+  Begin
+    Result := '';
+    If clsSearchIn In CommandLineSwitches Then
+      ZipArchive.ExtractToString(ZFAI.StoredPath + ZFAI.FileName, Result);
+  End;
+
+var
+  iTime : Integer;
+  boolAdded: Boolean;
+
+begin
+  Result := 0;
+  if not (clsSummaryLevel in CommandLineSwitches) then
+    begin
+      Inc(iDirFiles);
+      LongRec(iTime).Lo := ZFAI.LastModFileTime;
+      LongRec(iTime).Hi := ZFAI.LastModFileDate;
+      boolAdded := FFilesCollection.Add(FileDateToDateTime(iTime),
+        ZFAI.UncompressedSize, OutputAttributes(ZFAI.ExternalFileAttributes),
+        strOwner, ZFAI.StoredPath + ZFAI.FileName, FSearchInText,
+        GetZIPFileText, ZFAI.ExternalFileAttributes);
+    end Else
+      boolAdded := True;
+  If boolAdded Then
+    Begin
+      Inc(FFiles);
+      Inc(FFileSize, ZFAI.UncompressedSize);
+      Inc(Result, ZFAI.UncompressedSize);
     End;
 end;
 
@@ -1141,14 +1254,20 @@ begin
       begin
         If CheckConsoleMode(FStd) Then
           OutputtoConsole(FStd, StringOfChar(#32, FWidth), clNone, clNone, False);
-        OutputToConsoleLn(FStd, strPath, FFoundSearchPathColour);
+        If Not Like('*.zip', strPath) Then
+          OutputToConsoleLn(FStd, strPath, FFoundSearchPathColour)
+        Else
+          Begin
+            OutputtoConsole(FStd, ExtractFilePath(strPath), FFoundSearchPathColour);
+            OutputtoConsoleLn(FStd, ExtractFileName(strPath), FZipFileColour);
+          End;
         boolDirPrinted := True;
       end;
       boolGREP := (clsSearchIn In CommandLineSwitches) And
         (FFilesCollection.FileInfo[i].GREPLines > 0);
       If Not (clsSearchIn In CommandLineSwitches) Or boolGREP Then
         OutputToConsoleLn(FStd, strOutput +
-          ExtractFileName(FFilesCollection.FileInfo[i].FileName), FFileInfoColour);
+          FFilesCollection.FileInfo[i].FileName, FFileInfoColour);
       If boolGREP Then
         For iLine := 0 To FFilesCollection.FileInfo[i].GREPLines - 1 Do
           Begin
@@ -1172,28 +1291,33 @@ end;
 
   @param   strPath    as a string
   @param   iLevel     as an Integer as a reference
-  @param   Result     as an Int64 as a reference
-  @param   iResult    as an Integer
   @param   slPatterns as a TStringList
-  @param   recSearch  as a TSearchRec
+  @return  an Int64
 
 **)
-procedure TSearch.RecurseDirectories(strPath: string; var iLevel: Integer;
-  var Result: Int64; iResult: Integer; slPatterns: TStringList; recSearch: TSearchRec);
+Function TSearch.RecurseDirectories(strPath: string; var iLevel: Integer;
+  slPatterns: TStringList) : Int64;
+
+Var
+  recSearch : TSearchRec;
+  iResult: Integer;
+
 begin
-  begin
-    iResult := FindFirst(strPath + '*.*', faAnyFile Or faHidden Or faSysFile,
-      recSearch);
-    while (iResult = 0) do
-    begin
-      if recSearch.Attr and faDirectory > 0 then
-        if (recSearch.Name <> '.') and (recSearch.Name <> '..') then
+  Result := 0;
+  iResult := FindFirst(strPath + '*.*', faAnyFile Or faHidden Or faSysFile,
+    recSearch);
+  While (iResult = 0) Do
+    Begin
+      If recSearch.Attr And faDirectory > 0 Then
+        If (recSearch.Name <> '.') And (recSearch.Name <> '..') Then
           Inc(Result, SearchDirectory(strPath + recSearch.Name + '\', slPatterns,
             iLevel));
+      If clsSearchZip In CommandLineSwitches Then
+        If Like('*.zip', recSearch.Name) Then
+          Inc(Result, SearchZip(strPath + recSearch.Name, slPatterns, iLevel));
       iResult := FindNext(recSearch);
-    end;
-    SysUtils.FindClose(recSearch);
-  end;
+    End;
+  SysUtils.FindClose(recSearch);
 end;
 
 (**
@@ -1268,53 +1392,167 @@ end;
   specified search patterns.
 
   @precon  None.
-  @postcon Search the current directory for files which match all the
-           specified search patterns.
+  @postcon Search the current directory for files which match all the specified
+           search patterns.
 
   @param   slPatterns as a TStringList
-  @param   iResult    as an Integer as a reference
-  @param   boolFound  as a Boolean
   @param   iDirFiles  as an Integer
-  @param   Result     as an Int64 as a reference
   @param   strPath    as a string
-  @param   recSearch  as a TSearchRec as a reference
+  @return  an Int64
 
 **)
-procedure TSearch.SearchForPatterns(slPatterns: TStringList; var iResult: Integer;
-  boolFound: Boolean; iDirFiles: Integer; var Result: Int64; strPath: string;
-  var recSearch: TSearchRec);
+Function TSearch.SearchForPatterns(slPatterns: TStringList; iDirFiles: Integer;
+  strPath: string) : Int64;
+
 var
   iPattern: Integer;
-  iSize: Int64;
   strOwner : String;
+  recSearch : TSearchRec;
+  iResult: Integer;
+  boolFound : Boolean;
 
 begin
-  for iPattern := 0 to slPatterns.Count - 1 do
-  begin
-    iResult := FindFirst(strPath + slPatterns[iPattern], faAnyFile, recSearch);
-    try
-      while iResult = 0 do
-      begin
-        WorkaroundLargeFiles(iSize, recSearch);
-        CheckFileAttributes(recSearch, FFileAttrs, FTypeAttrs, boolFound);
-        CheckSizeRange(iSize, FLSize, FUSize, boolFound);
-        CheckDateRange(recSearch, FLDate, FUDate, boolFound);
-        CheckExclusions(strPath, recSearch, boolFound, FExclusions);
-        If clsOwner In CommandLineSwitches Then
+  Result := 0;
+  For iPattern := 0 to slPatterns.Count - 1 Do
+    Begin
+      iResult := FindFirst(strPath + slPatterns[iPattern], faAnyFile, recSearch);
+      Try
+        While iResult = 0 Do
           Begin
-            strOwner := OutputOwner(strPath + recSearch.Name);
-            CheckOwner(strOwner, FOwnerSearch, FOwnerSearchPos, FOwnerSearchOps,
-              boolFound);
+            boolFound := True;
+            CheckFileAttributes(recSearch.Attr, FFileAttrs, FTypeAttrs, boolFound);
+            CheckSizeRange(recSearch.Size, FLSize, FUSize, boolFound);
+            CheckDateRange(recSearch.Time, FLDate, FUDate, boolFound);
+            CheckExclusions(strPath, recSearch.Name, boolFound, FExclusions);
+            If clsOwner In CommandLineSwitches Then
+              Begin
+                strOwner := OutputOwner(strPath + recSearch.Name);
+                CheckOwner(strOwner, FOwnerSearch, FOwnerSearchPos, FOwnerSearchOps,
+                  boolFound);
+              End;
+            If boolFound Then
+              Inc(Result, CheckFiles(recSearch, iDirFiles, strPath, strOwner));
+            iResult := FindNext(recSearch);
+            boolFound := True;
           End;
-        if boolFound then
-          CheckFiles(iSize, recSearch, iDirFiles, Result, strPath, strOwner);
-        iResult := FindNext(recSearch);
-        boolFound := True;
-      end;
-    finally
-      SysUtils.FindClose(recSearch);
-    end;
-  end;
+      Finally
+        SysUtils.FindClose(recSearch);
+      End;
+    End;
+end;
+
+(**
+
+  This method search the zip file for files which match all the specified search
+  patterns.
+
+  @precon  None.
+  @postcon Search the zip file for files which match all the specified search
+           patterns.
+
+  @param   strFileName as a String
+  @param   slPatterns  as a TStringList
+  @param   iDirFiles   as an Integer
+  @param   strPath     as a string
+  @return  an Int64
+
+**)
+function TSearch.SearchForPatternsInZip(strFileName: String;
+  slPatterns: TStringList; iDirFiles: Integer; strPath: string): Int64;
+
+Var
+  Z : TZipForge;
+  iPattern : Integer;
+  boolResult : Boolean;
+  boolFound: Boolean;
+  ZFAI : TZFArchiveItem;
+  iSize: Int64;
+  iDateTime : Integer;
+  strOwner: String;
+
+begin
+  Result := 0;
+  Z := TZipForge.Create(Nil);
+  Try
+    Z.FileName := strFileName;
+    Z.OpenArchive;
+    Try
+      For iPattern := 0 to slPatterns.Count - 1 Do
+        Begin
+          boolResult := Z.FindFirst(slPatterns[iPattern], ZFAI);
+          While boolResult Do
+            Begin
+              OutputCurrentSearchPath(strFileName + '\' + ZFAI.StoredPath);
+              boolFound := True;
+              iSize := ZFAI.UncompressedSize;
+              CheckFileAttributes(ZFAI.ExternalFileAttributes, FFileAttrs,
+                FTypeAttrs, boolFound);
+                CheckSizeRange(iSize, FLSize, FUSize, boolFound);
+                LongRec(iDateTime).Lo := ZFAI.LastModFileTime;
+                LongRec(iDateTime).Hi := ZFAI.LastModFileDate;
+                CheckDateRange(iDateTime, FLDate, FUDate, boolFound);
+                CheckExclusions(strPath, ZFAI.StoredPath + ZFAI.FileName, boolFound, FExclusions);
+                If clsOwner In CommandLineSwitches Then
+                  Begin
+                    strOwner := OutputOwner(strFileName);
+                    CheckOwner(strOwner, FOwnerSearch, FOwnerSearchPos,
+                      FOwnerSearchOps, boolFound);
+                  End;
+                If boolFound Then
+                  Inc(Result, CheckZipFiles(Z, ZFAI, iDirFiles, strPath, strOwner));
+              boolResult := Z.FindNext(ZFAI);
+              boolFound := True;
+            End;
+        End;
+    Finally
+      Z.CloseArchive;
+    End;
+  Finally
+    Z.Free;
+  End;
+end;
+
+(**
+
+  This method searches the named zip file for files.
+
+  @precon  None.
+  @postcon Method searches the named zip file for files.
+
+  @param   strFileName as a String
+  @param   slPatterns  as a TStringList
+  @param   iLevel      as an Integer as a reference
+  @return  an Int64
+
+**)
+function TSearch.SearchZip(strFileName: String; slPatterns: TStringList;
+  var iLevel: Integer): Int64;
+
+Var
+  boolDirPrinted: Boolean;
+  iDirFiles: Integer;
+
+begin
+  OutputCurrentSearchPath(strFileName);
+  Inc(iLevel);
+  Result := 0;
+  iDirFiles := 0;
+  Inc(FDirectories);
+  boolDirPrinted := False;
+  (* Find Files in Zip *)
+  FFilesCollection := TFiles.Create(FilesExceptionHandler);
+  Try
+    Inc(Result, SearchForPatternsInZip(strFileName, slPatterns, iDirFiles, strFileName));
+    If FOrderFilesBy <> obNone Then
+      FFilesCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
+    OutputFilesToConsole(strFileName, boolDirPrinted);
+  Finally
+    FFilesCollection.Free;
+  End;
+  If Not (clsSummaryLevel In CommandLineSwitches) Then
+    If iDirFiles > 0 Then
+      OutputToConsoleLn(FStd);
+  Dec(iLevel);
 end;
 
 (**
@@ -1344,6 +1582,7 @@ begin
       WriteString('Colours', 'GREPLineOutput', ColorToString(FGREPLineOutputColour));
       WriteString('Colours', 'SummaryOutput', ColorToString(FSummaryOutputColour));
       WriteString('Colours', 'Exception', ColorToString(FExceptionColour));
+      WriteString('Colours', 'ZipFile', ColorToString(FZipFileColour));
     Finally
       Free;
     End;
@@ -1370,10 +1609,7 @@ Function TSearch.SearchDirectory(strPath: String; slPatterns : TStringList;
   Var iLevel : Integer) : Int64;
 
 Var
-  iResult : Integer;
-  recSearch : TSearchRec;
   boolDirPrinted : Boolean;
-  boolFound : Boolean;
   iDirFiles : Integer;
   strOutput : String;
 
@@ -1385,11 +1621,9 @@ Begin
   Inc(FDirectories);
   boolDirPrinted := False;
   (* Find Files *)
-  boolFound := True;
   FFilesCollection := TFiles.Create(FilesExceptionHandler);
   Try
-    SearchForPatterns(slPatterns, iResult, boolFound, iDirFiles, Result, strPath,
-      recSearch);
+    Inc(Result, SearchForPatterns(slPatterns, iDirFiles, strPath));
     If FOrderFilesBy <> obNone Then
       FFilesCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
     OutputFilesToConsole(strPath, boolDirPrinted);
@@ -1401,7 +1635,7 @@ Begin
       OutputToConsoleLn(FStd);
   (* Search sub directories *)
   If clsSubDirectories In CommandLineSwitches Then
-    RecurseDirectories(strPath, iLevel, Result, iResult, slPatterns, recSearch);
+    Inc(Result, RecurseDirectories(strPath, iLevel, slPatterns));
   (* Output directory summary levels *)
   If clsSummaryLevel In CommandLineSwitches Then
     Begin
@@ -1428,6 +1662,10 @@ Var
   boolException : Boolean;
 
 Begin
+  {$IFDEF EURALOG}
+  SetEurekaLogState(DebugHook = 0);
+  {$ENDIF}
+  ReportMemoryLeaksOnShutdown := DebugHook <> 0;
   boolException := False;
   With TSearch.Create Do
     Try
