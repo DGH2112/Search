@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    14 Jul 2008
+  @Date    07 Mar 2010
 
 **)
 Unit FileHandling;
@@ -116,7 +116,8 @@ Type
     Constructor Create(ExceptionHandler : TFilesExceptionHandler);
     Destructor Destroy; Override;
     Function Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
-      strName, strGREPText : String; iFileAttrs : Integer) : Boolean;
+      strName, strGREPText, strGREPSearchText : String;
+      iFileAttrs : Integer) : Boolean;
     (**
       A property to return a specific file from the collection.
       @precon  iIndex must be a valid index.
@@ -280,18 +281,20 @@ End;
   @precon  None.
   @postcon Added a file and its attributes to the collection.
 
-  @param   dtDate      as a TDateTime
-  @param   iSize       as an Int64
-  @param   strAttr     as a String
-  @param   strOwner    as a String
-  @param   strName     as a String
-  @param   strGREPText as a String
-  @param   iFileAttrs  as an Integer
+  @param   dtDate            as a TDateTime
+  @param   iSize             as an Int64
+  @param   strAttr           as a String
+  @param   strOwner          as a String
+  @param   strName           as a String
+  @param   strGREPText       as a String
+  @param   strGREPSearchText as a String
+  @param   iFileAttrs        as an Integer
   @return  a Boolean
 
 **)
 Function TFiles.Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
-  strName, strGREPText : String; iFileAttrs : Integer) : Boolean;
+  strName, strGREPText, strGREPSearchText : String;
+  iFileAttrs : Integer) : Boolean;
 
 Var
   FFile : TFile;
@@ -309,7 +312,7 @@ Begin
           slFile := TStringList.Create;
           Try
             Try
-              slFile.LoadFromFile(strName);
+              slFile.Text := strGREPSearchText;
               For iLine := 0 To slFile.Count - 1 Do
                 If Pos(strGREPText, Lowercase(slFile[iLine])) > 0 Then
                   FFile.AddGREPLine(slFile[iLine], iLine + 1);
