@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    07 Mar 2010
+  @Date    02 May 2010
 
 **)
 Program Search;
@@ -1422,6 +1422,7 @@ begin
             boolFound := True;
             CheckFileAttributes(recSearch.Attr, FFileAttrs, FTypeAttrs, boolFound);
             CheckSizeRange(recSearch.Size, FLSize, FUSize, boolFound);
+            //: @bug     This only works on last access date!
             CheckDateRange(recSearch.Time, FLDate, FUDate, boolFound);
             CheckExclusions(strPath, recSearch.Name, boolFound, FExclusions);
             If clsOwner In CommandLineSwitches Then
@@ -1490,6 +1491,7 @@ begin
                 CheckSizeRange(iSize, FLSize, FUSize, boolFound);
                 LongRec(iDateTime).Lo := ZFAI.LastModFileTime;
                 LongRec(iDateTime).Hi := ZFAI.LastModFileDate;
+                //: @bug     This only works on last access date!
                 CheckDateRange(iDateTime, FLDate, FUDate, boolFound);
                 CheckExclusions(strPath, ZFAI.StoredPath + ZFAI.FileName, boolFound, FExclusions);
                 If clsOwner In CommandLineSwitches Then
@@ -1663,9 +1665,9 @@ Var
 
 Begin
   {$IFDEF EURALOG}
-  SetEurekaLogState(DebugHook = 0);
+  SetEurekaLogState(Not IsDebuggerPresent);
   {$ENDIF}
-  ReportMemoryLeaksOnShutdown := DebugHook <> 0;
+  ReportMemoryLeaksOnShutdown := IsDebuggerPresent;
   boolException := False;
   With TSearch.Create Do
     Try
