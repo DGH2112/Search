@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    05 Mar 2010
+  @Date    02 May 2010
 
 **)
 unit ApplicationFunctions;
@@ -315,7 +315,7 @@ Var
         Else
           iFactor := 1;
         End;
-        If strSize[Length(strSize)] In ['k', 'K', 'm', 'M', 'g', 'G', 't', 'T'] Then
+        If CharInSet(strSize[Length(strSize)], ['k', 'K', 'm', 'M', 'g', 'G', 't', 'T']) Then
           strSize := Copy(strSize, 1, Length(strSize) - 1);
         Val(strSize, iSize, iErrorCode);
         If iErrorCode > 0 Then
@@ -662,8 +662,6 @@ End;
 
   @precon  None.
   @postcon Returns boolFound as true if the file date is within the date range.
-
-  @bug     This only works on last access date!
 
   @param   iDateTime as an Integer
   @param   dtLDate   as a Double
