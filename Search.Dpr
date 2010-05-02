@@ -26,6 +26,7 @@ uses
   Graphics,
   ActiveX,
   IniFiles,
+  Math,
   DGHLibrary in '..\..\library\DGHLibrary.pas',
   FileHandling in 'Source\FileHandling.pas',
   MSXML2_TLB in '..\..\LIBRARY\MSXML2_TLB.pas',
@@ -89,6 +90,7 @@ Type
     (** A handle to the error console output. **)
     FErr : THandle;
     (** A string to store the loading and saving settings filename in. **)
+    FSizeFormat : TSizeFormat;
     FRootKey : String;
     FParams : TStringList;
     FLevel : Integer;
@@ -139,6 +141,7 @@ Type
     Procedure SaveSettings;
     Procedure FilesExceptionHandler(strException : String);
     Procedure ExceptionProc(strMsg : String);
+    Function FormatSize(iSize : Int64) : String;
   Public
     Constructor Create;
     Destructor Destroy; Override;
@@ -200,6 +203,8 @@ Resourcestring
   (** A help message to define the use of the u switch. **)
   strForceACheckForUpdate = 'Force a check for updates to the software from ' +
   'the Internet.';
+  (** A help message for searching within ZIP files **)
+  strSearchInZips = 'Search within ZIP files.';
   (** A help message to define the use of the x switch. **)
   strApplyingExclusions = 'Applying exclusions from the file "%s".';
   (** A resource string to display the text being searched for. **)
@@ -222,6 +227,14 @@ Resourcestring
   strOrderingFilesBySize = 'Ordering files by Size';
   (** A resource string to define ordering files by Name. **)
   strOrderingFilesByName = 'Ordering files by Name';
+  (** A resource string to define size format output in kilobytes **)
+  strSizeFormatKiloBytes = 'Sizes formatted in KiloBytes';
+  (** A resource string to define size format output in megabytes **)
+  strSizeFormatMegaBytes = 'Sizes formatted in MegaBytes';
+  (** A resource string to define size format output in gigabytes **)
+  strSizeFormatGigaBytes = 'Sizes formatted in GigaBytes';
+  (** A resource string to define size format output in terabytes **)
+  strSizeFormatTeraBytes = 'Sizes formatted in TeraBytes';
   (** A resource string to define that file owners are being displayed. **)
   strDisplayTheOwners = 'Display the Owners of the files found';
   (** A resource string to define that no progress should be displayed. **)
@@ -263,9 +276,9 @@ Resourcestring
   (** A resource string to denote searching for volume labels. **)
   strVolume = '        Volume';
   (** A resource string for formatting information. **)
-  strMsg1 = '  Found %1.0n bytes in %1.0n Files in %1.0n Directories.';
+  strMsg1 = '  Found %s bytes in %1.0n Files in %1.0n Directories.';
   (** A resource string for formatting information. **)
-  strMsg2 = '  Total space %1.0n bytes, and %1.0n bytes Free.';
+  strMsg2 = '  Total space %s bytes, and %s bytes free.';
   (** A resource string for formatting information. **)
   strTitle = 'Search %d.%d%s (Build %s) File Find and Summary Tool.';
   (** A resource string for formatting information. **)
@@ -279,7 +292,7 @@ Resourcestring
   (** A resource string for formatting information. **)
   strDirFormat = '  %s  %15s  ';
   (** A resource string for formatting information. **)
-  strFileFormat = '  %s  %15.0n  ';
+  strFileFormat = '  %s  %15s  ';
   (** A resource string for matching owners at the end of the string. **)
   strOwnerAtTheEnd = ' at the end';
   (** A resource string for matching owners in the middle of the string. **)
@@ -367,6 +380,8 @@ Resourcestring
   strHelp0185 = 'Searches for files between sizes (l) and (u).';
   (** A resource string for the console help information. **)
   strHelp0187 = 'l = lower bounding size in bytes, u = upper bounding size in bytes';
+  (** A resource string for the console help information **)
+  strHelp0188 = 'Sizes can be postfixed with k, m, g or t for kilo, mega, giga and terabytes';
   (** A resource string for the console help information. **)
   strHelp0190 = '/Q';
   (** A resource string for the console help information. **)
@@ -412,6 +427,10 @@ Resourcestring
   strHelp0281 = '/P';
   (** A resource string for the console help information. **)
   strHelp0282 = 'Enables the searching within ZIP archives.';
+  (** A resource string for the console help information **)
+  strHelp0290 = '/F:KMGT';
+  (** A resource string for the console help information **)
+  strHelp0291 = 'Changes the output size format to Kilo, Mega, Giga or Terabytes.';
 
 (**
 
@@ -536,10 +555,10 @@ Begin
     iTotalNumberOfBytes, @iTotalNumberOfFreeBytes);
   If CheckConsoleMode(FStd) Then
     OutputtoConsole(FStd, StringOfChar(#32, FWidth - 1), clNone, clNone, False);
-  OutputToConsoleLn(FStd, Format(strMsg1, [FFileSize + 0.1, FFiles + 0.1,
-    FDirectories + 0.1]), FFooterColour);
-  OutputToConsoleLn(FStd, Format(strMsg2, [iTotalNumberOfBytes + 0.1,
-    iTotalNumberOfFreeBytes + 0.1]), FFooterColour);
+  OutputToConsoleLn(FStd, Format(strMsg1, [Trim(FormatSize(FFileSize)),
+    FFiles + 0.1, FDirectories + 0.1]), FFooterColour);
+  OutputToConsoleLn(FStd, Format(strMsg2, [Trim(FormatSize(iTotalNumberOfBytes)),
+    Trim(FormatSize(iTotalNumberOfFreeBytes))]), FFooterColour);
 End;
 
 (**
@@ -613,6 +632,7 @@ Begin
   OutputToConsole(FStd, Indent(strHelp0180, 2, iWidth), FHelpSwitchColour);
   OutputToConsoleLn(FStd, strHelp0185, FHelpTextColour);
   OutputToConsoleLn(FStd, Indent(strHelp0187, iTextIndent + 2, 0), FHelpInfoColour);
+  OutputToConsoleLn(FStd, Indent(strHelp0188, iTextIndent + 2, 0), FHelpInfoColour);
   OutputToConsole(FStd, Indent(strHelp0190, 2, iWidth), FHelpSwitchColour);
   OutputToConsoleLn(FStd, strHelp0195, FHelpTextColour);
   OutputToConsole(FStd, Indent(strHelp0200, 2, iWidth), FHelpSwitchColour);
@@ -634,6 +654,8 @@ Begin
   OutputToConsoleLn(FStd, strHelp0277, FHelpTextColour);
   OutputToConsole(FStd, Indent(strHelp0281, 2, iWidth), FHelpSwitchColour);
   OutputToConsoleLn(FStd, strHelp0282, FHelpTextColour);
+  OutputToConsole(FStd, Indent(strHelp0290, 2, iWidth), FHelpSwitchColour);
+  OutputToConsoleLn(FStd, strHelp0291, FHelpTextColour);
   OutputToConsoleLn(FStd);
   OutputToConsoleLn(FStd, strHelp0280, FHelpFootNoteColour);
   OutputToConsoleLn(FStd);
@@ -823,6 +845,14 @@ Begin
   DisplayText(clsSearchIn, 'i', Format(strSearchForText, [FSearchInText]));
   DisplayText(clsExclusions, 'x', Format(strApplyingExclusions, [FExlFileName]));
   DisplayText(clsUpdate, 'u', strForceACheckForUpdate);
+  DisplayText(clsUpdate, 'p', strSearchInZips);
+  Case FSizeFormat Of
+    sfKilobytes: DisplayText(clsSizeOutput, 'p', strSizeFormatKilobytes);
+    sfMegaBytes: DisplayText(clsSizeOutput, 'p', strSizeFormatMegabytes);
+    sfGigaBytes: DisplayText(clsSizeOutput, 'p', strSizeFormatGigabytes);
+    sfTeraBytes: DisplayText(clsSizeOutput, 'p', strSizeFormatTerabytes);
+  End;
+  DisplayText(clsUpdate, 'f', strForceACheckForUpdate);
   OutputToConsoleLn(FStd);
 End;
 
@@ -855,6 +885,40 @@ procedure TSearch.FilesExceptionHandler(strException: String);
 begin
   OutputToConsoleLn(FStd, Format(strFilesException, [strException]),
     FExceptionColour);
+end;
+
+(**
+
+  This method returns the file size formatted to that defined on the command
+  line.
+
+  @precon  None.
+  @postcon Returns the file size formatted to that defined on the command
+           line.
+
+  @param   iSize as an Int64
+  @return  a String
+
+**)
+function TSearch.FormatSize(iSize: Int64): String;
+
+Var
+  dblSize : Double;
+
+begin
+  dblSize := iSize;
+  Case FSizeFormat Of
+    sfKilobytes: Result := Format('%13.0nK',
+      [RoundTo(dblSize / 1024.0, 0)]);
+    sfMegaBytes: Result := Format('%10.0nM',
+      [RoundTo(dblSize / (1024.0 * 1024.0), 0)]);
+    sfGigaBytes: Result := Format('%7.0nG',
+      [RoundTo(dblSize / (1024.0 * 1024.0 * 1024.0), 0)]);
+    sfTeraBytes: Result := Format('%4.0nT',
+      [RoundTo(dblSize / (1024.0 * 1024.0 * 1024.0 * 1024.0), 0)]);
+  Else
+    Result := Format('%15.0n', [dblSize]);
+  End;
 end;
 
 (**
@@ -907,6 +971,7 @@ Begin
                 'x', 'X': GetExclusions(FParams, iSwitch, iIndex, FExlFileName);
                 'u', 'U': Include(CommandLineSwitches, clsUpdate);
                 'p', 'P': Include(CommandLineSwitches, clsSearchZip);
+                'f', 'F': GetSizeFormat(FParams, iSwitch, iIndex, FSizeFormat);
               Else
                 Raise ESearchException.CreateFmt(strInValidCommandLineSwitch,
                   [FParams[iSwitch][iIndex], FParams[iSwitch]]);
@@ -1188,6 +1253,7 @@ begin
   FParams := TStringList.Create;
   CoInitialize(Nil);
   FLevel := -1;
+  SetRoundMode(rmUp);
 end;
 
 (**
@@ -1237,7 +1303,7 @@ begin
       If Pos('D', FFilesCollection.FileInfo[i].Attr) = 0 Then
         strOutput := Format(strFileFormat, [
           FormatDateTime(strDateFormat, FFilesCollection.FileInfo[i].Date),
-          FFilesCollection.FileInfo[i].Size + 0.1])
+          FormatSize(FFilesCollection.FileInfo[i].Size)])
       Else
         strOutput := Format(strDirFormat, [
           FormatDateTime(strDateFormat, FFilesCollection.FileInfo[i].Date),

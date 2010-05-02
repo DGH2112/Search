@@ -83,7 +83,7 @@
 						<Source Name="MainSource">Search.Dpr</Source>
 					</Source>
 					<Parameters>
-						<Parameters Name="RunParams">dgh*.pas /ps!wi</Parameters>
+						<Parameters Name="RunParams">*.zip /caps!wf:k</Parameters>
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="DebugCWD">..\..\..\</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
@@ -98,7 +98,7 @@
 						<VersionInfo Name="MajorVer">1</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
 						<VersionInfo Name="Release">17</VersionInfo>
-						<VersionInfo Name="Build">436</VersionInfo>
+						<VersionInfo Name="Build">457</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -110,7 +110,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">Search</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">1.0.17.436</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">1.0.17.457</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">Search</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
