@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    07 Mar 2010
+  @Date    02 May 2010
 
 **)
 Unit FileHandling;
@@ -41,6 +41,7 @@ Type
       strName : String);
     Procedure AddGREPLine(strText : String; iLine : Integer);
     Destructor Destroy; Override;
+    Function Clone : TFile;
     (**
       A property to read and write the files date and time.
       @precon  None.
@@ -109,6 +110,7 @@ Type
   Private
     FFiles : TObjectList;
     FExceptionHandler : TFilesExceptionHandler;
+    FPath : String;
   Protected
     Function GetFile(iIndex : Integer) : TFile;
     Function GetCount : Integer;
@@ -117,7 +119,10 @@ Type
     Destructor Destroy; Override;
     Function Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
       strName, strGREPText, strGREPSearchText : String;
-      iFileAttrs : Integer) : Boolean;
+      iFileAttrs : Integer) : Boolean; Overload;
+    Function OwnerWidth : Integer;
+    Procedure OrderBy(OrderBy : TOrderBy; OrderDirection : TOrderDirection);
+    Function Add(FileInfo : TFile) : Boolean; Overload;
     (**
       A property to return a specific file from the collection.
       @precon  iIndex must be a valid index.
@@ -133,8 +138,13 @@ Type
       @return  an Integer
     **)
     Property Count : Integer Read GetCount;
-    Function OwnerWidth : Integer;
-    Procedure OrderBy(OrderBy : TOrderBy; OrderDirection : TOrderDirection);
+    (**
+      A property to read and write a path for the collection of files.
+      @precon  None.
+      @postcon Gets and sets the path of the file collection.
+      @return  a String
+    **)
+    Property Path : String Read FPath Write FPath;
   End;
 
 Implementation
@@ -153,6 +163,23 @@ Implementation
 procedure TFile.AddGREPLine(strText: String; iLine : Integer);
 begin
   FGREPLines.AddObject(strText, TObject(iLine));
+end;
+
+(**
+
+  This method returns a clone (copy) of the TFile instance.
+
+  @precon  None.
+  @postcon Returns a clone (copy) of the TFile instance.
+
+  @return  a TFile
+
+**)
+function TFile.Clone: TFile;
+
+begin
+  Result := TFile.Create(FDate, FSize, FAttr, FOwner, ExtractFileName(FName));
+  Result.FGREPLines.Assign(FGREPLines);
 end;
 
 (**
@@ -240,6 +267,23 @@ end;
 function TFile.GetGREPLines: Integer;
 begin
   Result := FGREPLines.Count;
+end;
+
+(**
+
+  This method adds a TFile to the files collection.
+
+  @precon  FileInfo must be a valid instance.
+  @postcon Adds a TFile to the files collection.
+
+  @param   FileInfo as a TFile
+  @return  a Boolean
+
+**)
+function TFiles.Add(FileInfo: TFile): Boolean;
+begin
+  Result := True;
+  FFiles.Add(FileInfo);
 end;
 
 (**
