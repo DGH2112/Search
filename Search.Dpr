@@ -1410,6 +1410,8 @@ var
   recSearch : TSearchRec;
   iResult: Integer;
   boolFound : Boolean;
+  ST: TSystemTime;
+  dtDate: TDateTime;
 
 begin
   Result := 0;
@@ -1422,8 +1424,24 @@ begin
             boolFound := True;
             CheckFileAttributes(recSearch.Attr, FFileAttrs, FTypeAttrs, boolFound);
             CheckSizeRange(recSearch.Size, FLSize, FUSize, boolFound);
-            //: @bug     This only works on last access date!
-            CheckDateRange(recSearch.Time, FLDate, FUDate, boolFound);
+            Case FDateType Of
+              dtCreation:
+                Begin
+                  FileTimeToSystemTime(recSearch.FindData.ftCreationTime, ST);
+                  dtDate := EncodeDate(ST.wYear, ST.wMonth, ST.wDay) +
+                    EncodeTime(ST.wHour, ST.wMinute, ST.wSecond, ST.wMilliseconds);
+                  CheckDateRange(DateTimeToFileDate(dtDate), FLDate, FUDate, boolFound);
+                End;
+              dtLastAccess:
+                Begin
+                  FileTimeToSystemTime(recSearch.FindData.ftLastAccessTime, ST);
+                  dtDate := EncodeDate(ST.wYear, ST.wMonth, ST.wDay) +
+                    EncodeTime(ST.wHour, ST.wMinute, ST.wSecond, ST.wMilliseconds);
+                  CheckDateRange(DateTimeToFileDate(dtDate), FLDate, FUDate, boolFound);
+                End
+            Else
+              CheckDateRange(recSearch.Time, FLDate, FUDate, boolFound);
+            End;
             CheckExclusions(strPath, recSearch.Name, boolFound, FExclusions);
             If clsOwner In CommandLineSwitches Then
               Begin
@@ -1488,20 +1506,20 @@ begin
               iSize := ZFAI.UncompressedSize;
               CheckFileAttributes(ZFAI.ExternalFileAttributes, FFileAttrs,
                 FTypeAttrs, boolFound);
-                CheckSizeRange(iSize, FLSize, FUSize, boolFound);
-                LongRec(iDateTime).Lo := ZFAI.LastModFileTime;
-                LongRec(iDateTime).Hi := ZFAI.LastModFileDate;
-                //: @bug     This only works on last access date!
-                CheckDateRange(iDateTime, FLDate, FUDate, boolFound);
-                CheckExclusions(strPath, ZFAI.StoredPath + ZFAI.FileName, boolFound, FExclusions);
-                If clsOwner In CommandLineSwitches Then
-                  Begin
-                    strOwner := OutputOwner(strFileName);
-                    CheckOwner(strOwner, FOwnerSearch, FOwnerSearchPos,
-                      FOwnerSearchOps, boolFound);
-                  End;
-                If boolFound Then
-                  Inc(Result, CheckZipFiles(Z, ZFAI, iDirFiles, strPath, strOwner));
+              CheckSizeRange(iSize, FLSize, FUSize, boolFound);
+              // Zip files only contain the last write date of a file.
+              LongRec(iDateTime).Lo := ZFAI.LastModFileTime;
+              LongRec(iDateTime).Hi := ZFAI.LastModFileDate;
+              CheckDateRange(iDateTime, FLDate, FUDate, boolFound);
+              CheckExclusions(strPath, ZFAI.StoredPath + ZFAI.FileName, boolFound, FExclusions);
+              If clsOwner In CommandLineSwitches Then
+                Begin
+                  strOwner := OutputOwner(strFileName);
+                  CheckOwner(strOwner, FOwnerSearch, FOwnerSearchPos,
+                    FOwnerSearchOps, boolFound);
+                End;
+              If boolFound Then
+                Inc(Result, CheckZipFiles(Z, ZFAI, iDirFiles, strPath, strOwner));
               boolResult := Z.FindNext(ZFAI);
               boolFound := True;
             End;
