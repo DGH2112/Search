@@ -39,7 +39,8 @@ Type
     clsDisplayCriteria,  { /c or -c }
     clsExclusions,       { /x or -x }
     clsUpdate,           { /u or -u }
-    clsSearchZip         { /p or -P }
+    clsSearchZip,        { /p or -p }
+    clsSizeOutput        { /f or -f }
   );
 
   (** This is a set of boolean command line switches. **)
@@ -53,6 +54,9 @@ Type
 
   (** This is an enumerate to defines where the owner should be searched. **)
   TOwnerSearchPos = (ospNone, ospExact, ospStart, ospMiddle, ospEnd);
+
+  (** This is an enumerate to defines the output size formats. **)
+  TSizeFormat = (sfNone, sfKilobytes, sfMegaBytes, sfGigaBytes, sfTeraBytes);
 
 Const
   (** A constant to define that only files should be listed. **)
@@ -95,11 +99,14 @@ Var
   procedure CheckSizeRange(iSize, iLSize, iUSize: Int64; var boolFound: Boolean);
   procedure CheckFileAttributes(SearchAttrs : Integer; iFileAttrs,
     iTypeAttrs : Integer; var boolFound: Boolean);
-  Procedure CheckExclusions(strPath, strFilename : String; 
+  Procedure CheckExclusions(strPath, strFilename : String;
     var boolFound : Boolean; slExclusions : TStringList);
   Procedure CheckOwner(strOwner, strOwnerSearch : String;
     OwnerSearchPos : TOwnerSearchPos; OwnerSearch : TOwnerSearch;
     var boolFound : Boolean);
+  Procedure GetSizeFormat(slParams : TStringList; var iSwitch, iIndex : Integer;
+    var SizeFormat : TSizeFormat);
+
 
 implementation
 
@@ -140,9 +147,9 @@ ResourceString
   (** An exception message for a missing colon in the date type definition. **)
   strColonExpectedInDateType = 'Colon expected in date Type definition.';
   (** An execption message for a missing criteria in the Date Type definition. **)
-  strMissingDateTypeDirective = 'Missing Date Type definition.';
+  strMissingDateTypeDirective = 'Missing date type definition.';
   (** An exception message for an invalid Date Type criteria. **)
-  strInvalidDateTypeDirective = 'Invalid Date Type definition.';
+  strInvalidDateTypeDirective = 'Invalid date type definition.';
   (** An exception message for a missing ] in an Search definition. **)
   strCloseSquareExpectedInGREPSearchDef = '"]" Expected in GREP Search Definition';
   (** An exception message for a missing [ in an Search definition. **)
@@ -161,6 +168,12 @@ ResourceString
   strOpenSquareExpectedInOwnerSearchDef = '"[" Expected in Owner Search Definition.';
   (** An exception message for the Owner Search Criteria being empty. **)
   strOwnerSearchIsEmpty = 'You must specify a valid Owner Search Criteria.';
+  (** An execption messages for a missing colon on the size format definition. **)
+  strColonExpectedInSizeFormat = 'Colon expected in size format definition.';
+  (** An execption messages for a missing size format character in the definition. **)
+  strMissingSizeFormatDirective = 'Missing size format definition.';
+  (** An execption messages for a missing size format definition. **)
+  strInvalidSizeFormatDirective = 'Invalid size format definition.';
 
 (**
 
@@ -800,6 +813,40 @@ Begin
   If OwnerSearch = osNotEquals  Then
     bool := Not bool;
   boolFound := boolFound And bool
+End;
+
+(**
+
+  This function parses the size format directive.
+
+  @precon  slParams must eb avalid instance with iSwitch and iIndex being valid
+           indexes into the stringlist and characters of the string list
+           respectively.
+  @postcon Returns the size format requested else raises an exception.
+
+  @param   slParams   as a TStringList
+  @param   iSwitch    as an Integer as a reference
+  @param   iIndex     as an Integer as a reference
+  @param   SizeFormat as a TSizeFormat as a reference
+
+**)
+Procedure GetSizeFormat(slParams : TStringList; var iSwitch, iIndex : Integer;
+  var SizeFormat : TSizeFormat);
+
+Begin
+  Include(CommandLineSwitches, clsSizeOutput);
+  IncrementSwitchPosition(slParams, iIndex, iSwitch, strColonExpectedInSizeFormat);
+  If slParams[iSwitch][iIndex] <> ':' Then
+    Raise ESearchException.Create(strColonExpectedInSizeFormat);
+  IncrementSwitchPosition(slParams, iIndex, iSwitch, strMissingSizeFormatDirective);
+  Case slParams[iSwitch][iIndex] Of
+    'k', 'K': SizeFormat := sfKilobytes;
+    'm', 'M': SizeFormat := sfMegaBytes;
+    'g', 'G': SizeFormat := sfGigaBytes;
+    't', 'T': SizeFormat := sfTeraBytes;
+  Else
+    Raise ESearchException.Create(strInvalidSizeFormatDirective);
+  End
 End;
 
 end.
