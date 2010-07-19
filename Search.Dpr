@@ -319,7 +319,7 @@ Resourcestring
   (** A resource string for formatting information. **)
   strOutputCurrPathFormat = '%s%-*s';
   (** A resource string for formatting information. **)
-  strSearchLabel = 'Searching: (D:%d,F:%d) ';
+  strSearchLabel = 'Searching: (D:%1.0n,F:%1.0n) ';
   (** A resource string for the console help information. **)
   strHelp0010 = 'Syntax:';
   (** A resource string for the console help information. **)
@@ -474,7 +474,7 @@ Var
 Begin
   If clsQuiet In CommandLineSwitches Then
     Exit;
-  iLength := Length(Format(strSearchLabel, [FDirectories, FFiles]));
+  iLength := Length(Format(strSearchLabel, [Int(FDirectories), Int(FFiles)]));
   While Length(strPath) > (FWidth - iLength) Do
     Begin
       If Pos('...', strPath) = 0 Then
@@ -482,17 +482,23 @@ Begin
           i := PosOfNthChar(strPath, '\', 1) + 1;
           j := PosOfNthChar(strPath, '\', 2);
           If (i > 0) And (j > 0) Then
-            strPath := StringReplace(strPath, Copy(strPath, i, j - i), '...', []);
+            strPath := StringReplace(strPath, Copy(strPath, i, j - i), '...', [])
+          Else
+            strPath := Copy(strPath, Length(strPath) - (FWidth - iLength),
+              FWidth - iLength);
         End Else
         Begin
           i := PosOfNthChar(strPath, '\', 2);
           j := PosOFNthChar(strPath, '\', 3);
           If (i > 0) And (j > 0) Then
-            strPath := StringReplace(strPath, Copy(strPath, i, j - i), '', []);
+            strPath := StringReplace(strPath, Copy(strPath, i, j - i), '', [])
+          Else
+            strPath := Copy(strPath, Length(strPath) - (FWidth - iLength),
+              FWidth - iLength);
         End;
     End;
   strPath := Format(strOutputCurrPathFormat, [Format(strSearchLabel,
-    [FDirectories, FFiles]), FWidth - iLength, strPath]);
+    [Int(FDirectories), Int(FFiles)]), FWidth - iLength, strPath]);
   If CheckConsoleMode(FStd) Then
     OutputToConsole(FStd, strPath, FSearchPathColour, clNone, False);
 End;
