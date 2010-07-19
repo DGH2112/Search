@@ -6,7 +6,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    02 May 2010
+  @Date    19 Jul 2010
 
 **)
 Program Search;
@@ -1572,40 +1572,43 @@ begin
   Z := TZipForge.Create(Nil);
   Try
     Z.FileName := strFileName;
-    Z.OpenArchive;
-    Try
-      For iPattern := 0 to slPatterns.Count - 1 Do
-        Begin
-          boolResult := Z.FindFirst(slPatterns[iPattern], ZFAI);
-          While boolResult Do
+    If Z.IsValidArchiveFile Then
+      Begin
+        Z.OpenArchive;
+        Try
+          For iPattern := 0 to slPatterns.Count - 1 Do
             Begin
-              OutputCurrentSearchPath(strFileName + '\' + ZFAI.StoredPath);
-              boolFound := True;
-              iSize := ZFAI.UncompressedSize;
-              CheckFileAttributes(ZFAI.ExternalFileAttributes, FFileAttrs,
-                FTypeAttrs, boolFound);
-              CheckSizeRange(iSize, FLSize, FUSize, boolFound);
-              // Zip files only contain the last write date of a file.
-              LongRec(iDateTime).Lo := ZFAI.LastModFileTime;
-              LongRec(iDateTime).Hi := ZFAI.LastModFileDate;
-              CheckDateRange(iDateTime, FLDate, FUDate, boolFound);
-              CheckExclusions(strPath, ZFAI.StoredPath + ZFAI.FileName, boolFound, FExclusions);
-              If clsOwner In CommandLineSwitches Then
+              boolResult := Z.FindFirst(slPatterns[iPattern], ZFAI);
+              While boolResult Do
                 Begin
-                  strOwner := OutputOwner(strFileName);
-                  CheckOwner(strOwner, FOwnerSearch, FOwnerSearchPos,
-                    FOwnerSearchOps, boolFound);
+                  OutputCurrentSearchPath(strFileName + '\' + ZFAI.StoredPath);
+                  boolFound := True;
+                  iSize := ZFAI.UncompressedSize;
+                  CheckFileAttributes(ZFAI.ExternalFileAttributes, FFileAttrs,
+                    FTypeAttrs, boolFound);
+                  CheckSizeRange(iSize, FLSize, FUSize, boolFound);
+                  // Zip files only contain the last write date of a file.
+                  LongRec(iDateTime).Lo := ZFAI.LastModFileTime;
+                  LongRec(iDateTime).Hi := ZFAI.LastModFileDate;
+                  CheckDateRange(iDateTime, FLDate, FUDate, boolFound);
+                  CheckExclusions(strPath, ZFAI.StoredPath + ZFAI.FileName, boolFound, FExclusions);
+                  If clsOwner In CommandLineSwitches Then
+                    Begin
+                      strOwner := OutputOwner(strFileName);
+                      CheckOwner(strOwner, FOwnerSearch, FOwnerSearchPos,
+                        FOwnerSearchOps, boolFound);
+                    End;
+                  If boolFound Then
+                    Inc(Result, CheckZipFiles(Z, ZFAI, iDirFiles, strPath, strOwner,
+                      FilesCollection));
+                  boolResult := Z.FindNext(ZFAI);
+                  boolFound := True;
                 End;
-              If boolFound Then
-                Inc(Result, CheckZipFiles(Z, ZFAI, iDirFiles, strPath, strOwner,
-                  FilesCollection));
-              boolResult := Z.FindNext(ZFAI);
-              boolFound := True;
             End;
+        Finally
+          Z.CloseArchive;
         End;
-    Finally
-      Z.CloseArchive;
-    End;
+      End;
   Finally
     Z.Free;
   End;

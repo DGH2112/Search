@@ -20,7 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_UnitSearchPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;..\..\LIBRARY\ZipForge\Lib\Delphi 2009 and C++ Builder 2009;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_Platform>x86</DCC_Platform>
 			<DCC_DependencyCheckOutputName>Search.exe</DCC_DependencyCheckOutputName>
 			<DCC_MapFile>3</DCC_MapFile>
@@ -83,9 +83,9 @@
 						<Source Name="MainSource">Search.Dpr</Source>
 					</Source>
 					<Parameters>
-						<Parameters Name="RunParams">DGH*.pas /caps!wf:k</Parameters>
+						<Parameters Name="RunParams">* /ps10</Parameters>
 						<Parameters Name="UseLauncher">False</Parameters>
-						<Parameters Name="DebugCWD">E:\HoylD\VCS Backup</Parameters>
+						<Parameters Name="DebugCWD">C:\Documents and Settings\HoylD</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
 					</Parameters>
@@ -97,8 +97,8 @@
 						<VersionInfo Name="AutoIncBuild">True</VersionInfo>
 						<VersionInfo Name="MajorVer">1</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
-						<VersionInfo Name="Release">17</VersionInfo>
-						<VersionInfo Name="Build">469</VersionInfo>
+						<VersionInfo Name="Release">18</VersionInfo>
+						<VersionInfo Name="Build">470</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -110,7 +110,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">Search</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">1.0.17.469</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">1.0.18.470</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">Search</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
@@ -120,10 +120,10 @@
 						<VersionInfoKeys Name="Comments">Search Command Line Tool</VersionInfoKeys>
 					</VersionInfoKeys>
 					<Excluded_Packages>
-						<Excluded_Packages Name="$(BDS)\bin\bcboffice2k120.bpl">CodeGear C++Builder Office 2000 Servers Package</Excluded_Packages>
-						<Excluded_Packages Name="$(BDS)\bin\bcbofficexp120.bpl">CodeGear C++Builder Office XP Servers Package</Excluded_Packages>
-						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k120.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-						<Excluded_Packages Name="$(BDS)\bin\dclofficexp120.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\bcboffice2k140.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\bcbofficexp140.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k140.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dclofficexp140.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
 					</Excluded_Packages>
 				</Delphi.Personality>
 			</BorlandProject>
@@ -133,7 +133,7 @@
 
 <!-- EurekaLog First Line
 [Exception Log]
-EurekaLog Version=6021
+EurekaLog Version=6022
 Activate=1
 Activate Handle=1
 Save Log File=1
