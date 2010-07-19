@@ -83,9 +83,9 @@
 						<Source Name="MainSource">Search.Dpr</Source>
 					</Source>
 					<Parameters>
-						<Parameters Name="RunParams">* /ps10</Parameters>
+						<Parameters Name="RunParams">*dgh*.* /ps</Parameters>
 						<Parameters Name="UseLauncher">False</Parameters>
-						<Parameters Name="DebugCWD">C:\Documents and Settings\HoylD</Parameters>
+						<Parameters Name="DebugCWD">E:\HoylD\Borland Studio Projects</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
 					</Parameters>
@@ -98,7 +98,7 @@
 						<VersionInfo Name="MajorVer">1</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
 						<VersionInfo Name="Release">18</VersionInfo>
-						<VersionInfo Name="Build">470</VersionInfo>
+						<VersionInfo Name="Build">473</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -110,7 +110,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">Search</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">1.0.18.470</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">1.0.18.473</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">Search</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>

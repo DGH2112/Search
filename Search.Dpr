@@ -1579,7 +1579,7 @@ begin
           For iPattern := 0 to slPatterns.Count - 1 Do
             Begin
               boolResult := Z.FindFirst(slPatterns[iPattern], ZFAI);
-              While boolResult Do
+              While boolResult And Not ZFAI.Encrypted Do
                 Begin
                   OutputCurrentSearchPath(strFileName + '\' + ZFAI.StoredPath);
                   boolFound := True;
