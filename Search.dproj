@@ -83,9 +83,9 @@
 						<Source Name="MainSource">Search.Dpr</Source>
 					</Source>
 					<Parameters>
-						<Parameters Name="RunParams">*dgh*.pas /ps</Parameters>
+						<Parameters Name="RunParams">*dgh*.pas /s1!</Parameters>
 						<Parameters Name="UseLauncher">False</Parameters>
-						<Parameters Name="DebugCWD">E:\HoylD\Borland Studio Projects</Parameters>
+						<Parameters Name="DebugCWD">D:\HoylD\Borland Studio Projects\</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
 					</Parameters>
@@ -97,8 +97,8 @@
 						<VersionInfo Name="AutoIncBuild">True</VersionInfo>
 						<VersionInfo Name="MajorVer">1</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
-						<VersionInfo Name="Release">18</VersionInfo>
-						<VersionInfo Name="Build">476</VersionInfo>
+						<VersionInfo Name="Release">19</VersionInfo>
+						<VersionInfo Name="Build">485</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -110,7 +110,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">Search</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">1.0.18.476</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">1.0.19.485</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">Search</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
@@ -133,7 +133,7 @@
 
 <!-- EurekaLog First Line
 [Exception Log]
-EurekaLog Version=6022
+EurekaLog Version=6025
 Activate=1
 Activate Handle=1
 Save Log File=1
