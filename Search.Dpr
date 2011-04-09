@@ -6,7 +6,7 @@
 
  @Version 1.0
  @Author  David Hoyle
- @Date    08 Apr 2011
+ @Date    09 Apr 2011
 
  **)
 Program Search;
@@ -281,13 +281,13 @@ Resourcestring
   (** A resource string for formatting information. **)
   strMsg1 = '  Found %s bytes in %1.0n Files in %1.0n Directories.';
   (** A resource string for formatting information. **)
-  strMsg2 = '  Total space %s bytes, and %s bytes free.';
+  strMsg2 = '  Total space %s bytes and %s bytes free.';
   (** A resource string for formatting information. **)
   strTitle = 'Search %d.%d%s (Build %s) File Find and Summary Tool.';
   (** A resource string for formatting information. **)
   strPressEnterToFinish = 'Press <Enter> to finish.';
   (** A resource string for formatting information. **)
-  strSummaryFormat = '%15s%s%s';
+  strSummaryFormat = '%s%s%s';
   (** A resource string for formatting information. **)
   strOwnerFormat = '%-*s  ';
   (** A resource string for formatting information. **)
@@ -295,7 +295,7 @@ Resourcestring
   (** A resource string for formatting information. **)
   strDirFormat = '  %s  %15s  ';
   (** A resource string for formatting information. **)
-  strFileFormat = '  %s  %15s  ';
+  strFileFormat = '  %s  %s  ';
   (** A resource string for matching owners at the end of the string. **)
   strOwnerAtTheEnd = ' at the end';
   (** A resource string for matching owners in the middle of the string. **)
