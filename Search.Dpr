@@ -6,7 +6,7 @@
 
  @Version 1.0
  @Author  David Hoyle
- @Date    09 Apr 2011
+ @Date    10 Apr 2011
 
  **)
 Program Search;
@@ -364,7 +364,7 @@ Resourcestring
   (** A resource string for the console help information. **)
   strHelp0135 = 'Hide empty Summarised subdirectories';
   (** A resource string for the console help information. **)
-  strHelp0140 = '/T[RASHFFDV]';
+  strHelp0140 = '/T[RASHFDV]';
   (** A resource string for the console help information. **)
   strHelp0145 = 'Show only files with certain attributes';
   (** A resource string for the console help information. **)
@@ -832,7 +832,7 @@ Begin
   DisplayText(clsQuiet, 'q', strQuietMode);
   If DisplayText(clsOwner, 'w', strDisplayTheOwners, False) Then
     Begin
-      If FOwnerSearchPos In [ospExact .. ospEnd] Then
+      If FOwnerSearchPos In [ospExact..ospEnd] Then
         Begin
           OutputToConsole(FStd, strOwnerSearchingFor, FHelpTextColour);
           If FOwnerSearchOps In [osNotEquals] Then
@@ -887,18 +887,17 @@ Begin
   DisplayText(clsExclusions, 'x', Format(strApplyingExclusions,
       [FExlFileName]));
   DisplayText(clsUpdate, 'u', strForceACheckForUpdate);
-  DisplayText(clsUpdate, 'p', strSearchInZips);
+  DisplayText(clsSearchZip, 'p', strSearchInZips);
   Case FSizeFormat Of
     sfKilobytes:
-      DisplayText(clsSizeOutput, 'p', strSizeFormatKiloBytes);
+      DisplayText(clsSizeOutput, 'f', strSizeFormatKiloBytes);
     sfMegaBytes:
-      DisplayText(clsSizeOutput, 'p', strSizeFormatMegaBytes);
+      DisplayText(clsSizeOutput, 'f', strSizeFormatMegaBytes);
     sfGigaBytes:
-      DisplayText(clsSizeOutput, 'p', strSizeFormatGigaBytes);
+      DisplayText(clsSizeOutput, 'f', strSizeFormatGigaBytes);
     sfTeraBytes:
-      DisplayText(clsSizeOutput, 'p', strSizeFormatTeraBytes);
+      DisplayText(clsSizeOutput, 'f', strSizeFormatTeraBytes);
   End;
-  DisplayText(clsUpdate, 'f', strForceACheckForUpdate);
   OutputToConsoleLn(FStd);
 End;
 
