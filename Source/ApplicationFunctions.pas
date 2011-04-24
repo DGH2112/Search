@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    02 May 2010
+  @Date    23 Apr 2011
 
 **)
 unit ApplicationFunctions;
@@ -40,7 +40,8 @@ Type
     clsExclusions,       { /x or -x }
     clsUpdate,           { /u or -u }
     clsSearchZip,        { /p or -p }
-    clsSizeOutput        { /f or -f }
+    clsSizeOutput,       { /f or -f }
+    clsOutputAsCSV       { /v or -v }
   );
 
   (** This is a set of boolean command line switches. **)
