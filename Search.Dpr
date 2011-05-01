@@ -6,10 +6,11 @@
 
  @Version 1.0
  @Author  David Hoyle
- @Date    10 Apr 2011
+ @Date    01 May 2011
 
  **)
 Program Search;
+
 {$APPTYPE CONSOLE}
 {$R *.RES}
 
@@ -106,6 +107,14 @@ Type
     FSummaryOutputColour: TColor;
     FExceptionColour: TColor;
     FZipFileColour: TColor;
+    Procedure OutputDateTimeAndSize(FilesCollection: TFiles; Var strOutput: String;
+      i: Integer);
+    Procedure OutputFileAttributes(i: Integer; FilesCollection: TFiles;
+      Var strOutput: String);
+    Procedure OutputFileOwner(FilesCollection: TFiles; Var strOutput: String; i: Integer);
+    Procedure OutputGREPInformation(i: Integer; boolGREP: Boolean;
+      FilesCollection: TFiles);
+    Procedure OutputDirectoryOrZIPFile(Var boolDirPrinted: Boolean; strPath: String);
   Protected
     Procedure GetConsoleInformation;
     Procedure OutputCurrentSearchPath(strPath: String);
@@ -120,8 +129,7 @@ Type
     Function CheckFiles(recSearch: TSearchRec; Var iDirFiles: Integer;
       strPath, strOwner: String; FilesCollection: TFiles): Int64;
     Function CheckZipFiles(ZipArchive: TZipForge; ZFAI: TZFArchiveItem;
-      Var iDirFiles: Integer; strPath, strOwner: String;
-      FilesCollection: TFiles): Int64;
+      Var iDirFiles: Integer; strPath, strOwner: String; FilesCollection: TFiles): Int64;
     Procedure WorkaroundLargeFiles(Var iSize: Int64; recSearch: TSearchRec);
     Procedure OutputFilesToConsole(strPath: String; boolDirPrinted: Boolean;
       FilesCollection: TFiles);
@@ -129,9 +137,8 @@ Type
       slPatterns: TStringList): Int64;
     Function SearchForPatterns(slPatterns: TStringList; iDirFiles: Integer;
       strPath: String; FilesCollection: TFiles): Int64;
-    Function SearchForPatternsInZip(strFileName: String;
-      slPatterns: TStringList; iDirFiles: Integer; strPath: String;
-      FilesCollection: TFiles): Int64;
+    Function SearchForPatternsInZip(strFileName: String; slPatterns: TStringList;
+      iDirFiles: Integer; strPath: String; FilesCollection: TFiles): Int64;
     Function SearchDirectory(strPath: String; slPatterns: TStringList;
       Var iLevel: Integer): Int64;
     Function SearchZip(strFileName: String; slPatterns: TStringList;
@@ -175,16 +182,14 @@ Type
    @return  a DWORD
 
    **)
-Function GetNamedSecurityInfo(pObjectName: PAnsiChar;
-  ObjectType: SE_OBJECT_TYPE; SecurityInfo: SECURITY_INFORMATION;
-  ppsidOwner, ppsidGroup: PPSID; ppDacl, ppSacl: PACL;
-  Var ppSecurityDescriptor: PSECURITY_DESCRIPTOR): DWORD; Stdcall;
+Function GetNamedSecurityInfo(pObjectName: PAnsiChar; ObjectType: SE_OBJECT_TYPE;
+  SecurityInfo: SECURITY_INFORMATION; ppsidOwner, ppsidGroup: PPSID;
+  ppDacl, ppSacl: PACL; Var ppSecurityDescriptor: PSECURITY_DESCRIPTOR): DWORD; Stdcall;
 External 'advapi32.dll' Name 'GetNamedSecurityInfoA';
 
 Resourcestring
   (** An exception message for the exclusions file not found. **)
-  strExclusionsNotFound =
-    'The filename "%s" was not found to process exclusions ' +
+  strExclusionsNotFound = 'The filename "%s" was not found to process exclusions ' +
     'in the searches.';
   (** A resource string to define the Exception output format. **)
   strException = 'ESearchException: %s';
@@ -197,12 +202,12 @@ Resourcestring
     'param pairing. (%s)';
   (** A resource string to define the for of the date outputs. **)
   strDateFormat = 'ddd dd/mmm/yyyy hh:mm:ss';
+  (** A resource string to define the for of the date outputs. **)
+  strDateFormatCSV = 'dd/mmm/yyyy hh:mm:ss';
   (** An exception message to prompt for a criteria **)
-  strNeedToSpecifyCriteria =
-    'You need to specify at least one search criteria.';
+  strNeedToSpecifyCriteria = 'You need to specify at least one search criteria.';
   (** An exception message to notify of an invalid command line parameter. **)
-  strInvalidCommandLineSwitch =
-    'Invalid command line switch "%s" in parameter "%s."';
+  strInvalidCommandLineSwitch = 'Invalid command line switch "%s" in parameter "%s."';
   (** A help message to define the use of the u switch. **)
   strForceACheckForUpdate = 'Force a check for updates to the software from ' +
     'the Internet.';
@@ -243,8 +248,7 @@ Resourcestring
   (** A resource string to define that no progress should be displayed. **)
   strQuietMode = 'Quiet mode - no progress updates.';
   (** A resource string to define size filter by size. **)
-  strDisplayFilesWithSIzes = 'Display files with sizes between %s and %s byt' +
-    'es.';
+  strDisplayFilesWithSIzes = 'Display files with sizes between %s and %s byt' + 'es.';
   (** A resource string to define size filter by date. **)
   strDisplayFilesWithDates = 'Display files with dates between %s and %s.';
   (** A resource string to define the suppression of summary information = 0 **)
@@ -291,11 +295,17 @@ Resourcestring
   (** A resource string for formatting information. **)
   strOwnerFormat = '%-*s  ';
   (** A resource string for formatting information. **)
+  strOwnerFormatCSV = '%s,';
+  (** A resource string for formatting information. **)
   strAttrFormat = '%s  ';
+  (** A resource string for formatting information. **)
+  strAttrFormatCSV = '%s,';
   (** A resource string for formatting information. **)
   strDirFormat = '  %s  %15s  ';
   (** A resource string for formatting information. **)
   strFileFormat = '  %s  %s  ';
+  (** A resource string for formatting information. **)
+  strFileFormatCSV = '%s,%d,';
   (** A resource string for matching owners at the end of the string. **)
   strOwnerAtTheEnd = ' at the end';
   (** A resource string for matching owners in the middle of the string. **)
@@ -335,8 +345,7 @@ Resourcestring
   (** A resource string for the console help information. **)
   strHelp0050 = '{/X[filename]} {/@[Drive:\Path\FileName.INI]}';
   (** A resource string for the console help information. **)
-  strHelp0060 = 'searchparam# = {drive:\path\}filter1{;filter2{;filter3{;.' +
-    '..}}}';
+  strHelp0060 = 'searchparam# = {drive:\path\}filter1{;filter2{;filter3{;.' + '..}}}';
   (** A resource string for the console help information. **)
   strHelp0070 = 'filter#';
   (** A resource string for the console help information. **)
@@ -376,15 +385,13 @@ Resourcestring
   (** A resource string for the console help information. **)
   strHelp0175 = 'Searches for files between dates (l) and (u).';
   (** A resource string for the console help information. **)
-  strHelp0177 =
-    'l = lower bounding date and time, u = upper bounding date and time';
+  strHelp0177 = 'l = lower bounding date and time, u = upper bounding date and time';
   (** A resource string for the console help information. **)
   strHelp0180 = '/Z[{l}-{u}]';
   (** A resource string for the console help information. **)
   strHelp0185 = 'Searches for files between sizes (l) and (u).';
   (** A resource string for the console help information. **)
-  strHelp0187 =
-    'l = lower bounding size in bytes, u = upper bounding size in bytes';
+  strHelp0187 = 'l = lower bounding size in bytes, u = upper bounding size in bytes';
   (** A resource string for the console help information **)
   strHelp0188 =
     'Sizes can be postfixed with k, m, g or t for kilo, mega, giga and terabytes';
@@ -395,8 +402,7 @@ Resourcestring
   (** A resource string for the console help information. **)
   strHelp0200 = '/W {[Owner]}';
   (** A resource string for the console help information. **)
-  strHelp0205 =
-    'Owner Information. The owner search can be a wildcard search with an *.';
+  strHelp0205 = 'Owner Information. The owner search can be a wildcard search with an *.';
   (** A resource string for the console help information. **)
   strHelp0207 = 'Searches beginning with ! force a negated criteria.';
   (** A resource string for the console help information. **)
@@ -404,8 +410,7 @@ Resourcestring
   (** A resource string for the console help information. **)
   strHelp0215 = 'Order files ascending [+] and descending [-]';
   (** A resource string for the console help information. **)
-  strHelp0220 =
-    'N = Name, A = Attribute, D = Date and Time, O = Owner, S = Size';
+  strHelp0220 = 'N = Name, A = Attribute, D = Date and Time, O = Owner, S = Size';
   (** A resource string for the console help information. **)
   strHelp0230 = '/E:CAW';
   (** A resource string for the console help information. **)
@@ -438,8 +443,11 @@ Resourcestring
   (** A resource string for the console help information **)
   strHelp0290 = '/F:KMGT';
   (** A resource string for the console help information **)
-  strHelp0291 =
-    'Changes the output size format to Kilo, Mega, Giga or Terabytes.';
+  strHelp0291 = 'Changes the output size format to Kilo, Mega, Giga or Terabytes.';
+  (** A resource string for the console help information **)
+  strHelp0292 = '/V';
+  (** A resource string for the console help information **)
+  strHelp0293 = 'Output the found information in CSV format.';
 
   (**
 
@@ -480,7 +488,7 @@ Var
   iLength: Integer;
 
 Begin
-  If clsQuiet In CommandLineSwitches Then
+  If (clsQuiet In CommandLineSwitches) Or (clsOutputAsCSV In CommandLineSwitches) Then
     Exit;
   iLength := Length(Format(strSearchLabel, [Int(FDirectories), Int(FFiles)]));
   While Length(strPath) > (FWidth - iLength) Do
@@ -490,8 +498,7 @@ Begin
           i := PosOfNthChar(strPath, '\', 1) + 1;
           j := PosOfNthChar(strPath, '\', 2);
           If (i > 0) And (j > 0) Then
-            strPath := StringReplace(strPath, Copy(strPath, i, j - i), '...',
-              [])
+            strPath := StringReplace(strPath, Copy(strPath, i, j - i), '...', [])
           Else
             strPath := Copy(strPath, Length(strPath) - (FWidth - iLength),
               FWidth - iLength);
@@ -508,8 +515,8 @@ Begin
         End;
     End;
   strPath := Format(strOutputCurrPathFormat,
-    [Format(strSearchLabel, [Int(FDirectories), Int(FFiles)]),
-    FWidth - iLength, strPath]);
+    [Format(strSearchLabel, [Int(FDirectories), Int(FFiles)]), FWidth - iLength,
+    strPath]);
   If CheckConsoleMode(FStd) Then
     OutputToConsole(FStd, strPath, FSearchPathColour, clNone, False);
 End;
@@ -524,9 +531,27 @@ End;
  **)
 Procedure TSearch.PrintTitle;
 
+Var
+  strOutput: String;
+
 Begin
-  OutputToConsoleLn(FStd, GetConsoleTitle(strTitle), FTitleColour);
-  OutputToConsoleLn(FStd);
+  If Not(clsOutputAsCSV In CommandLineSwitches) Then
+    Begin
+      OutputToConsoleLn(FStd, GetConsoleTitle(strTitle), FTitleColour);
+      OutputToConsoleLn(FStd);
+      If clsDisplayCriteria In CommandLineSwitches Then
+        DisplayCriteria;
+    End
+  Else
+    Begin
+      strOutput := 'Date and Time,Size,';
+      If clsAttrRange In CommandLineSwitches Then
+        strOutput := strOutput + 'Attrbutes,';
+      If clsOwner In CommandLineSwitches Then
+        strOutput := strOutput + 'Owner,';
+      strOutput := strOutput + 'Filename';
+      OutputToConsoleLn(FStd, strOutput, FTitleColour);
+    End;
 End;
 
 (**
@@ -543,8 +568,9 @@ End;
 Procedure TSearch.PrintHeader(strPath, strPattern: String);
 
 Begin
-  OutputToConsoleLn(FStd, Format(strSearchingForHeader, [strPath, strPattern]),
-    FHeaderColour);
+  If Not(clsOutputAsCSV In CommandLineSwitches) Then
+    OutputToConsoleLn(FStd, Format(strSearchingForHeader, [strPath, strPattern]),
+      FHeaderColour);
   FFiles := 0;
   FDirectories := 0;
   FFileSize := 0;
@@ -563,19 +589,20 @@ End;
 Procedure TSearch.PrintFooter(strPath: String);
 
 Var
-  iFreeBytesAvailableToCaller, iTotalNumberOfBytes,
-    iTotalNumberOfFreeBytes: Int64;
+  iFreeBytesAvailableToCaller, iTotalNumberOfBytes, iTotalNumberOfFreeBytes: Int64;
 
 Begin
-  GetDiskFreeSpaceEx(PChar(strPath), iFreeBytesAvailableToCaller,
-    iTotalNumberOfBytes, @iTotalNumberOfFreeBytes);
-  If CheckConsoleMode(FStd) Then
-    OutputToConsole(FStd, StringOfChar(#32, FWidth - 1), clNone, clNone, False);
-  OutputToConsoleLn(FStd, Format(strMsg1, [Trim(FormatSize(FFileSize)),
-      FFiles + 0.1, FDirectories + 0.1]), FFooterColour);
-  OutputToConsoleLn(FStd,
-    Format(strMsg2, [Trim(FormatSize(iTotalNumberOfBytes)),
-      Trim(FormatSize(iTotalNumberOfFreeBytes))]), FFooterColour);
+  If Not(clsOutputAsCSV In CommandLineSwitches) Then
+    Begin
+      GetDiskFreeSpaceEx(PChar(strPath), iFreeBytesAvailableToCaller,
+        iTotalNumberOfBytes, @iTotalNumberOfFreeBytes);
+      If CheckConsoleMode(FStd) Then
+        OutputToConsole(FStd, StringOfChar(#32, FWidth - 1), clNone, clNone, False);
+      OutputToConsoleLn(FStd, Format(strMsg1, [Trim(FormatSize(FFileSize)), FFiles + 0.1,
+          FDirectories + 0.1]), FFooterColour);
+      OutputToConsoleLn(FStd, Format(strMsg2, [Trim(FormatSize(iTotalNumberOfBytes)),
+          Trim(FormatSize(iTotalNumberOfFreeBytes))]), FFooterColour);
+    End;
 End;
 
 (**
@@ -641,20 +668,15 @@ Begin
   OutputToConsoleLn(FStd, strHelp0135, FHelpTextColour);
   OutputToConsole(FStd, Indent(strHelp0140, 2, iWidth), FHelpSwitchColour);
   OutputToConsoleLn(FStd, strHelp0145, FHelpTextColour);
-  OutputToConsoleLn(FStd, Indent(strHelp0150, iTextIndent + 2, 0),
-    FHelpInfoColour);
-  OutputToConsoleLn(FStd, Indent(strHelp0160, iTextIndent + 2, 0),
-    FHelpInfoColour);
+  OutputToConsoleLn(FStd, Indent(strHelp0150, iTextIndent + 2, 0), FHelpInfoColour);
+  OutputToConsoleLn(FStd, Indent(strHelp0160, iTextIndent + 2, 0), FHelpInfoColour);
   OutputToConsole(FStd, Indent(strHelp0170, 2, iWidth), FHelpSwitchColour);
   OutputToConsoleLn(FStd, strHelp0175, FHelpTextColour);
-  OutputToConsoleLn(FStd, Indent(strHelp0177, iTextIndent + 2, 0),
-    FHelpInfoColour);
+  OutputToConsoleLn(FStd, Indent(strHelp0177, iTextIndent + 2, 0), FHelpInfoColour);
   OutputToConsole(FStd, Indent(strHelp0180, 2, iWidth), FHelpSwitchColour);
   OutputToConsoleLn(FStd, strHelp0185, FHelpTextColour);
-  OutputToConsoleLn(FStd, Indent(strHelp0187, iTextIndent + 2, 0),
-    FHelpInfoColour);
-  OutputToConsoleLn(FStd, Indent(strHelp0188, iTextIndent + 2, 0),
-    FHelpInfoColour);
+  OutputToConsoleLn(FStd, Indent(strHelp0187, iTextIndent + 2, 0), FHelpInfoColour);
+  OutputToConsoleLn(FStd, Indent(strHelp0188, iTextIndent + 2, 0), FHelpInfoColour);
   OutputToConsole(FStd, Indent(strHelp0190, 2, iWidth), FHelpSwitchColour);
   OutputToConsoleLn(FStd, strHelp0195, FHelpTextColour);
   OutputToConsole(FStd, Indent(strHelp0200, 2, iWidth), FHelpSwitchColour);
@@ -662,12 +684,10 @@ Begin
   OutputToConsoleLn(FStd, Indent(strHelp0207, iTextIndent, 0));
   OutputToConsole(FStd, Indent(strHelp0210, 2, iWidth), FHelpSwitchColour);
   OutputToConsoleLn(FStd, strHelp0215, FHelpTextColour);
-  OutputToConsoleLn(FStd, Indent(strHelp0220, iTextIndent + 2, 0),
-    FHelpInfoColour);
+  OutputToConsoleLn(FStd, Indent(strHelp0220, iTextIndent + 2, 0), FHelpInfoColour);
   OutputToConsole(FStd, Indent(strHelp0230, 2, iWidth), FHelpSwitchColour);
   OutputToConsoleLn(FStd, strHelp0235, FHelpTextColour);
-  OutputToConsoleLn(FStd, Indent(strHelp0240, iTextIndent + 2, 0),
-    FHelpInfoColour);
+  OutputToConsoleLn(FStd, Indent(strHelp0240, iTextIndent + 2, 0), FHelpInfoColour);
   OutputToConsole(FStd, Indent(strHelp0250, 2, iWidth), FHelpSwitchColour);
   OutputToConsoleLn(FStd, strHelp0255, FHelpTextColour);
   OutputToConsole(FStd, Indent(strHelp0260, 2, iWidth), FHelpSwitchColour);
@@ -680,6 +700,8 @@ Begin
   OutputToConsoleLn(FStd, strHelp0282, FHelpTextColour);
   OutputToConsole(FStd, Indent(strHelp0290, 2, iWidth), FHelpSwitchColour);
   OutputToConsoleLn(FStd, strHelp0291, FHelpTextColour);
+  OutputToConsole(FStd, Indent(strHelp0292, 2, iWidth), FHelpSwitchColour);
+  OutputToConsoleLn(FStd, strHelp0293, FHelpTextColour);
   OutputToConsoleLn(FStd);
   OutputToConsoleLn(FStd, strHelp0280, FHelpFootNoteColour);
   OutputToConsoleLn(FStd);
@@ -814,8 +836,7 @@ Procedure TSearch.DisplayCriteria();
 
 Begin
   OutputToConsoleLn(FStd, strSearchCriteria, FHelpHeaderColour);
-  DisplayText(clsDisplayCriteria, 'c',
-    'Displaying criteria used for this search.');
+  DisplayText(clsDisplayCriteria, 'c', 'Displaying criteria used for this search.');
   DisplayText(clsSubDirectories, 's', strRecursingSubdirectories);
   DisplayText(clsDebug, '!', strDEBUGReadLnPause);
   DisplayText(clsShowAttribs, 'a', strDisplayingFileAttibs);
@@ -824,15 +845,14 @@ Begin
       Format(strSummarisingOutput, [FSummaryLevel]));
   DisplayText(clsSupressZeros, '0', strSupressingSummary);
   DisplayText(clsDateRange, 'd', Format(strDisplayFilesWithDates,
-      [FormatDateTime(strDateFormat, FLDate), FormatDateTime(strDateFormat,
-        FUDate)]));
-  DisplayText(clsSizeRange, 'd', Format(strDisplayFilesWithSIzes,
-      [ReduceSize(FLSize), ReduceSize(FUSize)]));
+      [FormatDateTime(strDateFormat, FLDate), FormatDateTime(strDateFormat, FUDate)]));
+  DisplayText(clsSizeRange, 'd', Format(strDisplayFilesWithSIzes, [ReduceSize(FLSize),
+      ReduceSize(FUSize)]));
   DisplayAttributes;
   DisplayText(clsQuiet, 'q', strQuietMode);
   If DisplayText(clsOwner, 'w', strDisplayTheOwners, False) Then
     Begin
-      If FOwnerSearchPos In [ospExact..ospEnd] Then
+      If FOwnerSearchPos In [ospExact .. ospEnd] Then
         Begin
           OutputToConsole(FStd, strOwnerSearchingFor, FHelpTextColour);
           If FOwnerSearchOps In [osNotEquals] Then
@@ -869,8 +889,7 @@ Begin
       If FOrderFilesDirection = odDescending Then
         Begin
           OutputToConsole(FStd, ' (', FHelpTextColour);
-          OutputToConsole(FStd, strOrderingFilesInDescOrder,
-            FHelpFootNoteColour);
+          OutputToConsole(FStd, strOrderingFilesInDescOrder, FHelpFootNoteColour);
           OutputToConsole(FStd, ')', FHelpTextColour);
         End;
       OutputToConsoleLn(FStd, '.', FHelpTextColour);
@@ -884,8 +903,7 @@ Begin
       DisplayText(clsDateType, 'w', strDisplayingFileLastWriteDates);
   End;
   DisplayText(clsSearchIn, 'i', Format(strSearchForText, [FSearchInText]));
-  DisplayText(clsExclusions, 'x', Format(strApplyingExclusions,
-      [FExlFileName]));
+  DisplayText(clsExclusions, 'x', Format(strApplyingExclusions, [FExlFileName]));
   DisplayText(clsUpdate, 'u', strForceACheckForUpdate);
   DisplayText(clsSearchZip, 'p', strSearchInZips);
   Case FSizeFormat Of
@@ -928,8 +946,7 @@ End;
  **)
 Procedure TSearch.FilesExceptionHandler(strException: String);
 Begin
-  OutputToConsoleLn(FStd, Format(strFilesException, [strException]),
-    FExceptionColour);
+  OutputToConsoleLn(FStd, Format(strFilesException, [strException]), FExceptionColour);
 End;
 
 (**
@@ -958,11 +975,10 @@ Begin
     sfMegaBytes:
       Result := Format('%10.0nM', [RoundTo(dblSize / (1024.0 * 1024.0), 0)]);
     sfGigaBytes:
-      Result := Format('%7.0nG', [RoundTo(dblSize / (1024.0 * 1024.0 * 1024.0),
-          0)]);
+      Result := Format('%7.0nG', [RoundTo(dblSize / (1024.0 * 1024.0 * 1024.0), 0)]);
     sfTeraBytes:
-      Result := Format('%4.0nT',
-        [RoundTo(dblSize / (1024.0 * 1024.0 * 1024.0 * 1024.0), 0)]);
+      Result := Format('%4.0nT', [RoundTo(dblSize / (1024.0 * 1024.0 * 1024.0 * 1024.0),
+          0)]);
     Else
       Result := Format('%15.0n', [dblSize]);
     End;
@@ -1015,8 +1031,7 @@ Begin
                 'z', 'Z':
                   GetSizeRange(FParams, iSwitch, iIndex, FLSize, FUSize);
                 't', 'T':
-                  GetAttributes(FParams, iSwitch, iIndex, FFileAttrs,
-                    FTypeAttrs);
+                  GetAttributes(FParams, iSwitch, iIndex, FFileAttrs, FTypeAttrs);
                 'q', 'Q':
                   Include(CommandLineSwitches, clsQuiet);
                 'w', 'W':
@@ -1039,6 +1054,8 @@ Begin
                   Include(CommandLineSwitches, clsSearchZip);
                 'f', 'F':
                   GetSizeFormat(FParams, iSwitch, iIndex, FSizeFormat);
+                'v', 'V':
+                  Include(CommandLineSwitches, clsOutputAsCSV);
                 Else
                   Raise ESearchException.CreateFmt(strInvalidCommandLineSwitch,
                     [FParams[iSwitch][iIndex], FParams[iSwitch]]);
@@ -1058,8 +1075,6 @@ Begin
       Include(CommandLineSwitches, clsShowHelp)
     Else
       Raise ESearchException.Create(strNeedToSpecifyCriteria);
-  If clsDisplayCriteria In CommandLineSwitches Then
-    DisplayCriteria;
 End;
 
 (**
@@ -1074,37 +1089,27 @@ Procedure TSearch.LoadSettings;
 Begin
   With TIniFile.Create(FRootKey) Do
     Try
-      FSearchPathColour := StringToColor(ReadString('Colours', 'SearchPath',
-          'clMaroon'));
+      FSearchPathColour := StringToColor(ReadString('Colours', 'SearchPath', 'clMaroon'));
       FTitleColour := StringToColor(ReadString('Colours', 'Title', 'clNone'));
-      FHeaderColour := StringToColor(ReadString('Colours', 'Header',
+      FHeaderColour := StringToColor(ReadString('Colours', 'Header', 'clYellow'));
+      FFooterColour := StringToColor(ReadString('Colours', 'Footer', 'clWhite'));
+      FHelpHeaderColour := StringToColor(ReadString('Colours', 'HelpHeader', 'clWhite'));
+      FHelpInfoColour := StringToColor(ReadString('Colours', 'HelpInfo', 'clLime'));
+      FHelpTextColour := StringToColor(ReadString('Colours', 'HelpText', 'clNone'));
+      FHelpSwitchColour := StringToColor(ReadString('Colours', 'HelpSwitch', 'clRed'));
+      FHelpFootNoteColour := StringToColor(ReadString('Colours', 'HelpFoorNote',
           'clYellow'));
-      FFooterColour := StringToColor(ReadString('Colours', 'Footer',
+      FFoundSearchPathColour := StringToColor(ReadString('Colours', 'FoundSearchPath',
           'clWhite'));
-      FHelpHeaderColour := StringToColor(ReadString('Colours', 'HelpHeader',
-          'clWhite'));
-      FHelpInfoColour := StringToColor(ReadString('Colours', 'HelpInfo',
+      FFileInfoColour := StringToColor(ReadString('Colours', 'FileInfo', 'clNone'));
+      FGREPLineNumbersColour := StringToColor(ReadString('Colours', 'GREPLineNumbers',
+          'clRed'));
+      FGREPLineOutputColour := StringToColor(ReadString('Colours', 'GREPLineOutput',
           'clLime'));
-      FHelpTextColour := StringToColor(ReadString('Colours', 'HelpText',
+      FSummaryOutputColour := StringToColor(ReadString('Colours', 'SummaryOutput',
           'clNone'));
-      FHelpSwitchColour := StringToColor(ReadString('Colours', 'HelpSwitch',
-          'clRed'));
-      FHelpFootNoteColour := StringToColor(ReadString('Colours',
-          'HelpFoorNote', 'clYellow'));
-      FFoundSearchPathColour := StringToColor(ReadString('Colours',
-          'FoundSearchPath', 'clWhite'));
-      FFileInfoColour := StringToColor(ReadString('Colours', 'FileInfo',
-          'clNone'));
-      FGREPLineNumbersColour := StringToColor(ReadString('Colours',
-          'GREPLineNumbers', 'clRed'));
-      FGREPLineOutputColour := StringToColor(ReadString('Colours',
-          'GREPLineOutput', 'clLime'));
-      FSummaryOutputColour := StringToColor(ReadString('Colours',
-          'SummaryOutput', 'clNone'));
-      FExceptionColour := StringToColor(ReadString('Colours', 'Exception',
-          'clRed'));
-      FZipFileColour := StringToColor(ReadString('Colours', 'ZipFile',
-          'clFuchsia'));
+      FExceptionColour := StringToColor(ReadString('Colours', 'Exception', 'clRed'));
+      FZipFileColour := StringToColor(ReadString('Colours', 'ZipFile', 'clFuchsia'));
     Finally
       Free;
     End;
@@ -1163,8 +1168,7 @@ Var
 Begin
   Result := '';
   If GetNamedSecurityInfo(PAnsiChar(AnsiString(strFileName)), SE_FILE_OBJECT,
-    OWNER_SECURITY_INFORMATION, @Owner, Nil, Nil, Nil, Pointer(SD))
-    = ERROR_SUCCESS Then
+    OWNER_SECURITY_INFORMATION, @Owner, Nil, Nil, Nil, Pointer(SD)) = ERROR_SUCCESS Then
     Begin
       Result := LookupAccountBySID(Owner);
       LocalFree(Cardinal(SD));
@@ -1242,9 +1246,9 @@ Begin
       FileTimeToLocalFileTime(dtDate, dtDateLocal);
       iTime := 0;
       FileTimeToDosDateTime(dtDateLocal, LongRec(iTime).Hi, LongRec(iTime).Lo);
-      boolAdded := FilesCollection.Add(FileDateToDateTime(iTime),
-        recSearch.Size, OutputAttributes(recSearch.Attr), strOwner,
-        recSearch.Name, FSearchInText, GetFileText, recSearch.Attr);
+      boolAdded := FilesCollection.Add(FileDateToDateTime(iTime), recSearch.Size,
+        OutputAttributes(recSearch.Attr), strOwner, recSearch.Name, FSearchInText,
+        GetFileText, recSearch.Attr);
     End
   Else
     boolAdded := True;
@@ -1275,8 +1279,7 @@ End;
 
  **)
 Function TSearch.CheckZipFiles(ZipArchive: TZipForge; ZFAI: TZFArchiveItem;
-  Var iDirFiles: Integer; strPath, strOwner: String;
-  FilesCollection: TFiles): Int64;
+  Var iDirFiles: Integer; strPath, strOwner: String; FilesCollection: TFiles): Int64;
 
 (**
 
@@ -1309,10 +1312,10 @@ Begin
       Inc(iDirFiles);
       LongRec(iTime).Lo := ZFAI.LastModFileTime;
       LongRec(iTime).Hi := ZFAI.LastModFileDate;
-      boolAdded := FilesCollection.Add(FileDateToDateTime(iTime),
-        ZFAI.UncompressedSize, OutputAttributes(ZFAI.ExternalFileAttributes),
-        strOwner, ZFAI.StoredPath + ZFAI.FileName, FSearchInText,
-        GetZipFileText, ZFAI.ExternalFileAttributes);
+      boolAdded := FilesCollection.Add(FileDateToDateTime(iTime), ZFAI.UncompressedSize,
+        OutputAttributes(ZFAI.ExternalFileAttributes), strOwner,
+        ZFAI.StoredPath + ZFAI.FileName, FSearchInText, GetZipFileText,
+        ZFAI.ExternalFileAttributes);
     End
   Else
     boolAdded := True;
@@ -1377,81 +1380,36 @@ End;
  @param   FilesCollection as a TFiles
 
  **)
-Procedure TSearch.OutputFilesToConsole(strPath: String;
-  boolDirPrinted: Boolean; FilesCollection: TFiles);
+Procedure TSearch.OutputFilesToConsole(strPath: String; boolDirPrinted: Boolean;
+  FilesCollection: TFiles);
+
 Var
   i: Integer;
-  iOwnerWidth: Integer;
   strOutput: String;
-  iLine: Integer;
   boolGREP: Boolean;
-  iZipPos: Integer;
 
 Begin
   For i := 0 To FilesCollection.Count - 1 Do
     Begin
-      // Output date and time
-      If Pos('D', FilesCollection.FileInfo[i].Attr) = 0 Then
-        strOutput := Format(strFileFormat, [FormatDateTime(strDateFormat,
-            FilesCollection.FileInfo[i].Date),
-          FormatSize(FilesCollection.FileInfo[i].Size)])
-      Else
-        strOutput := Format(strDirFormat, [FormatDateTime(strDateFormat,
-            FilesCollection.FileInfo[i].Date), '<DIR>']);
-      // Output Attributes
-      If clsShowAttribs In CommandLineSwitches Then
-        strOutput := strOutput + Format(strAttrFormat,
-          [FilesCollection.FileInfo[i].Attr]);
-      // Output Owner
-      If clsOwner In CommandLineSwitches Then
-        Begin
-          iOwnerWidth := FilesCollection.OwnerWidth;
-          strOutput := strOutput + Format(strOwnerFormat, [iOwnerWidth,
-            FilesCollection.FileInfo[i].Owner]);
-        End;
-      // Output Dir / Zip file
-      If Not boolDirPrinted Then
-        Begin
-          If CheckConsoleMode(FStd) Then
-            OutputToConsole(FStd, StringOfChar(#32, FWidth), clNone, clNone,
-              False);
-          If Not Like('*.zip\*', strPath) Then
-            OutputToConsoleLn(FStd, strPath, FFoundSearchPathColour)
-          Else
-            Begin
-              iZipPos := Pos('.zip', LowerCase(strPath));
-              OutputToConsole(FStd,
-                ExtractFilePath(Copy(strPath, 1, iZipPos + 3)),
-                FFoundSearchPathColour);
-              OutputToConsole(FStd,
-                ExtractFileName(Copy(strPath, 1, iZipPos + 3)),
-                FZipFileColour);
-              OutputToConsoleLn(FStd, Copy(strPath, iZipPos + 4,
-                  Length(strPath) - iZipPos - 4), FFoundSearchPathColour);
-            End;
-          boolDirPrinted := True;
-        End;
+      OutputDateTimeAndSize(FilesCollection, strOutput, i);
+      OutputFileAttributes(i, FilesCollection, strOutput);
+      OutputFileOwner(FilesCollection, strOutput, i);
+      If Not(clsOutputAsCSV In CommandLineSwitches) Then
+        OutputDirectoryOrZIPFile(boolDirPrinted, strPath);
       boolGREP := (clsSearchIn In CommandLineSwitches) And
         (FilesCollection.FileInfo[i].GREPLines > 0);
       If Not(clsSearchIn In CommandLineSwitches) Or boolGREP Then
-        OutputToConsoleLn(FStd,
-          strOutput + FilesCollection.FileInfo[i].FileName,
-          FFileInfoColour);
-      // Output GREP Information
-      If boolGREP Then
-        For iLine := 0 To FilesCollection.FileInfo[i].GREPLines - 1 Do
-          Begin
-            OutputToConsole(FStd,
-              Format('  %10.0n: ',
-                [FilesCollection.FileInfo[i].GREPLine[iLine] + 0.1]),
-              FGREPLineNumbersColour);
-            OutputToConsoleLn(FStd,
-              FilesCollection.FileInfo[i].GREPText[iLine],
-              FGREPLineOutputColour, clNone, False);
-          End;
+        If Not(clsOutputAsCSV In CommandLineSwitches) Then
+          OutputToConsoleLn(FStd, strOutput + FilesCollection.FileInfo[i].FileName,
+            FFileInfoColour)
+        Else
+          OutputToConsoleLn(FStd,
+            strOutput + strPath + FilesCollection.FileInfo[i].FileName, FFileInfoColour);
+      OutputGREPInformation(i, boolGREP, FilesCollection);
     End;
-  If FilesCollection.Count > 0 Then
-    OutputToConsoleLn(FStd);
+  If Not(clsOutputAsCSV In CommandLineSwitches) Then
+    If FilesCollection.Count > 0 Then
+      OutputToConsoleLn(FStd);
 End;
 
 (**
@@ -1476,14 +1434,13 @@ Var
 
 Begin
   Result := 0;
-  iResult := FindFirst(strPath + '*.*', faAnyFile Or faHidden Or faSysFile,
-    recSearch);
+  iResult := FindFirst(strPath + '*.*', faAnyFile Or faHidden Or faSysFile, recSearch);
   While (iResult = 0) Do
     Begin
       If recSearch.Attr And faDirectory > 0 Then
         If (recSearch.Name <> '.') And (recSearch.Name <> '..') Then
-          Inc(Result, SearchDirectory(strPath + recSearch.Name + '\',
-              slPatterns, iLevel));
+          Inc(Result, SearchDirectory(strPath + recSearch.Name + '\', slPatterns,
+              iLevel));
       If clsSearchZip In CommandLineSwitches Then
         If Like('*.zip', recSearch.Name) Then
           Inc(Result, SearchZip(strPath + recSearch.Name, slPatterns, iLevel));
@@ -1515,10 +1472,9 @@ Begin
   GetConsoleInformation;
   FRootKey := BuildRootKey(FParams, FilesExceptionHandler);
   LoadSettings;
-  PrintTitle;
   GetCommandLineSwitches;
-  TCheckForupdates.Execute(strAppID, FRootKey,
-    clsUpdate In CommandLineSwitches);
+  PrintTitle;
+  TCheckForupdates.Execute(strAppID, FRootKey, clsUpdate In CommandLineSwitches);
   If Not(clsExclusions In CommandLineSwitches) Or
     ((clsExclusions In CommandLineSwitches) And FileExists(FExlFileName)) Then
     Begin
@@ -1531,9 +1487,8 @@ Begin
             Begin
               iPos := Pos('=', FSearchParams[i]);
               If iPos = 0 Then
-                Raise ESearchException.CreateFmt
-                  (
-                  strErrorInPathSearchParamString, [FSearchParams[i]]);
+                Raise ESearchException.CreateFmt(strErrorInPathSearchParamString,
+                  [FSearchParams[i]]);
               strPath := FSearchParams.Names[i];
               If strPath = '' Then
                 strPath := GetCurrentDir;
@@ -1594,33 +1549,27 @@ Begin
   Result := 0;
   For iPattern := 0 To slPatterns.Count - 1 Do
     Begin
-      iResult := FindFirst(strPath + slPatterns[iPattern], faAnyFile,
-        recSearch);
+      iResult := FindFirst(strPath + slPatterns[iPattern], faAnyFile, recSearch);
       Try
         While iResult = 0 Do
           Begin
             boolFound := True;
-            CheckFileAttributes(recSearch.Attr, FFileAttrs, FTypeAttrs,
-              boolFound);
+            CheckFileAttributes(recSearch.Attr, FFileAttrs, FTypeAttrs, boolFound);
             CheckSizeRange(recSearch.Size, FLSize, FUSize, boolFound);
             Case FDateType Of
               dtCreation:
                 Begin
                   FileTimeToSystemTime(recSearch.FindData.ftCreationTime, ST);
-                  dtDate := EncodeDate(ST.wYear, ST.wMonth, ST.wDay)
-                    + EncodeTime(ST.wHour, ST.wMinute, ST.wSecond,
-                    ST.wMilliseconds);
-                  CheckDateRange(DateTimeToFileDate(dtDate), FLDate, FUDate,
-                    boolFound);
+                  dtDate := EncodeDate(ST.wYear, ST.wMonth, ST.wDay) + EncodeTime
+                    (ST.wHour, ST.wMinute, ST.wSecond, ST.wMilliseconds);
+                  CheckDateRange(DateTimeToFileDate(dtDate), FLDate, FUDate, boolFound);
                 End;
               dtLastAccess:
                 Begin
                   FileTimeToSystemTime(recSearch.FindData.ftLastAccessTime, ST);
-                  dtDate := EncodeDate(ST.wYear, ST.wMonth, ST.wDay)
-                    + EncodeTime(ST.wHour, ST.wMinute, ST.wSecond,
-                    ST.wMilliseconds);
-                  CheckDateRange(DateTimeToFileDate(dtDate), FLDate, FUDate,
-                    boolFound);
+                  dtDate := EncodeDate(ST.wYear, ST.wMonth, ST.wDay) + EncodeTime
+                    (ST.wHour, ST.wMinute, ST.wSecond, ST.wMilliseconds);
+                  CheckDateRange(DateTimeToFileDate(dtDate), FLDate, FUDate, boolFound);
                 End
               Else
                 CheckDateRange(recSearch.Time, FLDate, FUDate, boolFound);
@@ -1629,8 +1578,8 @@ Begin
             If clsOwner In CommandLineSwitches Then
               Begin
                 strOwner := OutputOwner(strPath + recSearch.Name);
-                CheckOwner(strOwner, FOwnerSearch, FOwnerSearchPos,
-                  FOwnerSearchOps, boolFound);
+                CheckOwner(strOwner, FOwnerSearch, FOwnerSearchPos, FOwnerSearchOps,
+                  boolFound);
               End;
             If boolFound Then
               Inc(Result, CheckFiles(recSearch, iDirFiles, strPath, strOwner,
@@ -1661,9 +1610,8 @@ End;
  @return  an Int64
 
  **)
-Function TSearch.SearchForPatternsInZip(strFileName: String;
-  slPatterns: TStringList; iDirFiles: Integer; strPath: String;
-  FilesCollection: TFiles): Int64;
+Function TSearch.SearchForPatternsInZip(strFileName: String; slPatterns: TStringList;
+  iDirFiles: Integer; strPath: String; FilesCollection: TFiles): Int64;
 
 Var
   Z: TZipForge;
@@ -1699,8 +1647,8 @@ Begin
                   LongRec(iDateTime).Lo := ZFAI.LastModFileTime;
                   LongRec(iDateTime).Hi := ZFAI.LastModFileDate;
                   CheckDateRange(iDateTime, FLDate, FUDate, boolFound);
-                  CheckExclusions(strPath, ZFAI.StoredPath + ZFAI.FileName,
-                    boolFound, FExclusions);
+                  CheckExclusions(strPath, ZFAI.StoredPath + ZFAI.FileName, boolFound,
+                    FExclusions);
                   If clsOwner In CommandLineSwitches Then
                     Begin
                       strOwner := OutputOwner(strFileName);
@@ -1708,8 +1656,8 @@ Begin
                         FOwnerSearchOps, boolFound);
                     End;
                   If boolFound Then
-                    Inc(Result, CheckZipFiles(Z, ZFAI, iDirFiles, strPath,
-                        strOwner, FilesCollection));
+                    Inc(Result, CheckZipFiles(Z, ZFAI, iDirFiles, strPath, strOwner,
+                        FilesCollection));
                   boolResult := Z.FindNext(ZFAI);
                   boolFound := True;
                 End;
@@ -1760,8 +1708,8 @@ Begin
   (* Find Files in Zip *)
   FilesCollection := TFiles.Create(FilesExceptionHandler);
   Try
-    Inc(Result, SearchForPatternsInZip(strFileName, slPatterns, iDirFiles,
-        strFileName, FilesCollection));
+    Inc(Result, SearchForPatternsInZip(strFileName, slPatterns, iDirFiles, strFileName,
+        FilesCollection));
     // Break down files into individual paths
     FilesCollection.OrderBy(obName, odAscending);
     PathCollections := TObjectList.Create(True);
@@ -1770,13 +1718,12 @@ Begin
       Files := Nil;
       For iFile := 0 To FilesCollection.Count - 1 Do
         Begin
-          If (strPath <> ExtractFilePath
-              (FilesCollection.FileInfo[iFile].FileName)) Or (Files = Nil) Then
+          If (strPath <> ExtractFilePath(FilesCollection.FileInfo[iFile].FileName)) Or
+            (Files = Nil) Then
             Begin
               Files := TFiles.Create(FilesExceptionHandler);
               PathCollections.Add(Files);
-              strPath := ExtractFilePath
-                (FilesCollection.FileInfo[iFile].FileName);
+              strPath := ExtractFilePath(FilesCollection.FileInfo[iFile].FileName);
               Files.Path := strPath;
             End;
           If Files <> Nil Then
@@ -1787,8 +1734,8 @@ Begin
           PathCollection := PathCollections[iPath] As TFiles;
           If FOrderFilesBy <> obNone Then
             PathCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
-          OutputFilesToConsole(strFileName + '\' + PathCollection.Path,
-            boolDirPrinted, PathCollection);
+          OutputFilesToConsole(strFileName + '\' + PathCollection.Path, boolDirPrinted,
+            PathCollection);
         End;
     Finally
       PathCollections.Free;
@@ -1822,17 +1769,12 @@ Begin
       WriteString('Colours', 'HelpInfo', ColorToString(FHelpInfoColour));
       WriteString('Colours', 'HelpText', ColorToString(FHelpTextColour));
       WriteString('Colours', 'HelpSwitch', ColorToString(FHelpSwitchColour));
-      WriteString('Colours', 'HelpFootNote',
-        ColorToString(FHelpFootNoteColour));
-      WriteString('Colours', 'FoundSearchPath',
-        ColorToString(FFoundSearchPathColour));
+      WriteString('Colours', 'HelpFootNote', ColorToString(FHelpFootNoteColour));
+      WriteString('Colours', 'FoundSearchPath', ColorToString(FFoundSearchPathColour));
       WriteString('Colours', 'FileInfo', ColorToString(FFileInfoColour));
-      WriteString('Colours', 'GREPLineNumbers',
-        ColorToString(FGREPLineNumbersColour));
-      WriteString('Colours', 'GREPLineOutput',
-        ColorToString(FGREPLineOutputColour));
-      WriteString('Colours', 'SummaryOutput',
-        ColorToString(FSummaryOutputColour));
+      WriteString('Colours', 'GREPLineNumbers', ColorToString(FGREPLineNumbersColour));
+      WriteString('Colours', 'GREPLineOutput', ColorToString(FGREPLineOutputColour));
+      WriteString('Colours', 'SummaryOutput', ColorToString(FSummaryOutputColour));
       WriteString('Colours', 'Exception', ColorToString(FExceptionColour));
       WriteString('Colours', 'ZipFile', ColorToString(FZipFileColour));
     Finally
@@ -1840,7 +1782,7 @@ Begin
     End;
 End;
 
-(**
+(**                                                  999
 
  This is the main recursive routine that searches the currently passed
  directory for files and then if subdirectories are required calls
@@ -1876,8 +1818,7 @@ Begin
   (* Find Files *)
   FilesCollection := TFiles.Create(FilesExceptionHandler);
   Try
-    Inc(Result, SearchForPatterns(slPatterns, iDirFiles, strPath,
-        FilesCollection));
+    Inc(Result, SearchForPatterns(slPatterns, iDirFiles, strPath, FilesCollection));
     If FOrderFilesBy <> obNone Then
       FilesCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
     OutputFilesToConsole(strPath, boolDirPrinted, FilesCollection);
@@ -1905,6 +1846,170 @@ Begin
   Dec(iLevel);
 End;
 
+(**
+
+ This method outputs the file date and time and its size to the passed output
+ string.
+
+ @precon  FilesCollection must be a valid instance.
+ @postcon Outputs the file date and time and its size to the passed output
+ string.
+
+ @param   FilesCollection as a TFiles
+ @param   strOutput       as a String as a reference
+ @param   i               as an Integer
+
+ **)
+Procedure TSearch.OutputDateTimeAndSize(FilesCollection: TFiles; Var strOutput: String;
+  i: Integer);
+
+Begin
+  If Not(clsOutputAsCSV In CommandLineSwitches) Then
+    Begin
+      If Pos('D', FilesCollection.FileInfo[i].Attr) = 0 Then
+        strOutput := Format(strFileFormat, [FormatDateTime(strDateFormat,
+            FilesCollection.FileInfo[i].Date),
+          FormatSize(FilesCollection.FileInfo[i].Size)])
+      Else
+        strOutput := Format(strDirFormat, [FormatDateTime(strDateFormat,
+            FilesCollection.FileInfo[i].Date), '<DIR>']);
+    End
+  Else
+    Begin
+      If Pos('D', FilesCollection.FileInfo[i].Attr) = 0 Then
+        strOutput := Format(strFileFormatCSV, [FormatDateTime(strDateFormatCSV,
+            FilesCollection.FileInfo[i].Date), FilesCollection.FileInfo[i].Size])
+      Else
+        strOutput := Format(strFileFormatCSV, [FormatDateTime(strDateFormatCSV,
+            FilesCollection.FileInfo[i].Date), 0]);
+    End;
+End;
+
+(**
+
+ This method outputs the files attributes to the passed output string.
+
+ @precon  FileCollection must be a valid instance.
+ @postcon Outputs the files attributes to the passed output string.
+
+ @param   i               as an Integer
+ @param   FilesCollection as a TFiles
+ @param   strOutput       as a String as a reference
+
+ **)
+Procedure TSearch.OutputFileAttributes(i: Integer; FilesCollection: TFiles;
+  Var strOutput: String);
+
+Begin
+  If clsShowAttribs In CommandLineSwitches Then
+    If Not(clsOutputAsCSV In CommandLineSwitches) Then
+      strOutput := strOutput + Format(strAttrFormat, [FilesCollection.FileInfo[i].Attr])
+    Else
+      strOutput := strOutput + Format(strAttrFormatCSV,
+        [FilesCollection.FileInfo[i].Attr]);
+End;
+
+(**
+
+  This method outputs the file owner.
+
+  @precon  FilesCollection must be a valid instance.
+  @postcon Outputs the file owner.
+
+  @param   FilesCollection as a TFiles
+  @param   strOutput       as a String as a reference
+  @param   i               as an Integer
+
+**)
+Procedure TSearch.OutputFileOwner(FilesCollection: TFiles; Var strOutput: String;
+  i: Integer);
+
+Var
+  iOwnerWidth: Integer;
+
+Begin
+  If clsOwner In CommandLineSwitches Then
+    If Not(clsOutputAsCSV In CommandLineSwitches) Then
+      Begin
+        iOwnerWidth := FilesCollection.OwnerWidth;
+        strOutput := strOutput + Format(strOwnerFormat, [iOwnerWidth,
+          FilesCollection.FileInfo[i].Owner]);
+      End
+    Else
+      Begin
+        strOutput := strOutput + Format(strOwnerFormatCSV,
+          [FilesCollection.FileInfo[i].Owner]);
+      End;
+End;
+
+(**
+
+  This method outputs the files GREP information for a file.
+
+  @precon  FilesCollection must be a valid instance.
+  @postcon Outputs the files GREP information for a file.
+
+  @param   i               as an Integer
+  @param   boolGREP        as a Boolean
+  @param   FilesCollection as a TFiles
+
+**)
+Procedure TSearch.OutputGREPInformation(i: Integer; boolGREP: Boolean;
+  FilesCollection: TFiles);
+
+Var
+  iLine: Integer;
+
+Begin
+  If boolGREP Then
+    For iLine := 0 To FilesCollection.FileInfo[i].GREPLines - 1 Do
+      Begin
+        OutputToConsole(FStd, Format('  %10.0n: ',
+            [FilesCollection.FileInfo[i].GREPLine[iLine] + 0.1]),
+          FGREPLineNumbersColour);
+        OutputToConsoleLn(FStd, FilesCollection.FileInfo[i].GREPText[iLine],
+          FGREPLineOutputColour, clNone, False);
+      End;
+End;
+
+(**
+
+  This method outputs the name of the directory or zip from which files are being found.
+
+  @precon  None.
+  @postcon Outputs the name of the directory or zip from which files are being found.
+
+  @param   boolDirPrinted as a Boolean as a reference
+  @param   strPath        as a String
+
+**)
+Procedure TSearch.OutputDirectoryOrZIPFile(Var boolDirPrinted: Boolean; strPath: String);
+
+Var
+  iZipPos: Integer;
+
+Begin
+  // Output Dir / Zip file
+  If Not boolDirPrinted Then
+    Begin
+      If CheckConsoleMode(FStd) Then
+        OutputToConsole(FStd, StringOfChar(' ', FWidth), clNone, clNone, False);
+      If Not Like('*.zip\*', strPath) Then
+        OutputToConsoleLn(FStd, strPath, FFoundSearchPathColour)
+      Else
+        Begin
+          iZipPos := Pos('.zip', LowerCase(strPath));
+          OutputToConsole(FStd, ExtractFilePath(Copy(strPath, 1, iZipPos + 3)),
+            FFoundSearchPathColour);
+          OutputToConsole(FStd, ExtractFileName(Copy(strPath, 1, iZipPos + 3)),
+            FZipFileColour);
+          OutputToConsoleLn(FStd, Copy(strPath, iZipPos + 4,
+              Length(strPath) - iZipPos - 4), FFoundSearchPathColour);
+        End;
+      boolDirPrinted := True;
+    End;
+End;
+
 (** ---------------------------------------------------------------------------
 
  Main Program body.
@@ -1916,9 +2021,13 @@ Var
   boolException: Boolean;
 
 Begin
-{$IFDEF EURALOG}
+
+  {$IFDEF EURALOG}
+
   SetEurekaLogState(Not IsDebuggerPresent);
-{$ENDIF}
+
+  {$ENDIF}
+
   ReportMemoryLeaksOnShutdown := IsDebuggerPresent;
   boolException := False;
   With TSearch.Create Do
@@ -1928,8 +2037,7 @@ Begin
       Except
         On E: ESearchException Do
           Begin
-            OutputToConsoleLn(FErr, Format(strException, [E.Message]),
-              ExceptionColour);
+            OutputToConsoleLn(FErr, Format(strException, [E.Message]), ExceptionColour);
             boolException := True;
           End;
       End;

@@ -83,7 +83,7 @@
 						<Source Name="MainSource">Search.Dpr</Source>
 					</Source>
 					<Parameters>
-						<Parameters Name="RunParams">*dgh*.pas /cs!at[fr]?</Parameters>
+						<Parameters Name="RunParams">*dgh*.pas /spcawv!?</Parameters>
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="DebugCWD">D:\HoylD\Borland Studio Projects\</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
@@ -97,8 +97,8 @@
 						<VersionInfo Name="AutoIncBuild">True</VersionInfo>
 						<VersionInfo Name="MajorVer">1</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
-						<VersionInfo Name="Release">19</VersionInfo>
-						<VersionInfo Name="Build">496</VersionInfo>
+						<VersionInfo Name="Release">20</VersionInfo>
+						<VersionInfo Name="Build">527</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -110,7 +110,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">Search</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">1.0.19.496</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">1.0.20.527</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">Search</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
@@ -133,7 +133,7 @@
 
 <!-- EurekaLog First Line
 [Exception Log]
-EurekaLog Version=6025
+EurekaLog Version=6101
 Activate=1
 Activate Handle=1
 Save Log File=1
@@ -299,6 +299,7 @@ loFreeAllLeaks=1
 loCatchLeaksExceptions=1
 cfoReduceFileSize=1
 cfoCheckFileCorruption=1
+cfoUseEL7=0
 Count mtInformationMsgCaption=1
 mtInformationMsgCaption0="Information."
 Count mtQuestionMsgCaption=1
