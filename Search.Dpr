@@ -6,7 +6,7 @@
 
  @Version 1.0
  @Author  David Hoyle
- @Date    01 May 2011
+ @Date    31 Mar 2012
 
  **)
 Program Search;
@@ -163,6 +163,11 @@ Type
 
   (** A type for a pointer to a PSID structure **)
   PPSID = ^PSID;
+
+  (** This is a helper class for the TStrings class. **)
+  TStringsHelper = Class Helper For TStrings
+    Procedure SafeLoadFromFile(strFileName : String);
+  End;
 
   (**
 
@@ -1217,7 +1222,7 @@ Function TSearch.CheckFiles(recSearch: TSearchRec; Var iDirFiles: Integer;
       Begin
         sl := TStringList.Create;
         Try
-          sl.LoadFromFile(strPath + recSearch.Name);
+          sl.SafeLoadFromFile(strPath + recSearch.Name);
           Result := sl.Text;
         Finally
           sl.Free;
@@ -2008,6 +2013,33 @@ Begin
         End;
       boolDirPrinted := True;
     End;
+End;
+
+{ TStringsHelper }
+
+(**
+
+  This method provide the GREP functionality of SEARCH with a safe mechanism to load
+  information from files without any share violations.
+
+  @precon  None.
+  @postcon Opens the named file safely.
+
+  @param   strFileName as a String
+
+**)
+Procedure TStringsHelper.SafeLoadFromFile(strFileName: String);
+
+Var
+  Stream: TStream;
+
+Begin
+  Stream := TFileStream.Create(strFileName, fmOpenRead Or fmShareDenyNone);
+  Try
+    LoadFromStream(Stream);
+  Finally
+    Stream.Free;
+  End;
 End;
 
 (** ---------------------------------------------------------------------------
