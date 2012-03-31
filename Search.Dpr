@@ -540,7 +540,7 @@ Var
   strOutput: String;
 
 Begin
-  If Not(clsOutputAsCSV In CommandLineSwitches) Then
+  If Not (clsOutputAsCSV In CommandLineSwitches) Then
     Begin
       OutputToConsoleLn(FStd, GetConsoleTitle(strTitle), FTitleColour);
       OutputToConsoleLn(FStd);
@@ -549,12 +549,12 @@ Begin
     End
   Else
     Begin
-      strOutput := 'Date and Time,Size,';
-      If clsAttrRange In CommandLineSwitches Then
-        strOutput := strOutput + 'Attrbutes,';
+      strOutput := 'Date and Time,Size';
+      If clsShowAttribs In CommandLineSwitches Then
+        strOutput := strOutput + ',Attrbutes';
       If clsOwner In CommandLineSwitches Then
-        strOutput := strOutput + 'Owner,';
-      strOutput := strOutput + 'Filename';
+        strOutput := strOutput + ',Owner';
+      strOutput := strOutput + ',Filename';
       OutputToConsoleLn(FStd, strOutput, FTitleColour);
     End;
 End;
