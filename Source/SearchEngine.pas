@@ -1104,7 +1104,7 @@ Begin
   With TIniFile.Create(FRootKey) Do
     Try
       FSearchPathColour := StringToColor(ReadString('Colours', 'SearchPath', 'clMaroon'));
-      FTitleColour := StringToColor(ReadString('Colours', 'Title', 'clNone'));
+      FTitleColour := StringToColor(ReadString('Colours', 'Title', 'clWhite'));
       FHeaderColour := StringToColor(ReadString('Colours', 'Header', 'clYellow'));
       FFooterColour := StringToColor(ReadString('Colours', 'Footer', 'clWhite'));
       FHelpHeaderColour := StringToColor(ReadString('Colours', 'HelpHeader', 'clWhite'));
