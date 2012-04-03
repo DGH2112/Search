@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    31 Mar 2012
+  @Date    03 Apr 2012
 
 **)
 Unit SearchEngine;
@@ -1243,6 +1243,7 @@ Var
   dtDate, dtDateLocal: TFileTime;
   iTime: Integer;
   boolAdded: Boolean;
+  dtFileDate: TDateTime;
 
 Begin
   Result := 0;
@@ -1259,8 +1260,15 @@ Begin
       End;
       FileTimeToLocalFileTime(dtDate, dtDateLocal);
       iTime := 0;
-      FileTimeToDosDateTime(dtDateLocal, LongRec(iTime).Hi, LongRec(iTime).Lo);
-      boolAdded := FilesCollection.Add(FileDateToDateTime(iTime), recSearch.Size,
+      If Not FileTimeToDosDateTime(dtDateLocal, LongRec(iTime).Hi,
+        LongRec(iTime).Lo) Then
+        iTime := 0;
+      Try
+        dtFileDate := FileDateToDateTime(iTime);
+      Except
+        dtFileDate := 0;
+      End;
+      boolAdded := FilesCollection.Add(dtFileDate, recSearch.Size,
         OutputAttributes(recSearch.Attr), strOwner, recSearch.Name, FSearchInText,
         GetFileText, recSearch.Attr);
     End
