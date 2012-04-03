@@ -60,6 +60,7 @@
 			<DCCReference Include="..\..\LIBRARY\MSXML2_TLB.pas"/>
 			<DCCReference Include="..\..\LIBRARY\checkforupdates.pas"/>
 			<DCCReference Include="Source\ApplicationFunctions.pas"/>
+			<DCCReference Include="Source\SearchEngine.pas"/>
 			<None Include="..\..\LIBRARY\CompilerDefinitions.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
@@ -83,9 +84,9 @@
 						<Source Name="MainSource">Search.Dpr</Source>
 					</Source>
 					<Parameters>
-						<Parameters Name="RunParams">*dgh*.pas /spcawv!</Parameters>
+						<Parameters Name="RunParams">*.jpg /spcaw!</Parameters>
 						<Parameters Name="UseLauncher">False</Parameters>
-						<Parameters Name="DebugCWD">D:\HoylD\Borland Studio Projects\</Parameters>
+						<Parameters Name="DebugCWD">D:\HoylD\Borland Studio Projects\applications\Search\</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
 					</Parameters>
@@ -98,7 +99,7 @@
 						<VersionInfo Name="MajorVer">1</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
 						<VersionInfo Name="Release">21</VersionInfo>
-						<VersionInfo Name="Build">532</VersionInfo>
+						<VersionInfo Name="Build">544</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -110,7 +111,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">Search</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">1.0.21.532</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">1.0.21.544</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">Search</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks">Season&apos;s Fall Music Limited (c) 1989</VersionInfoKeys>
