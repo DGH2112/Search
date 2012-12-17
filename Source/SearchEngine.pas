@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    03 Apr 2012
+  @Date    17 Dec 2012
 
 **)
 Unit SearchEngine;
@@ -95,6 +95,7 @@ Type
     FSummaryOutputColour: TColor;
     FExceptionColour: TColor;
     FZipFileColour: TColor;
+    FErrorLog : TStringList;
     Procedure OutputDateTimeAndSize(FilesCollection: TFiles; Var strOutput: String;
       i: Integer);
     Procedure OutputFileAttributes(i: Integer; FilesCollection: TFiles;
@@ -112,30 +113,37 @@ Type
     Procedure PrintHelp;
     Procedure DisplayCriteria;
     Procedure GetCommandLineSwitches;
-    Function LookupAccountBySID(SID: PSID): String;
-    Function OutputOwner(strFileName: String): String;
-    Function CheckFiles(recSearch: TSearchRec; Var iDirFiles: Integer;
+    Function  LookupAccountBySID(SID: PSID): String;
+    Function  OutputOwner(strFileName: String): String;
+    Function  CheckFiles(recSearch: TSearchRec; Var iDirFiles: Integer;
       strPath, strOwner: String; FilesCollection: TFiles): Int64;
-    Function CheckZipFiles(ZipArchive: TZipForge; ZFAI: TZFArchiveItem;
+    Function  CheckZipFiles(ZipArchive: TZipForge; ZFAI: TZFArchiveItem;
       Var iDirFiles: Integer; strPath, strOwner: String; FilesCollection: TFiles): Int64;
     Procedure WorkaroundLargeFiles(Var iSize: Int64; recSearch: TSearchRec);
     Procedure OutputFilesToConsole(strPath: String; boolDirPrinted: Boolean;
       FilesCollection: TFiles);
-    Function RecurseDirectories(strPath: String; Var iLevel: Integer;
+    Function  RecurseDirectories(strPath: String; Var iLevel: Integer;
       slPatterns: TStringList): Int64;
-    Function SearchForPatterns(slPatterns: TStringList; iDirFiles: Integer;
+    Function  SearchForPatterns(slPatterns: TStringList; iDirFiles: Integer;
       strPath: String; FilesCollection: TFiles): Int64;
-    Function SearchForPatternsInZip(strFileName: String; slPatterns: TStringList;
+    Function  SearchForPatternsInZip(strFileName: String; slPatterns: TStringList;
       iDirFiles: Integer; strPath: String; FilesCollection: TFiles): Int64;
-    Function SearchDirectory(strPath: String; slPatterns: TStringList;
+    Function  SearchDirectory(strPath: String; slPatterns: TStringList;
       Var iLevel: Integer): Int64;
-    Function SearchZip(strFileName: String; slPatterns: TStringList;
+    Function  SearchZip(strFileName: String; slPatterns: TStringList;
       Var iLevel: Integer): Int64;
     Procedure LoadSettings;
     Procedure SaveSettings;
     Procedure FilesExceptionHandler(strException: String);
     Procedure ExceptionProc(strMsg: String);
-    Function FormatSize(iSize: Int64): String;
+    Function  FormatSize(iSize: Int64): String;
+    Procedure AddErrorToLog(strErrMsg, strFileName : String);
+    Procedure PrintErrorLog;
+    Procedure ProcessZipFileFailure(Sender : TObject; FileName : String;
+      Operation : TZFProcessOperation; NativeError : Integer; ErrorCode : Integer;
+      ErrorMessage : String; var Action : TZFAction);
+    Procedure ZipDiskFull(Sender : TObject; VolumeNumber : Integer;
+      VolumeFileName : String; var Cancel : Boolean);
   Public
     Constructor Create;
     Destructor Destroy; Override;
@@ -570,6 +578,32 @@ End;
 
 (**
 
+  This method captures a zip file process failure and logs an error message.
+
+  @note    Should never get called.
+
+  @precon  None.
+  @postcon Captures a zip file process failure and logs an error message.
+
+  @param   Sender       as a TObject
+  @param   FileName     as a String
+  @param   Operation    as a TZFProcessOperation
+  @param   NativeError  as an Integer
+  @param   ErrorCode    as an Integer
+  @param   ErrorMessage as a String
+  @param   Action       as a TZFAction as a reference
+
+**)
+Procedure TSearch.ProcessZipFileFailure(Sender: TObject; FileName: String;
+  Operation: TZFProcessOperation; NativeError, ErrorCode: Integer;
+  ErrorMessage: String; Var Action: TZFAction);
+
+Begin
+  AddErrorToLog(ErrorMessage, (Sender As TZipForge).FileName + '\' + FileName);
+End;
+
+(**
+
   Prints the path and search pattern before each search
 
   @precon  None.
@@ -730,8 +764,10 @@ End;
 
 **)
 Destructor TSearch.Destroy;
+
 Begin
   SaveSettings;
+  FErrorLog.Free;
   FExclusions.Free;
   FSearchParams.Free;
   FParams.Free;
@@ -935,6 +971,31 @@ End;
 
 (**
 
+  This method outputs any error messages at the end of the search process.
+
+  @precon  None.
+  @postcon Outputs any error messages at the end of the search process.
+
+**)
+Procedure TSearch.PrintErrorLog;
+
+Var
+  i : Integer;
+  
+Begin
+  If Not(clsOutputAsCSV In CommandLineSwitches) Then
+    If FErrorLog.Count > 0 Then
+      Begin
+        OutputToConsoleLn(FStd);
+        OutputToConsoleLn(FStd, 'The following errors were encountered during the search:',
+          FExceptionColour);
+        For i := 0 To FErrorLog.Count - 1 Do
+          OutputToConsoleLn(FStd, #32#32 + FErrorLog[i]);
+      End;
+End;
+
+(**
+
   This is a exception handler for the BuildRootKey method.
 
   @precon  None.
@@ -944,6 +1005,7 @@ End;
 
 **)
 Procedure TSearch.ExceptionProc(strMsg: String);
+
 Begin
   Raise Exception.Create(strMsg);
 End;
@@ -1191,6 +1253,23 @@ End;
 
 (**
 
+  This method adds an error messages to the error message log.
+
+  @precon  None.
+  @postcon Adds an error messages to the error message log.
+
+  @param   strErrMsg   as a String
+  @param   strFileName as a String
+
+**)
+Procedure TSearch.AddErrorToLog(strErrMsg, strFileName: String);
+
+Begin
+  FErrorLog.Add(Format('%s (%s)', [strErrMsg, strFileName]))
+End;
+
+(**
+
   This method adds the file to the collection and increments the various
   counters.
 
@@ -1263,11 +1342,8 @@ Begin
       If Not FileTimeToDosDateTime(dtDateLocal, LongRec(iTime).Hi,
         LongRec(iTime).Lo) Then
         iTime := 0;
-      Try
-        dtFileDate := FileDateToDateTime(iTime);
-      Except
-        dtFileDate := 0;
-      End;
+      dtFileDate := SafeFileDateToDateTime(iTime, strPath + recSearch.Name,
+        AddErrorToLog);
       boolAdded := FilesCollection.Add(dtFileDate, recSearch.Size,
         OutputAttributes(recSearch.Attr), strOwner, recSearch.Name, FSearchInText,
         GetFileText, recSearch.Attr);
@@ -1358,11 +1434,13 @@ End;
 
 **)
 Constructor TSearch.Create;
+
 Begin
   FExceptionColour := clRed;
   FSearchParams := TStringList.Create;
   FExclusions := TStringList.Create;
   FParams := TStringList.Create;
+  FErrorLog := TStringList.Create;
   CoInitialize(Nil);
   FLevel := -1;
   SetRoundMode(rmUp);
@@ -1388,6 +1466,28 @@ Begin
       iSize := Int64(nFileSizeHigh) * Int64(MAXDWORD);
       iSize := iSize + nFileSizeLow;
     End;
+End;
+
+(**
+
+  This method logs an errror message if the zip code reports a disk full error.
+
+  @precon  None.
+  @postcon Logs an errror message if the zip code reports a disk full error.
+
+  @param   Sender         as a TObject
+  @param   VolumeNumber   as an Integer
+  @param   VolumeFileName as a String
+  @param   Cancel         as a Boolean as a reference
+
+**)
+Procedure TSearch.ZipDiskFull(Sender: TObject; VolumeNumber: Integer;
+  VolumeFileName: String; Var Cancel: Boolean);
+
+Begin
+  AddErrorToLog(Format('Disk volume %d full [%s]',
+    [VolumeNumber, VolumeFileName]), (Sender As TZipForge).FileName);
+  Cancel := True;
 End;
 
 (**
@@ -1530,6 +1630,7 @@ Begin
               If clsSummaryLevel In CommandLineSwitches Then
                 OutputToConsoleLn(FStd);
               PrintFooter(strPath);
+              PrintErrorLog;
             End;
         End
       Else
@@ -1584,17 +1685,20 @@ Begin
                   FileTimeToSystemTime(recSearch.FindData.ftCreationTime, ST);
                   dtDate := EncodeDate(ST.wYear, ST.wMonth, ST.wDay) + EncodeTime
                     (ST.wHour, ST.wMinute, ST.wSecond, ST.wMilliseconds);
-                  CheckDateRange(DateTimeToFileDate(dtDate), FLDate, FUDate, boolFound);
+                  CheckDateRange(DateTimeToFileDate(dtDate), FLDate, FUDate, boolFound,
+                    strPath + recSearch.Name, AddErrorToLog);
                 End;
               dtLastAccess:
                 Begin
                   FileTimeToSystemTime(recSearch.FindData.ftLastAccessTime, ST);
                   dtDate := EncodeDate(ST.wYear, ST.wMonth, ST.wDay) + EncodeTime
                     (ST.wHour, ST.wMinute, ST.wSecond, ST.wMilliseconds);
-                  CheckDateRange(DateTimeToFileDate(dtDate), FLDate, FUDate, boolFound);
+                  CheckDateRange(DateTimeToFileDate(dtDate), FLDate, FUDate, boolFound,
+                    strPath + recSearch.Name, AddErrorToLog);
                 End
               Else
-                CheckDateRange(recSearch.Time, FLDate, FUDate, boolFound);
+                CheckDateRange(recSearch.Time, FLDate, FUDate, boolFound,
+                  strPath + recSearch.Name, AddErrorToLog);
             End;
             CheckExclusions(strPath, recSearch.Name, boolFound, FExclusions);
             If clsOwner In CommandLineSwitches Then
@@ -1650,6 +1754,8 @@ Begin
   Z := TZipForge.Create(Nil);
   Try
     Z.FileName := strFileName;
+    Z.OnProcessFileFailure := ProcessZipFileFailure;
+    Z.OnDiskFull := ZipDiskFull;
     If Z.IsValidArchiveFile Then
       Begin
         Z.OpenArchive;
@@ -1668,7 +1774,8 @@ Begin
                   // Zip files only contain the last write date of a file.
                   LongRec(iDateTime).Lo := ZFAI.LastModFileTime;
                   LongRec(iDateTime).Hi := ZFAI.LastModFileDate;
-                  CheckDateRange(iDateTime, FLDate, FUDate, boolFound);
+                  CheckDateRange(iDateTime, FLDate, FUDate, boolFound,
+                    strFileName + '\' + ZFAI.StoredPath + ZFAI.FileName, AddErrorToLog);
                   CheckExclusions(strPath, ZFAI.StoredPath + ZFAI.FileName, boolFound,
                     FExclusions);
                   If clsOwner In CommandLineSwitches Then
