@@ -6,7 +6,7 @@
 
  @Version 1.0
  @Author  David Hoyle
- @Date    03 Apr 2012
+ @Date    17 Dec 2012
 
  **)
 Program Search;
@@ -14,12 +14,13 @@ Program Search;
 {$APPTYPE CONSOLE}
 {$R *.RES}
 
+{$R 'Search32VersionInfo.res' 'Search32VersionInfo.RC'}
+
 uses
   ExceptionLog,
   SysUtils,
   DGHLibrary in '..\..\library\DGHLibrary.pas',
   FileHandling in 'Source\FileHandling.pas',
-  MSXML2_TLB in '..\..\LIBRARY\MSXML2_TLB.pas',
   checkforupdates in '..\..\LIBRARY\checkforupdates.pas',
   ApplicationFunctions in 'Source\ApplicationFunctions.pas',
   SearchEngine in 'Source\SearchEngine.pas';
