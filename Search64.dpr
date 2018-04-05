@@ -20,7 +20,6 @@ uses
   SysUtils,
   DGHLibrary in 'Externals\DGHLibrary.pas',
   FileHandling in 'Source\FileHandling.pas',
-  checkforupdates in 'Externals\checkforupdates.pas',
   ApplicationFunctions in 'Source\ApplicationFunctions.pas',
   SearchEngine in 'Source\SearchEngine.pas';
 

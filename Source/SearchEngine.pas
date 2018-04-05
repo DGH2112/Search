@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    31 Mar 2017
+  @Date    05 Apr 2018
 
 **)
 Unit SearchEngine;
@@ -175,7 +175,7 @@ Uses
   IniFiles,
   Math,
   DGHLibrary,
-  CheckForUpdates, System.RegularExpressions;
+  System.RegularExpressions;
 
   (**
 
@@ -206,8 +206,6 @@ Resourcestring
     'in the searches.';
   (** A resource string to note an exception searching files. **)
   strFilesException = 'Exception search files: %s';
-  (** A resource string to define the Application ID for updates. **)
-  strAppID = 'Search';
   (** This is a constant to represent a parameter string error. **)
   strErrorInPathSearchParamString = 'There was an error in the path=search ' +
     'param pairing. (%s)';
@@ -219,9 +217,6 @@ Resourcestring
   strNeedToSpecifyCriteria = 'You need to specify at least one search criteria.';
   (** An exception message to notify of an invalid command line parameter. **)
   strInvalidCommandLineSwitch = 'Invalid command line switch "%s" in parameter "%s."';
-  (** A help message to define the use of the u switch. **)
-  strForceACheckForUpdate = 'Force a check for updates to the software from ' +
-    'the Internet.';
   (** A help message for searching within ZIP files **)
   strSearchInZips = 'Search within ZIP files.';
   (** A help message to define the use of the x switch. **)
@@ -941,7 +936,6 @@ Begin
   End;
   DisplayText(clsRegExSearch, 'i', Format(strSearchForText, [FRegExSearch]));
   DisplayText(clsExclusions, 'x', Format(strApplyingExclusions, [FExlFileName]));
-  DisplayText(clsUpdate, 'u', strForceACheckForUpdate);
   DisplayText(clsSearchZip, 'p', strSearchInZips);
   Case FSizeFormat Of
     sfKilobytes:
@@ -1094,7 +1088,6 @@ Begin
                 'e', 'E': GetDateType(FParams, iSwitch, iIndex, FDateType);
                 'c', 'C': Include(CommandLineSwitches, clsDisplayCriteria);
                 'x', 'X': GetExclusions(FParams, iSwitch, iIndex, FExlFileName);
-                'u', 'U': Include(CommandLineSwitches, clsUpdate);
                 'p', 'P': Include(CommandLineSwitches, clsSearchZip);
                 'f', 'F': GetSizeFormat(FParams, iSwitch, iIndex, FSizeFormat);
                 'v', 'V': Include(CommandLineSwitches, clsOutputAsCSV);
@@ -1557,7 +1550,6 @@ Begin
   LoadSettings;
   GetCommandLineSwitches;
   PrintTitle;
-  TCheckForupdates.Execute(strAppID, FRootKey, clsUpdate In CommandLineSwitches);
   If Not(clsExclusions In CommandLineSwitches) Or
     ((clsExclusions In CommandLineSwitches) And FileExists(FExlFileName)) Then
     Begin

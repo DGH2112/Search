@@ -109,7 +109,6 @@
         </RcCompile>
         <DCCReference Include="Externals\DGHLibrary.pas"/>
         <DCCReference Include="Source\FileHandling.pas"/>
-        <DCCReference Include="Externals\checkforupdates.pas"/>
         <DCCReference Include="Source\ApplicationFunctions.pas"/>
         <DCCReference Include="Source\SearchEngine.pas"/>
         <BuildConfiguration Include="Debug">
