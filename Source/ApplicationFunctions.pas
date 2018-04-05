@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    22 Jan 2017
+  @Date    05 Apr 2018
 
 **)
 Unit ApplicationFunctions;
@@ -40,7 +40,6 @@ Type
     clsDateType,                     { /e or -e }
     clsDisplayCriteria,              { /c or -c }
     clsExclusions,                   { /x or -x }
-    clsUpdate,                       { /u or -u }
     clsSearchZip,                    { /p or -p }
     clsSizeOutput,                   { /f or -f }
     clsOutputAsCSV                   { /v or -v }

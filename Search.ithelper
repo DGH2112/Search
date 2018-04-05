@@ -10,7 +10,7 @@ CompileWithBRCC32=0
 MajorVer=1
 MinorVer=1
 ReleaseVer=23
-BuildVer=708
+BuildVer=710
 ResourceName=Search32VersionInfo
 
 [Zipping]
@@ -22,7 +22,7 @@ ExclusionFiles=
 [VersionInfo]
 CompanyName=Season's Fall Music
 FileDescription=Win32 Command line file search tool
-FileVersion=1.1.23.708
+FileVersion=1.1.23.710
 InternalName=Search
 LegalCopyright=Season's Fall Music
 LegalTrademarks=Season's Fall Music
