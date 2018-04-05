@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    02 May 2010
+  @Date    22 Jan 2017
 
 **)
 Unit FileHandling;
@@ -13,7 +13,11 @@ Unit FileHandling;
 Interface
 
 Uses
-  SysUtils, Classes, Contnrs;
+  SysUtils,
+  Classes,
+  Contnrs,
+  RegularExpressions,
+  Generics.Collections;
 
 Type
   (** An enumerate to define the order for sorting the files. **)
@@ -23,23 +27,40 @@ Type
       descending **)
   TOrderDirection = (odAscending, odDescending);
 
+  TRegExMatch = Record
+    FIndex : Integer;
+    FLength : Integer;
+  End;
+
+  TArrayOfMatch = Array Of TRegExMatch;
+
+  TRegExMatches = Record
+  Strict Private
+    FLineNum    : Integer;
+    FMatches    : TArrayOfMatch;
+    FCount      : Integer;
+    Function GetMatch(iIndex : Integer) : TRegExMatch;
+  Public
+    Constructor Create(iLine : Integer; Matches : TMatchCollection);
+    Property LineNum : Integer Read FLineNum;
+    Property Count : Integer Read FCount;
+    Property Group[iIndex : Integer] : TRegExMatch Read GetMatch;
+  End;
+
   (** A class to hold a files information. **)
   TFile = Class
-  Private
+  Strict Private
     FDate : TDateTime;
     FSize : Int64;
     FAttr : String;
     FOwner : String;
     FName : String;
-    FGREPLines : TStringList;
-    function GetGREPText(iIndex: Integer): String;
-    function GetGREPLine(iIndex: Integer): Integer;
-    function GetGREPLines: Integer;
-  Protected
+    FRegExLines : TList<TRegExMatches>;
+  Strict Protected
   Public
     Constructor Create(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
       strName : String);
-    Procedure AddGREPLine(strText : String; iLine : Integer);
+    Procedure AddRegExLine(iLine : Integer; Matches : TMatchCollection);
     Destructor Destroy; Override;
     Function Clone : TFile;
     (**
@@ -77,29 +98,7 @@ Type
       @return  a String
     **)
     Property FileName : String Read FName;
-    (**
-      A property to returns the number of GREP lines found.
-      @precon  None.
-      @postcon Returns the number of GREP lines found.
-      @return  an Integer
-    **)
-    Property GREPLines : Integer Read GetGREPLines;
-    (**
-      A property to returns specific indexed GREP Text.
-      @precon  iIndex must be a valid index.
-      @postcon Returns an indexed GREP Text for the file.
-      @param   iIndex as       an Integer
-      @return  a String
-    **)
-    Property GREPText[iIndex : Integer] : String Read GetGREPText;
-    (**
-      A property to returns specific indexed GREP line.
-      @precon  iIndex must be a valid index.
-      @postcon Returns an indexed GREP line for the file.
-      @param   iIndex as       an Integer
-      @return  an Integer
-    **)
-    Property GREPLine[iIndex : Integer] : Integer Read GetGREPLine;
+    Property RegExMatches : TList<TRegExMatches> Read FRegExLines;
   End;
 
   (** This is a procedure declaration for an exception event handler. **)
@@ -111,15 +110,16 @@ Type
     FFiles : TObjectList;
     FExceptionHandler : TFilesExceptionHandler;
     FPath : String;
+    FRegEx : TRegEx;
+    FRegExSearch : Boolean;
   Protected
     Function GetFile(iIndex : Integer) : TFile;
     Function GetCount : Integer;
   Public
-    Constructor Create(ExceptionHandler : TFilesExceptionHandler);
+    Constructor Create(ExceptionHandler : TFilesExceptionHandler; strRegExSearchText : String);
     Destructor Destroy; Override;
     Function Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
-      strName, strGREPText, strGREPSearchText : String;
-      iFileAttrs : Integer) : Boolean; Overload;
+      strName, strSearchText : String; iFileAttrs : Integer) : Boolean; Overload;
     Function OwnerWidth : Integer;
     Procedure OrderBy(OrderBy : TOrderBy; OrderDirection : TOrderDirection);
     Function Add(FileInfo : TFile) : Boolean; Overload;
@@ -149,20 +149,51 @@ Type
 
 Implementation
 
+Uses
+  RegularExpressionsCore,
+  Windows;
+
+{ TRegExRecord }
+
+Constructor TRegExMatches.Create(iLine: Integer; Matches : TMatchCollection);
+
+Var
+  iMatch: Integer;
+
+Begin
+  FLineNum := iLine;
+  SetLength(FMatches, Matches.Count);
+  For iMatch := 0 To Matches.Count - 1 Do
+    Begin
+      FMatches[iMatch].FIndex := Matches.Item[iMatch].Index;
+      FMatches[iMatch].FLength := Matches.Item[iMatch].Length;
+    End;
+  FCount := Matches.Count;
+End;
+
+Function TRegExMatches.GetMatch(iIndex: Integer): TRegExMatch;
+
+Begin
+  Result := FMatches[iIndex];
+End;
+
 (**
 
-  This method adds the given text as a GREP line.
+  This method adds the given text as a RegEx line.
 
   @precon  None.
-  @postcon Adds the given text as a GREP line.
+  @postcon Adds the given text as a RegEx line.
 
   @param   strText as a String
   @param   iLine   as an Integer
+  @param   iIndex  as an Integer
+  @param   iLength as an Integer
 
 **)
-procedure TFile.AddGREPLine(strText: String; iLine : Integer);
+Procedure TFile.AddRegExLine(iLine : Integer; Matches : TMatchCollection);
+
 begin
-  FGREPLines.AddObject(strText, TObject(iLine));
+  FRegExLines.Add(TRegExMatches.Create(iLine, Matches));
 end;
 
 (**
@@ -176,10 +207,13 @@ end;
 
 **)
 function TFile.Clone: TFile;
+var
+  R: TRegExMatches;
 
 begin
   Result := TFile.Create(FDate, FSize, FAttr, FOwner, ExtractFileName(FName));
-  Result.FGREPLines.Assign(FGREPLines);
+  For R In FRegExLines Do
+    Result.FRegExLines.Add(R);
 end;
 
 (**
@@ -198,9 +232,10 @@ end;
 **)
 constructor TFile.Create(dtDate: TDateTime; iSize: Int64; strAttr, strOwner,
   strName: String);
+
 begin
   inherited Create;
-  FGREPLines := TStringList.Create;
+  FRegExLines := TList<TRegExMatches>.Create;
   FDate := dtDate;
   FSize := iSize;
   FAttr := strAttr;
@@ -218,55 +253,8 @@ end;
 **)
 destructor TFile.Destroy;
 begin
-  FGREPLines.Free;
+  FRegExLines.Free;
   inherited Destroy;
-end;
-
-(**
-
-  This is a getter method for the GREPText property.
-
-  @precon  iIndex must be a valid index.
-  @postcon Returns the GREP text specified by the index.
-
-  @param   iIndex as an Integer
-  @return  a String
-
-**)
-function TFile.GetGREPText(iIndex: Integer): String;
-begin
-  Result := FGREPLines[iIndex];
-end;
-
-(**
-
-  This is a getter method for the GREPLine property.
-
-  @precon  iIndex must be a valid index.
-  @postcon Returns the GREP line specified by the index.
-
-  @param   iIndex as an Integer
-  @return  an Integer
-
-**)
-function TFile.GetGREPLine(iIndex: Integer): Integer;
-begin
-  Result := Integer(FGREPLines.Objects[iIndex]);
-end;
-
-(**
-
-  This is a getter method for the GREPLines property.
-
-  @precon  None.
-  @postcon Returns the number of GREP lines in the file.
-
-  @return  an Integer
-
-**)
-function TFile.GetGREPLines: Integer;
-begin
-  Result := FGREPLines.Count;
 end;
 
 (**
@@ -293,14 +281,32 @@ end;
   @precon  None.
   @postcon Creates the file list.
 
-  @param   ExceptionHandler as a TFilesExceptionHandler
+  @param   ExceptionHandler   as a TFilesExceptionHandler
+  @param   strRegExSearchText as a String
 
 **)
-Constructor TFiles.Create(ExceptionHandler : TFilesExceptionHandler);
+Constructor TFiles.Create(ExceptionHandler : TFilesExceptionHandler; strRegExSearchText : String);
+
+Const
+  strRegExError = 'Reg Ex Error: %s ("%s")';
 
 Begin
   FFiles := TObjectList.Create(True);
   FExceptionHandler := ExceptionHandler;
+  FRegExSearch := False;
+  Try
+    If strRegExSearchText <> '' Then
+      Begin
+        FRegEx := TRegEx.Create(strRegExSearchText, [roIgnoreCase, roCompiled, roSingleLine]);
+        FRegExSearch := True;
+      End;
+  Except
+    On E : ERegularExpressionError Do
+      Begin
+        If Assigned(FExceptionHandler) Then
+          FExceptionHandler(Format(strRegExError, [E.Message, strRegExSearchText]));
+      End;
+  End;
 End;
 
 (**
@@ -325,50 +331,51 @@ End;
   @precon  None.
   @postcon Added a file and its attributes to the collection.
 
-  @param   dtDate            as a TDateTime
-  @param   iSize             as an Int64
-  @param   strAttr           as a String
-  @param   strOwner          as a String
-  @param   strName           as a String
-  @param   strGREPText       as a String
-  @param   strGREPSearchText as a String
-  @param   iFileAttrs        as an Integer
+  @param   dtDate        as a TDateTime
+  @param   iSize         as an Int64
+  @param   strAttr       as a String
+  @param   strOwner      as a String
+  @param   strName       as a String
+  @param   strSearchText as a String
+  @param   iFileAttrs    as an Integer
   @return  a Boolean
 
 **)
 Function TFiles.Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
-  strName, strGREPText, strGREPSearchText : String;
-  iFileAttrs : Integer) : Boolean;
+  strName, strSearchText : String; iFileAttrs : Integer) : Boolean;
 
 Var
   FFile : TFile;
-  slFile: TStringList;
   iLine: Integer;
+  slFile : TStringList;
+  M: TMatchCollection;
 
 Begin
   Result := True;
   FFile := TFile.Create(dtDate, iSize, strAttr, strOwner, strName);
-  strGREPText := Lowercase(strGREPText);
-  If strGREPText <> '' Then
+  If FRegExSearch Then
     Begin
       If  iFileAttrs And faDirectory = 0 Then
         Begin
           slFile := TStringList.Create;
           Try
+            slFile.Text := strSearchText;
             Try
-              slFile.Text := strGREPSearchText;
               For iLine := 0 To slFile.Count - 1 Do
-                If Pos(strGREPText, Lowercase(slFile[iLine])) > 0 Then
-                  FFile.AddGREPLine(slFile[iLine], iLine + 1);
+                Begin
+                  M := FRegEx.Matches(slFile[iLine]);
+                  If M.Count > 0 Then
+                    FFile.AddRegExLine(iLine + 1, M);
+                End;
             Except
-              On E : Exception Do
+              On E : ERegularExpressionError Do
                 If Assigned(FExceptionHandler) Then
                   FExceptionHandler(Format('%s (%s)', [E.Message, strName]));
             End;
           Finally
             slFile.Free;
           End;
-          If FFile.GetGREPLines > 0 Then
+          If FFile.RegExMatches.Count > 0 Then
             FFiles.Add(FFile)
           Else
             Result := False;

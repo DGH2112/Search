@@ -740,6 +740,7 @@ Var
   slParams : TStringList;
   iSwitch, iIndex : Integer;
   strSearchInText : String;
+  iLines: Integer;
 
 begin
   slParams := TStringList.Create;
@@ -748,7 +749,7 @@ begin
     iIndex := 2;
     slParams.Text := 'my.exe'#13#10'/i';
     Try
-      GetSearchInInfo(slParams, iSwitch, iIndex, strSearchInText);
+      GetSearchInInfo(slParams, iSwitch, iIndex, strSearchInText, iLines);
     Except
       On E: ESearchException Do
         Check(True);
@@ -759,7 +760,7 @@ begin
     iIndex := 2;
     slParams.Text := 'my.exe'#13#10'/i[';
     Try
-      GetSearchInInfo(slParams, iSwitch, iIndex, strSearchInText);
+      GetSearchInInfo(slParams, iSwitch, iIndex, strSearchInText, iLines);
     Except
       On E: ESearchException Do
         Check(True);
@@ -770,7 +771,7 @@ begin
     iIndex := 2;
     slParams.Text := 'my.exe'#13#10'/i[hello';
     Try
-      GetSearchInInfo(slParams, iSwitch, iIndex, strSearchInText);
+      GetSearchInInfo(slParams, iSwitch, iIndex, strSearchInText, iLines);
     Except
       On E: ESearchException Do
         Check(True);
@@ -780,7 +781,7 @@ begin
     iSwitch := 1;
     iIndex := 2;
     slParams.Text := 'my.exe'#13#10'/i[hello]';
-    GetSearchInInfo(slParams, iSwitch, iIndex, strSearchInText);
+    GetSearchInInfo(slParams, iSwitch, iIndex, strSearchInText, iLines);
     CheckEquals('hello', strSearchInText, 'Test 1');
   Finally
     slParams.Free;

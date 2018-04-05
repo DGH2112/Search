@@ -1,0 +1,60 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{E272ABC7-CBE7-4618-8A4B-278BD80653CB}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Test\SearchTests.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Search.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Search64.dproj">
+            <Dependencies>Search.dproj</Dependencies>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="SearchTests">
+        <MSBuild Projects="Test\SearchTests.dproj"/>
+    </Target>
+    <Target Name="SearchTests:Clean">
+        <MSBuild Projects="Test\SearchTests.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SearchTests:Make">
+        <MSBuild Projects="Test\SearchTests.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Search">
+        <MSBuild Projects="Search.dproj"/>
+    </Target>
+    <Target Name="Search:Clean">
+        <MSBuild Projects="Search.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Search:Make">
+        <MSBuild Projects="Search.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Search64" DependsOnTargets="Search">
+        <MSBuild Projects="Search64.dproj"/>
+    </Target>
+    <Target Name="Search64:Clean" DependsOnTargets="Search:Clean">
+        <MSBuild Projects="Search64.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Search64:Make" DependsOnTargets="Search:Make">
+        <MSBuild Projects="Search64.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="SearchTests;Search;Search64"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="SearchTests:Clean;Search:Clean;Search64:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="SearchTests:Make;Search:Make;Search64:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

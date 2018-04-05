@@ -1,8 +1,8 @@
 LANGUAGE LANG_ENGLISH,SUBLANG_ENGLISH_US
 
 1 VERSIONINFO LOADONCALL MOVEABLE DISCARDABLE IMPURE
-FILEVERSION 1, 0, 0, 706
-PRODUCTVERSION 1, 0, 0, 706
+FILEVERSION 1, 0, 0, 837
+PRODUCTVERSION 1, 0, 0, 837
 FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 FILEOS VOS__WINDOWS32
 FILETYPE VFT_APP
@@ -11,16 +11,16 @@ FILETYPE VFT_APP
   {
     BLOCK "040904E4"
     {
-     VALUE "CompanyName", "Season's Fall Music\000"
-     VALUE "FileDescription", "Search Tests\000"
-     VALUE "FileVersion", "1.0.0.706\000"
-     VALUE "InternalName", "SearchTests\000"
-     VALUE "LegalCopyright", "Season's Fall Music\000"
-     VALUE "LegalTrademarks", "Season's Fall Music\000"
-     VALUE "OriginalFilename", "SearchTests\000"
-     VALUE "ProductName", "SearchTests\000"
-     VALUE "ProductVersion", "1.0\000"
-     VALUE "Comments", "\000"
+      VALUE "CompanyName", "Season's Fall Music\000"
+      VALUE "FileDescription", "Search Tests\000"
+      VALUE "FileVersion", "1.0.0.837\000"
+      VALUE "InternalName", "SearchTests\000"
+      VALUE "LegalCopyright", "Season's Fall Music\000"
+      VALUE "LegalTrademarks", "Season's Fall Music\000"
+      VALUE "OriginalFilename", "SearchTests\000"
+      VALUE "ProductName", "SearchTests\000"
+      VALUE "ProductVersion", "1.0\000"
+      VALUE "Comments", "\000"
     }
   }
   BLOCK "VarFileInfo"

@@ -1,0 +1,2486 @@
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\SearchRX.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "SearchRX.Dpr"
+add 'SearchRX.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "25/Oct/2004 12:02:44" -m "Initial import into the version control system."
+[Development 07c25b1] Initial import into the version control system.
+ Date: Mon Oct 25 12:02:44 2004 +0100
+ 1 file changed, 451 insertions(+)
+ create mode 100644 SearchRX.Dpr
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\SearchRX.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "SearchRX.Dpr"
+add 'SearchRX.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "29/Oct/2004 09:31:51" -m "Maked changes to the code to make it more efficient"
+[Development 69516fe] Maked changes to the code to make it more efficient
+ Date: Fri Oct 29 09:31:51 2004 +0100
+ 1 file changed, 62 insertions(+), 39 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\SearchRX.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "SearchRX.Dpr"
+add 'SearchRX.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "30/Oct/2004 12:53:28" -m "Updated the code to use the standard FindFirst, FindNext and FindClose functions."
+[Development 44c55e8] Updated the code to use the standard FindFirst, FindNext and FindClose functions.
+ Date: Sat Oct 30 12:53:28 2004 +0100
+ 1 file changed, 823 insertions(+), 474 deletions(-)
+ rewrite SearchRX.Dpr (70%)
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe mv -v "SearchRX.Dpr" "Search.Dpr"
+Renaming SearchRX.Dpr to Search.Dpr
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "30/Oct/2004 22:16:32" -m "Fixed bug with specifying file and type attributes and implemented the summarisation of directories."
+[Development 4e129f2] Fixed bug with specifying file and type attributes and implemented the summarisation of directories.
+ Date: Sat Oct 30 22:16:32 2004 +0100
+ 1 file changed, 207 insertions(+), 104 deletions(-)
+ rename SearchRX.Dpr => Search.Dpr (71%)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "30/Oct/2004 23:13:56" -m "Added indentation to the summary"
+[Development fc97f38] Added indentation to the summary
+ Date: Sat Oct 30 23:13:56 2004 +0100
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "01/Nov/2004 17:53:47" -m "Updated for working with files larger than 2G."
+[Development c2e71c4] Updated for working with files larger than 2G.
+ Date: Mon Nov 1 17:53:47 2004 +0000
+ 1 file changed, 52 insertions(+), 16 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "05/Nov/2004 19:31:06" -m "Updated search output for search results."
+[Development d9c7b4c] Updated search output for search results.
+ Date: Fri Nov 5 19:31:06 2004 +0000
+ 1 file changed, 15 insertions(+), 8 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "05/Nov/2004 20:31:01" -m "Refactored the date convertion routines out into a new library file for use in all applications."
+[Development ed46b66] Refactored the date convertion routines out into a new library file for use in all applications.
+ Date: Fri Nov 5 20:31:01 2004 +0000
+ 1 file changed, 15 insertions(+), 277 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\DGHLibrary50.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\DGHLibrary50.pas"
+add 'Externals/DGHLibrary50.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "06/Nov/2004 12:20:45" -m "Initial import into the version control system."
+[Development 0dc6f1f] Initial import into the version control system.
+ Date: Sat Nov 6 12:20:45 2004 +0000
+ 1 file changed, 740 insertions(+)
+ create mode 100644 Externals/DGHLibrary50.pas
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "06/Nov/2004 12:20:52" -m "Updated the search path display code to ellipsize the path."
+[Development c447306] Updated the search path display code to ellipsize the path.
+ Date: Sat Nov 6 12:20:52 2004 +0000
+ 1 file changed, 18 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "06/Nov/2004 14:27:52" -m "Fixed bug where you must specify a criteria to get the help screen."
+[Development a1f966b] Fixed bug where you must specify a criteria to get the help screen.
+ Date: Sat Nov 6 14:27:52 2004 +0000
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\DGHLibrary50.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\DGHLibrary50.pas"
+add 'Externals/DGHLibrary50.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "01/May/2005 12:01:11" -m "Moved all library functions and procedures into this one library file."
+[Development c0ddf36] Moved all library functions and procedures into this one library file.
+ Date: Sun May 1 12:01:11 2005 +0100
+ 1 file changed, 2850 insertions(+), 7 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\DGHLibrary50.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\DGHLibrary50.pas"
+add 'Externals/DGHLibrary50.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "04/Jun/2005 17:56:34" -m "Updated this library file with new style Pascal Doc documentation."
+[Development dd9a610] Updated this library file with new style Pascal Doc documentation.
+ Date: Sat Jun 4 17:56:34 2005 +0100
+ 1 file changed, 1667 insertions(+), 349 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "04/Sep/2005 14:41:57" -m "Updated the Search tool to include for a Q (Quiet) switch which does not output the currently being searched path."
+[Development edc321c] Updated the Search tool to include for a Q (Quiet) switch which does not output the currently being searched path.
+ Date: Sun Sep 4 14:41:57 2005 +0100
+ 1 file changed, 10 insertions(+), 6 deletions(-)
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe mv -v "Externals\DGHLibrary50.pas" "Externals\dghlibrary.pas"
+Renaming Externals/DGHLibrary50.pas to Externals/dghlibrary.pas
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "28/Dec/2005 17:42:50" -m "Changed the reference to the DGHLibrary."
+[Development 93824a0] Changed the reference to the DGHLibrary.
+ Date: Wed Dec 28 17:42:50 2005 +0000
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+ rename Externals/{DGHLibrary50.pas => dghlibrary.pas} (99%)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "30/Dec/2005 17:07:39" -m "Updated reference that need a unit qualifier for BDS 2006."
+[Development f411ec7] Updated reference that need a unit qualifier for BDS 2006.
+ Date: Fri Dec 30 17:07:39 2005 +0000
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Jan/2006 19:25:06" -m "Added Windows to the uses clause."
+[Development ae1841f] Added Windows to the uses clause.
+ Date: Tue Jan 3 19:25:06 2006 +0000
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "08/Jan/2006 11:10:14" -m "Updated the document date for this module."
+[Development 3387e94] Updated the document date for this module.
+ Date: Sun Jan 8 11:10:14 2006 +0000
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dof
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dof"
+add 'Search.dof'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.cfg
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.cfg"
+add 'Search.cfg'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+add 'Search.bdsproj'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "19/Jan/2006 22:36:51" -m "Implemented multiple file filter separated by a semi-colon for each search path."
+[Development 07188b1] Implemented multiple file filter separated by a semi-colon for each search path.
+ Date: Thu Jan 19 22:36:51 2006 +0000
+ 5 files changed, 837 insertions(+), 85 deletions(-)
+ create mode 100644 Search.bdsproj
+ create mode 100644 Search.cfg
+ create mode 100644 Search.dof
+ create mode 100644 search.res
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dof
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dof"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.cfg
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.cfg"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+add 'Search.bdsproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "23/Jan/2006 17:32:38" -m "Fix the problem with the spaces to the edge of the console being written to files."
+[Development 8670085] Fix the problem with the spaces to the edge of the console being written to files.
+ Date: Mon Jan 23 17:32:38 2006 +0000
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Source\FileHandling.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\FileHandling.pas"
+add 'Source/FileHandling.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Feb/2006 00:19:28" -m "Initial import into the version control system."
+[Development 0eebbd9] Initial import into the version control system.
+ Date: Fri Feb 3 00:19:28 2006 +0000
+ 1 file changed, 274 insertions(+)
+ create mode 100644 Source/FileHandling.pas
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dof
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dof"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+add 'Search.bdsproj'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.cfg
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.cfg"
+add 'Search.cfg'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "05/Feb/2006 22:48:52" -m "Updated the command line switches."
+[Development 3237cc4] Updated the command line switches.
+ Date: Sun Feb 5 22:48:52 2006 +0000
+ 4 files changed, 625 insertions(+), 474 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\FileHandling.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\FileHandling.pas"
+add 'Source/FileHandling.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "06/Feb/2006 22:31:13" -m "Added the GREP style functionallity to the TFiles class.\n"
+[Development 6ac813c] Added the GREP style functionallity to the TFiles class.\n
+ Date: Mon Feb 6 22:31:13 2006 +0000
+ 1 file changed, 150 insertions(+), 25 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dof
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dof"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.cfg
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.cfg"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+add 'Search.bdsproj'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "08/Feb/2006 09:15:15" -m "Added another switch to formally display the parameter used for the specific search."
+[Development 48bc80a] Added another switch to formally display the parameter used for the specific search.
+ Date: Wed Feb 8 09:15:15 2006 +0000
+ 3 files changed, 249 insertions(+), 96 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\FileHandling.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\FileHandling.pas"
+add 'Source/FileHandling.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Apr/2006 17:40:01" -m "Made the searching for text within a file case insensitive."
+[Development 9ad12dd] Made the searching for text within a file case insensitive.
+ Date: Mon Apr 3 17:40:01 2006 +0100
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dof
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dof"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.cfg
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.cfg"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+add 'Search.bdsproj'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Apr/2006 17:40:06" -m "Made the searching for text within a file case insensitive."
+[Development b10fc39] Made the searching for text within a file case insensitive.
+ Date: Mon Apr 3 17:40:06 2006 +0100
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "13/Aug/2006 10:42:06" -m "Fix some problems with the library."
+[Development 32cf4e2] Fix some problems with the library.
+ Date: Sun Aug 13 10:42:06 2006 +0100
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "13/Aug/2006 10:42:07" -m "Update the search tool to correctly display the help for the command line.\n"
+[Development 2e3a287] Update the search tool to correctly display the help for the command line.\n
+ Date: Sun Aug 13 10:42:07 2006 +0100
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "13/Aug/2006 10:44:12" -m "Updated the documentation date."
+[Development 68f255b] Updated the documentation date.
+ Date: Sun Aug 13 10:44:12 2006 +0100
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "01/Oct/2006 16:28:00" -m "Corrected the TStringAlignment.Compare Result information to include originl eastings and northing."
+[Development 60442b1] Corrected the TStringAlignment.Compare Result information to include originl eastings and northing.
+ Date: Sun Oct 1 16:28:00 2006 +0100
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\FileHandling.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\FileHandling.pas"
+add 'Source/FileHandling.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "07/Nov/2006 18:29:35" -m "Updated the property 'Name' to 'Filename' to not clash with a Delphi directive."
+[Development 810ff8f] Updated the property 'Name' to 'Filename' to not clash with a Delphi directive.
+ Date: Tue Nov 7 18:29:35 2006 +0000
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "07/Nov/2006 18:31:39" -m "Added the ability to provide the search engine with a list of exclusion in either the path the filename or both."
+[Development 33516ed] Added the ability to provide the search engine with a list of exclusion in either the path the filename or both.
+ Date: Tue Nov 7 18:31:39 2006 +0000
+ 2 files changed, 136 insertions(+), 51 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "09/Dec/2006 10:02:11" -m "Updated the help with the new /X option."
+[Development 479eebe] Updated the help with the new /X option.
+ Date: Sat Dec 9 10:02:11 2006 +0000
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "09/Dec/2006 10:05:53" -m "Updated the help with the new /X option."
+[Development ef01b2a] Updated the help with the new /X option.
+ Date: Sat Dec 9 10:05:53 2006 +0000
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "18/Feb/2007 14:05:42" -m "Refactored the Buld number function to the DLibrary so that it can be used in other applications."
+[Development 653dbe5] Refactored the Buld number function to the DLibrary so that it can be used in other applications.
+ Date: Sun Feb 18 14:05:42 2007 +0000
+ 1 file changed, 82 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "18/Feb/2007 14:06:09" -m "Refactored the Build number function to the DLibrary so that it can be used in other applications."
+[Development d51b3c4] Refactored the Build number function to the DLibrary so that it can be used in other applications.
+ Date: Sun Feb 18 14:06:09 2007 +0000
+ 2 files changed, 2 insertions(+), 59 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Jul/2007 21:37:54" -m "Added the ability to search for file Owners."
+[Development d791597] Added the ability to search for file Owners.
+ Date: Tue Jul 3 21:37:54 2007 +0100
+ 1 file changed, 4 insertions(+)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Jul/2007 21:37:58" -m "Added the ability to search for file Owners."
+[Development 25ae11b] Added the ability to search for file Owners.
+ Date: Tue Jul 3 21:37:58 2007 +0100
+ 2 files changed, 123 insertions(+), 11 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "22/Jul/2007 16:44:06" -m "Update the GetConsoleTitle method and introduce some new Console functions. Also added a new set of functions OutputToConsoel() and OutputToConsoleLn();\n"
+[Development ada6bf0] Update the GetConsoleTitle method and introduce some new Console functions. Also added a new set of functions OutputToConsoel() and OutputToConsoleLn();\n
+ Date: Sun Jul 22 16:44:06 2007 +0100
+ 1 file changed, 201 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "24/Jul/2007 19:23:55" -m "Updated Get Build Number to take a iBuild number parameter."
+[Development 619c3d6] Updated Get Build Number to take a iBuild number parameter.
+ Date: Tue Jul 24 19:23:55 2007 +0100
+ 1 file changed, 8 insertions(+), 10 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\ConsoleCheckForUpdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\ConsoleCheckForUpdates.pas"
+add 'Externals/ConsoleCheckForUpdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "24/Jul/2007 19:35:40" -m "Initial import in to the version control system."
+[Development 9ad542d] Initial import in to the version control system.
+ Date: Tue Jul 24 19:35:40 2007 +0100
+ 1 file changed, 346 insertions(+)
+ create mode 100644 Externals/ConsoleCheckForUpdates.pas
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "25/Jul/2007 22:19:58" -m "Fixed the adjustment for screen width in OutputToConsole()."
+[Development 4f4ae9b] Fixed the adjustment for screen width in OutputToConsole().
+ Date: Wed Jul 25 22:19:58 2007 +0100
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\MSXML2_TLB.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\MSXML2_TLB.pas"
+add 'Externals/MSXML2_TLB.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "26/Jul/2007 18:42:26" -m "Initial import in to the version control system."
+[Development 9fa1179] Initial import in to the version control system.
+ Date: Thu Jul 26 18:42:26 2007 +0100
+ 1 file changed, 4687 insertions(+)
+ create mode 100644 Externals/MSXML2_TLB.pas
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "26/Jul/2007 19:22:58" -m "Allowed the OutputToConsole() functions to take another parameter which determines whether the cursor is updated."
+[Development 4026fb1] Allowed the OutputToConsole() functions to take another parameter which determines whether the cursor is updated.
+ Date: Thu Jul 26 19:22:58 2007 +0100
+ 1 file changed, 25 insertions(+), 19 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\ConsoleCheckForUpdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\ConsoleCheckForUpdates.pas"
+add 'Externals/ConsoleCheckForUpdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "29/Jul/2007 16:12:41" -m "Added a LF after the checking."
+[Development 97bb71c] Added a LF after the checking.
+ Date: Sun Jul 29 16:12:41 2007 +0100
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\FileHandling.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\FileHandling.pas"
+add 'Source/FileHandling.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "29/Jul/2007 16:13:05" -m "Updated the GREP code to check for a file and exclude directories."
+[Development 89c479d] Updated the GREP code to check for a file and exclude directories.
+ Date: Sun Jul 29 16:13:05 2007 +0100
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "29/Jul/2007 19:24:39" -m "Updated OutputToConsole() declarations."
+[Development 196e4dd] Updated OutputToConsole() declarations.
+ Date: Sun Jul 29 19:24:39 2007 +0100
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "29/Jul/2007 19:24:49" -m "Updated to include checking of the internet for updates and use of the new OutputToConsole() procedures."
+[Development 390dd6a] Updated to include checking of the internet for updates and use of the new OutputToConsole() procedures.
+ Date: Sun Jul 29 19:24:49 2007 +0100
+ 2 files changed, 389 insertions(+), 228 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "30/Jul/2007 21:27:03" -m "Made OutputToConsole() replace #9 (TABS) with analternate character."
+[Development 101307a] Made OutputToConsole() replace #9 (TABS) with analternate character.
+ Date: Mon Jul 30 21:27:03 2007 +0100
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\FileHandling.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\FileHandling.pas"
+add 'Source/FileHandling.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "30/Jul/2007 21:27:11" -m "Update the GREP code to put the line number in the data pointer."
+[Development 9b65d5b] Update the GREP code to put the line number in the data pointer.
+ Date: Mon Jul 30 21:27:11 2007 +0100
+ 1 file changed, 37 insertions(+), 11 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "31/Jul/2007 20:00:33" -m "Updated OutputToConsoel to replace RABs with #175"
+[Development bfe2aec] Updated OutputToConsoel to replace RABs with #175
+ Date: Tue Jul 31 20:00:33 2007 +0100
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\FileHandling.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\FileHandling.pas"
+add 'Source/FileHandling.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "31/Jul/2007 20:00:56" -m "Fixed the GREP problem of output directories."
+[Development 24bf403] Fixed the GREP problem of output directories.
+ Date: Tue Jul 31 20:00:56 2007 +0100
+ 1 file changed, 19 insertions(+), 15 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "01/Aug/2007 18:52:46" -m "Updated the following routines:\n *) OutputToConoleLn() - replace WriteLN with SetConsoleCursorPosition\n *) Change the signature of ForegroundColour/BackgroundColour to take an iNone TColor instance of a screen buffer info structure."
+[Development 52e51d3] Updated the following routines:\n *) OutputToConoleLn() - replace WriteLN with SetConsoleCursorPosition\n *) Change the signature of ForegroundColour/BackgroundColour to take an iNone TColor instance of a screen buffer info structure.
+ Date: Wed Aug 1 18:52:46 2007 +0100
+ 1 file changed, 15 insertions(+), 12 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\ConsoleCheckForUpdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\ConsoleCheckForUpdates.pas"
+add 'Externals/ConsoleCheckForUpdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "01/Aug/2007 22:11:39" -m "Updated the code so that if an update is available then Beep() and pause waiting confirmation."
+[Development ce7e85e] Updated the code so that if an update is available then Beep() and pause waiting confirmation.
+ Date: Wed Aug 1 22:11:39 2007 +0100
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\ConsoleCheckForUpdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\ConsoleCheckForUpdates.pas"
+add 'Externals/ConsoleCheckForUpdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "08/Aug/2007 19:14:56" -m "Made sure the can handle more than 1 URL just in case the first can not be found."
+[Development 8e5f117] Made sure the can handle more than 1 URL just in case the first can not be found.
+ Date: Wed Aug 8 19:14:56 2007 +0100
+ 1 file changed, 23 insertions(+), 10 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "08/Aug/2007 19:15:47" -m "Fixed the problem with %T not being found in .XER files and updated the software checker to take multple URLs."
+[Development 4508ed9] Fixed the problem with %T not being found in .XER files and updated the software checker to take multple URLs.
+ Date: Wed Aug 8 19:15:47 2007 +0100
+ 2 files changed, 117 insertions(+), 8 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\ConsoleCheckForUpdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\ConsoleCheckForUpdates.pas"
+add 'Externals/ConsoleCheckForUpdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "08/Aug/2007 19:54:46" -m "Updated the software checking output to indent the 'update found' message"
+[Development d6feeee] Updated the software checking output to indent the 'update found' message
+ Date: Wed Aug 8 19:54:46 2007 +0100
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "08/Aug/2007 19:54:50" -m "Updated the software checking output to indent the 'update found' message"
+[Development 87c0f0e] Updated the software checking output to indent the 'update found' message
+ Date: Wed Aug 8 19:54:50 2007 +0100
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\ConsoleCheckForUpdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\ConsoleCheckForUpdates.pas"
+add 'Externals/ConsoleCheckForUpdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "08/Aug/2007 21:38:53" -m "Moved the 'Checking for Update' message"
+[Development 63a4bea] Moved the 'Checking for Update' message
+ Date: Wed Aug 8 21:38:53 2007 +0100
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "19/Sep/2007 19:23:58" -m "Updated the bearing format to add spaces."
+[Development de083b2] Updated the bearing format to add spaces.
+ Date: Wed Sep 19 19:23:58 2007 +0100
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "19/Sep/2007 19:33:04" -m "Changed the name of the 'CreateFalse' constructors to stop C++ warnings."
+[Development 807e018] Changed the name of the 'CreateFalse' constructors to stop C++ warnings.
+ Date: Wed Sep 19 19:33:04 2007 +0100
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "28/Nov/2007 16:19:11" -m "Updated the alignment exception messages."
+[Development cd21a53] Updated the alignment exception messages.
+ Date: Wed Nov 28 16:19:11 2007 +0000
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/Dec/2007 14:21:19" -m "Updated DMSAsDecToDecimal()."
+[Development 6c0e287] Updated DMSAsDecToDecimal().
+ Date: Sun Dec 2 14:21:19 2007 +0000
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "28/Dec/2007 02:04:03" -m "Allowed the update method of the Clothoid curve to re-create a false origined curve."
+[Development 960eee3] Allowed the update method of the Clothoid curve to re-create a false origined curve.
+ Date: Fri Dec 28 02:04:03 2007 +0000
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "28/Dec/2007 23:12:23" -m "Updated the ISKeyWord to is Low() and High() for the binary search."
+[Development 442c7cd] Updated the ISKeyWord to is Low() and High() for the binary search.
+ Date: Fri Dec 28 23:12:23 2007 +0000
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "29/Dec/2007 15:15:41" -m "Raise Exceptions if the Clothoid Measure and Compare go beyond 1000 iterations.\nAlso fixed the signage of the distance returned from Clothoid.Compare."
+[Development b2b85a7] Raise Exceptions if the Clothoid Measure and Compare go beyond 1000 iterations.\nAlso fixed the signage of the distance returned from Clothoid.Compare.
+ Date: Sat Dec 29 15:15:41 2007 +0000
+ 1 file changed, 14 insertions(+), 9 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/Jan/2008 14:17:35" -m "Fixed problem in THCircularElement.Measure where the vector bearing can return a negative figure."
+[Development 76b971c] Fixed problem in THCircularElement.Measure where the vector bearing can return a negative figure.
+ Date: Wed Jan 2 14:17:35 2008 +0000
+ 1 file changed, 17 insertions(+), 29 deletions(-)
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe mv -v "Externals\ConsoleCheckForUpdates.pas" "Externals\checkforupdates.pas"
+Renaming Externals/ConsoleCheckForUpdates.pas to Externals/checkforupdates.pas
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/Jan/2008 15:45:17" -m "Updated this code so that it uses a Window Form to GUI apps and the Console for Console apps."
+[Development fdf4fe3] Updated this code so that it uses a Window Form to GUI apps and the Console for Console apps.
+ Date: Wed Jan 2 15:45:17 2008 +0000
+ 1 file changed, 52 insertions(+), 21 deletions(-)
+ rename Externals/{ConsoleCheckForUpdates.pas => checkforupdates.pas} (83%)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/Jan/2008 16:30:50" -m "Changed the loading and saving of settings to an INI"
+[Development 00f1f6c] Changed the loading and saving of settings to an INI
+ Date: Wed Jan 2 16:30:50 2008 +0000
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/Jan/2008 17:01:08" -m "Notified if using a newer version of the software."
+[Development 37b5b4b] Notified if using a newer version of the software.
+ Date: Wed Jan 2 17:01:08 2008 +0000
+ 1 file changed, 38 insertions(+), 23 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/Jan/2008 17:58:41" -m "Added the following features:\n * Allow searching of Hidden / System folders	\n * If specifying date ranges default time to 00:00 for a start date and 23:59 for a finish date"
+[Development 61f1ea6] Added the following features:\n * Allow searching of Hidden / System folders	\n * If specifying date ranges default time to 00:00 for a start date and 23:59 for a finish date
+ Date: Wed Jan 2 17:58:41 2008 +0000
+ 2 files changed, 56 insertions(+), 13 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Jan/2008 21:02:10" -m "Made the messages about new or older software display the 2 version numbers."
+[Development b0858f5] Made the messages about new or older software display the 2 version numbers.
+ Date: Thu Jan 3 21:02:10 2008 +0000
+ 1 file changed, 50 insertions(+), 17 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Jan/2008 21:20:48" -m "Fixed the problem with BuildVersionNumberm i.e. Bugs start with Space and then A and are index 1, 2 etc not 0, 1 ..."
+[Development 5f4044b] Fixed the problem with BuildVersionNumberm i.e. Bugs start with Space and then A and are index 1, 2 etc not 0, 1 ...
+ Date: Thu Jan 3 21:20:48 2008 +0000
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Jan/2008 21:41:37" -m "Made this dialogue modeless but if there are no updates then the dialogue closes after 5 seconds, if there are updates it closes after 60 seconds."
+[Development cea4adc] Made this dialogue modeless but if there are no updates then the dialogue closes after 5 seconds, if there are updates it closes after 60 seconds.
+ Date: Thu Jan 3 21:41:37 2008 +0000
+ 1 file changed, 7 insertions(+), 21 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "06/Jan/2008 00:59:16" -m "Ensured TfrmCheckForUpdates is not required in Console Applications."
+[Development a25ef03] Ensured TfrmCheckForUpdates is not required in Console Applications.
+ Date: Sun Jan 6 00:59:16 2008 +0000
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "06/Jan/2008 01:00:09" -m "Raised custom exceptions and trap these exception therefore letting unkown exception be caught by EurekaLog. ALSO coded around the EurekaLog memory leak detections - not sure if its a EurekaLog bug or a Borland bug."
+[Development 3925144] Raised custom exceptions and trap these exception therefore letting unkown exception be caught by EurekaLog. ALSO coded around the EurekaLog memory leak detections - not sure if its a EurekaLog bug or a Borland bug.
+ Date: Sun Jan 6 01:00:09 2008 +0000
+ 1 file changed, 33 insertions(+), 23 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\FileHandling.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\FileHandling.pas"
+add 'Source/FileHandling.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "11/Jan/2008 20:45:33" -m "Made sure that files not required in GREP are freed."
+[Development c2a5f8a] Made sure that files not required in GREP are freed.
+ Date: Fri Jan 11 20:45:33 2008 +0000
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\ApplicationFunctions.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\ApplicationFunctions.pas"
+add 'Source/ApplicationFunctions.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "12/Jan/2008 10:46:25" -m "Initial import into the version control system."
+[Development 6653899] Initial import into the version control system.
+ Date: Sat Jan 12 10:46:25 2008 +0000
+ 1 file changed, 797 insertions(+)
+ create mode 100644 Source/ApplicationFunctions.pas
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "12/Jan/2008 10:51:01" -m "Put the ParamStr command line arguments into a stringlist so that the routines that work with them can be tested.\n\nAlso:\n * Placed the main code in a class.\n * Configured Colours to be loaded from and saved to the INI file."
+[Development ddee742] Put the ParamStr command line arguments into a stringlist so that the routines that work with them can be tested.\n\nAlso:\n * Placed the main code in a class.\n * Configured Colours to be loaded from and saved to the INI file.
+ Date: Sat Jan 12 10:51:01 2008 +0000
+ 2 files changed, 492 insertions(+), 994 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "12/Jan/2008 11:15:04" -m "Got this code to load from and save to the ini file the colour settings for messages."
+[Development 8ef4798] Got this code to load from and save to the ini file the colour settings for messages.
+ Date: Sat Jan 12 11:15:04 2008 +0000
+ 1 file changed, 87 insertions(+), 16 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "12/Jan/2008 11:18:40" -m "Got this code to load from and save to the ini file the colour settings for messages."
+[Development a2eee03] Got this code to load from and save to the ini file the colour settings for messages.
+ Date: Sat Jan 12 11:18:40 2008 +0000
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "13/Jan/2008 22:14:04" -m "Re-compiled with full version of Eurekalog."
+[Development a9a9ac2] Re-compiled with full version of Eurekalog.
+ Date: Sun Jan 13 22:14:04 2008 +0000
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "20/Jan/2008 20:37:32" -m "Updated this code to use an INI file instead of the registry."
+[Development 1e0436a] Updated this code to use an INI file instead of the registry.
+ Date: Sun Jan 20 20:37:32 2008 +0000
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Feb/2008 11:14:55" -m "Made the GetBuildNumber() preocedure raise a custom exception which can be trapped separate from 'Exception'."
+[Development a6f4877] Made the GetBuildNumber() preocedure raise a custom exception which can be trapped separate from 'Exception'.
+ Date: Sun Feb 3 11:14:55 2008 +0000
+ 1 file changed, 13 insertions(+), 7 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Feb/2008 11:33:13" -m "Updated CheckVersionNumber() to take a file name"
+[Development ea5dfa6] Updated CheckVersionNumber() to take a file name
+ Date: Sun Feb 3 11:33:13 2008 +0000
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "24/Feb/2008 21:01:20" -m "Added the BuildRootKey as a function to this library (uses the HInstance handle of the module)."
+[Development 07ae1be] Added the BuildRootKey as a function to this library (uses the HInstance handle of the module).
+ Date: Sun Feb 24 21:01:20 2008 +0000
+ 1 file changed, 45 insertions(+), 5 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "09/Mar/2008 21:59:58" -m "Made sure the OK button is enabled and the timer is started when no package is found."
+[Development b385e06] Made sure the OK button is enabled and the timer is started when no package is found.
+ Date: Sun Mar 9 21:59:58 2008 +0000
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "21/Mar/2008 19:18:32" -m "Fixed OutputToConsoleLn() and OutputToConsole() so that they handle redirected consoles and output information past the end of the screen buffer."
+[Development 4110727] Fixed OutputToConsoleLn() and OutputToConsole() so that they handle redirected consoles and output information past the end of the screen buffer.
+ Date: Fri Mar 21 19:18:32 2008 +0000
+ 1 file changed, 89 insertions(+), 29 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "22/Mar/2008 11:57:04" -m "Made THClothiodElement has only 1 constructor"
+[Development 2e75f7e] Made THClothiodElement has only 1 constructor
+ Date: Sat Mar 22 11:57:04 2008 +0000
+ 1 file changed, 92 insertions(+), 109 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\ApplicationFunctions.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\ApplicationFunctions.pas"
+add 'Source/ApplicationFunctions.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "24/Mar/2008 16:28:21" -m "Added the Windows unit to the module to stop hints."
+[Development f39c12d] Added the Windows unit to the module to stop hints.
+ Date: Mon Mar 24 16:28:21 2008 +0000
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\FileHandling.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\FileHandling.pas"
+add 'Source/FileHandling.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "24/Mar/2008 16:43:10" -m "Wrapped the 'GREP' code in a Try/Except/Finally so that failure to open the file due to permissions are not fatal."
+[Development 21223ea] Wrapped the 'GREP' code in a Try/Except/Finally so that failure to open the file due to permissions are not fatal.
+ Date: Mon Mar 24 16:43:10 2008 +0000
+ 1 file changed, 20 insertions(+), 7 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "25/Mar/2008 23:09:01" -m "Fixed RangeCheck error in EvaluateEquation"
+[Development 922a0e0] Fixed RangeCheck error in EvaluateEquation
+ Date: Tue Mar 25 23:09:01 2008 +0000
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "26/Mar/2008 13:16:37" -m "Allowed ConvertDate() to handle milliseconds"
+[Development 7af1d8d] Allowed ConvertDate() to handle milliseconds
+ Date: Wed Mar 26 13:16:37 2008 +0000
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\ApplicationFunctions.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\ApplicationFunctions.pas"
+add 'Source/ApplicationFunctions.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "26/Mar/2008 13:18:37" -m "GetAttributes should return iFileOnly IF there are not TypeAttrs specified."
+[Development 526dbc9] GetAttributes should return iFileOnly IF there are not TypeAttrs specified.
+ Date: Wed Mar 26 13:18:37 2008 +0000
+ 1 file changed, 19 insertions(+), 13 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "26/Mar/2008 13:18:52" -m "Made the search path 1 character short than the width of the console so that it works correctly when you reach the end of the buffer."
+[Development f74413e] Made the search path 1 character short than the width of the console so that it works correctly when you reach the end of the buffer.
+ Date: Wed Mar 26 13:18:52 2008 +0000
+ 2 files changed, 28 insertions(+), 43 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "13/Apr/2008 10:35:39" -m "Made sure the URL failture close the dialogue after 60 seconds."
+[Development c37a745] Made sure the URL failture close the dialogue after 60 seconds.
+ Date: Sun Apr 13 10:35:39 2008 +0100
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "11/May/2008 16:01:08" -m "Updated the CheckForUpdates for to use an internal list of websites and not rely on the app to supply them."
+[Development c69e3f2] Updated the CheckForUpdates for to use an internal list of websites and not rely on the app to supply them.
+ Date: Sun May 11 16:01:08 2008 +0100
+ 1 file changed, 27 insertions(+), 16 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "11/May/2008 16:40:11" -m "Updated the CheckForUpdates for to use an internal list of websites and not rely on the app to supply them."
+[Development e7b2ad6] Updated the CheckForUpdates for to use an internal list of websites and not rely on the app to supply them.
+ Date: Sun May 11 16:40:11 2008 +0100
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "26/May/2008 15:38:19" -m "Moved the TokeniseMacro and ParseMacro to the library."
+[Development d91d845] Moved the TokeniseMacro and ParseMacro to the library.
+ Date: Mon May 26 15:38:19 2008 +0100
+ 1 file changed, 280 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "28/May/2008 12:36:09" -m "Fixed this so that the macro parse should use the message strExceptionMsg and also fixed the problem with adjacent symbols in string literals."
+[Development d5ac17f] Fixed this so that the macro parse should use the message strExceptionMsg and also fixed the problem with adjacent symbols in string literals.
+ Date: Wed May 28 12:36:09 2008 +0100
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "28/May/2008 12:37:06" -m "Updated the checking URL to DavidGHoyle.googlepages.com/HoylD.xml"
+[Development 3a74fd4] Updated the checking URL to DavidGHoyle.googlepages.com/HoylD.xml
+ Date: Wed May 28 12:37:06 2008 +0100
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "28/May/2008 13:00:31" -m "Updated the version number."
+[Development 541a03c] Updated the version number.
+ Date: Wed May 28 13:00:31 2008 +0100
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "28/May/2008 19:42:02" -m "Updated this CheckVersionNumber code to correctly get the module name, i.e. GetModuleFileName NOT ParamStr(0)."
+[Development 24bcc2d] Updated this CheckVersionNumber code to correctly get the module name, i.e. GetModuleFileName NOT ParamStr(0).
+ Date: Wed May 28 19:42:02 2008 +0100
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "14/Jun/2008 17:25:04" -m "Added DGHCreateProcess to the library."
+[Development 0653610] Added DGHCreateProcess to the library.
+ Date: Sat Jun 14 17:25:04 2008 +0100
+ 1 file changed, 184 insertions(+), 5 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "14/Jun/2008 19:38:01" -m "Fixed: Line 123: strBugs = ' abcedfghijklmnopqrstuvwxyz'; WRONG!"
+[Development 612e6a4] Fixed: Line 123: strBugs = ' abcedfghijklmnopqrstuvwxyz'; WRONG!
+ Date: Sat Jun 14 19:38:01 2008 +0100
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "14/Jun/2008 19:38:31" -m "Made the bugfix string available to CheckForUpdates"
+[Development 5f97797] Made the bugfix string available to CheckForUpdates
+ Date: Sat Jun 14 19:38:31 2008 +0100
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "15/Jun/2008 10:54:48" -m "Added the URL to the New or Update messages"
+[Development 2e14a54] Added the URL to the New or Update messages
+ Date: Sun Jun 15 10:54:48 2008 +0100
+ 1 file changed, 34 insertions(+), 28 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "15/Jun/2008 15:04:44" -m "Made the update process read an internal from the INI file (default 7 days)."
+[Development 4c25312] Made the update process read an internal from the INI file (default 7 days).
+ Date: Sun Jun 15 15:04:44 2008 +0100
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "21/Jun/2008 15:54:11" -m "Allowed the BuildRootKey function to check the command line (and returns the command line switches in a stringlist) for an alternate INI file with the form /@[Drive\:Path\FileName.Ext]"
+[Development 339db04] Allowed the BuildRootKey function to check the command line (and returns the command line switches in a stringlist) for an alternate INI file with the form /@[Drive\:Path\FileName.Ext]
+ Date: Sat Jun 21 15:54:11 2008 +0100
+ 1 file changed, 75 insertions(+), 4 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "23/Jun/2008 20:04:53" -m "Updated to habdle UNC paths"
+[Development 231d58b] Updated to habdle UNC paths
+ Date: Mon Jun 23 20:04:53 2008 +0100
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "12/Jul/2008 10:12:16" -m "Updated the Create Process and Process Collection code."
+[Development 3ef1ead] Updated the Create Process and Process Collection code.
+ Date: Sat Jul 12 10:12:16 2008 +0100
+ 1 file changed, 18 insertions(+), 21 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\FileHandling.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\FileHandling.pas"
+add 'Source/FileHandling.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "14/Jul/2008 12:53:09" -m "Fixed the bug with the wrong GREP line number."
+[Development d5cff03] Fixed the bug with the wrong GREP line number.
+ Date: Mon Jul 14 12:53:09 2008 +0100
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "14/Jul/2008 13:25:56" -m "Exposed CheckConsoleMode."
+[Development f5c1583] Exposed CheckConsoleMode.
+ Date: Mon Jul 14 13:25:56 2008 +0100
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "14/Jul/2008 13:26:10" -m "Fixed the following:\n * GREP line numbers\n * Stop search path output on redirection.\n * Add support for alternate INI files."
+[Development 528dc53] Fixed the following:\n * GREP line numbers\n * Stop search path output on redirection.\n * Add support for alternate INI files.
+ Date: Mon Jul 14 13:26:10 2008 +0100
+ 2 files changed, 58 insertions(+), 43 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "15/Jul/2008 09:20:42" -m "Added INI file to help output"
+[Development 5d94cfa] Added INI file to help output
+ Date: Tue Jul 15 09:20:42 2008 +0100
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "16/Aug/2008 16:02:16" -m "Added a new function 'Like' to find comparisions with * wildcards"
+[Development 55f9ec9] Added a new function 'Like' to find comparisions with * wildcards
+ Date: Sat Aug 16 16:02:16 2008 +0100
+ 1 file changed, 5893 insertions(+), 5822 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "16/Aug/2008 18:34:58" -m "Fixed Like"
+[Development fbd196a] Fixed Like
+ Date: Sat Aug 16 18:34:58 2008 +0100
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "10/Sep/2008 19:57:21" -m "Updated the scope of the MacroToken parser strings."
+[Development d9d2d0a] Updated the scope of the MacroToken parser strings.
+ Date: Wed Sep 10 19:57:21 2008 +0100
+ 1 file changed, 13 insertions(+), 15 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "04/Oct/2008 17:38:28" -m "Conditionally compiled strPressEnterToContinue"
+[Development f1c5396] Conditionally compiled strPressEnterToContinue
+ Date: Sat Oct 4 17:38:28 2008 +0100
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "11/Oct/2008 16:34:00" -m "Added a new function CalcColour() to determine the colour from 3 threshhold and 3 colours."
+[Development 1e84bb5] Added a new function CalcColour() to determine the colour from 3 threshhold and 3 colours.
+ Date: Sat Oct 11 16:34:00 2008 +0100
+ 1 file changed, 507 insertions(+), 253 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "12/Oct/2008 15:50:38" -m "Fixed the problem with exception not raising ErrorCode in DGHCreateProcess."
+[Development 30a4994] Fixed the problem with exception not raising ErrorCode in DGHCreateProcess.
+ Date: Sun Oct 12 15:50:38 2008 +0100
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "15/Oct/2008 18:59:26" -m "Made sure that the READ() after 'Press Key to Continue'  in consoles is not run IF the console is redirected."
+[Development cff8b1a] Made sure that the READ() after 'Press Key to Continue'  in consoles is not run IF the console is redirected.
+ Date: Wed Oct 15 18:59:26 2008 +0100
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\CompilerDefinitions.inc
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\CompilerDefinitions.inc"
+add 'Externals/CompilerDefinitions.inc'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "25/Oct/2008 15:54:14" -m "Initial import into the version control system"
+[Development 14f0b55] Initial import into the version control system
+ Date: Sat Oct 25 15:54:14 2008 +0100
+ 1 file changed, 124 insertions(+)
+ create mode 100644 Externals/CompilerDefinitions.inc
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "25/Oct/2008 15:55:51" -m "Updated the color interruptor and added compilation compilation so the unit is backward compatiable to D6/7."
+[Development 77a4ed5] Updated the color interruptor and added compilation compilation so the unit is backward compatiable to D6/7.
+ Date: Sat Oct 25 15:55:51 2008 +0100
+ 1 file changed, 6204 insertions(+), 6148 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "18/Jan/2009 18:00:21" -m "Initial import into the version control system."
+[Development 55464a5] Initial import into the version control system.
+ Date: Sun Jan 18 18:00:21 2009 +0000
+ 1 file changed, 5727 insertions(+)
+ create mode 100644 Test/Source/TestDGHLibrary.pas
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "06/Feb/2009 23:59:28" -m "Updated the check for updates message to show the SoftwareID."
+[Development 5532ed0] Updated the check for updates message to show the SoftwareID.
+ Date: Fri Feb 6 23:59:28 2009 +0000
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "08/Feb/2009 14:58:28" -m "Created an Exception Type for Date Conversion Exceptions."
+[Development bd9ed2b] Created an Exception Type for Date Conversion Exceptions.
+ Date: Sun Feb 8 14:58:28 2009 +0000
+ 1 file changed, 20 insertions(+), 9 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "28/Feb/2009 11:06:15" -m "Updated the definitions of the custom exceptions."
+[Development fc11ecb] Updated the definitions of the custom exceptions.
+ Date: Sat Feb 28 11:06:15 2009 +0000
+ 1 file changed, 26 insertions(+), 26 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "22/Mar/2009 12:46:41" -m "Updated the documentation to fix errors."
+[Development 4bc7966] Updated the documentation to fix errors.
+ Date: Sun Mar 22 12:46:41 2009 +0000
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "22/Mar/2009 12:47:18" -m "Updated the documentation to fix errors."
+[Development 8fcc74c] Updated the documentation to fix errors.
+ Date: Sun Mar 22 12:47:18 2009 +0000
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "22/Apr/2009 20:30:59" -m "Changed domain name."
+[Development d851f68] Changed domain name.
+ Date: Wed Apr 22 20:30:59 2009 +0100
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "26/Apr/2009 17:50:46" -m "Added a new test for DGHFindOnPath()"
+[Development a01be86] Added a new test for DGHFindOnPath()
+ Date: Sun Apr 26 17:50:46 2009 +0100
+ 1 file changed, 18 insertions(+)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "26/Apr/2009 17:57:05" -m "Fixed AVs in DGHCreateProcess by recoding and replacing PathFindOnPath() with DGHFindOnPath()."
+[Development 2823493] Fixed AVs in DGHCreateProcess by recoding and replacing PathFindOnPath() with DGHFindOnPath().
+ Date: Sun Apr 26 17:57:05 2009 +0100
+ 1 file changed, 89 insertions(+), 35 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "28/Apr/2009 18:56:26" -m "Updated to fix 'Check for Updates' problem."
+[Development 3b55a5d] Updated to fix 'Check for Updates' problem.
+ Date: Tue Apr 28 18:56:26 2009 +0100
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "26/Jun/2009 18:49:14" -m "Updated for RAD Studio 2009 and Unicode."
+[Development 8607de2] Updated for RAD Studio 2009 and Unicode.
+ Date: Fri Jun 26 18:49:14 2009 +0100
+ 1 file changed, 151 insertions(+), 10 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "26/Jun/2009 18:52:28" -m "Updated for RAD Studio 2009 and Unicode."
+[Development d85d4bd] Updated for RAD Studio 2009 and Unicode.
+ Date: Fri Jun 26 18:52:28 2009 +0100
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "28/Jun/2009 16:26:34" -m "Fixed Unicode / AnsiString bug in DGHCreateProcess + ProcessOutput()..\n"
+[Development 40e81c1] Fixed Unicode / AnsiString bug in DGHCreateProcess + ProcessOutput()..\n
+ Date: Sun Jun 28 16:26:34 2009 +0100
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "28/Jun/2009 16:27:38" -m "Added a test for DGHCreateProcess."
+[Development 840b94c] Added a test for DGHCreateProcess.
+ Date: Sun Jun 28 16:27:38 2009 +0100
+ 1 file changed, 65 insertions(+)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "21/Jul/2009 18:46:58" -m "Made portable."
+[Development c577134] Made portable.
+ Date: Tue Jul 21 18:46:58 2009 +0100
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "13/Aug/2009 18:36:24" -m "Updated to make DGHFindOnPath independant of machine."
+[Development 4760c0f] Updated to make DGHFindOnPath independant of machine.
+ Date: Thu Aug 13 18:36:24 2009 +0100
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "07/Oct/2009 19:04:22" -m "Updated documentation."
+[Development 7c87331] Updated documentation.
+ Date: Wed Oct 7 19:04:22 2009 +0100
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "25/Oct/2009 14:06:39" -m "Fixed Like() operator indexing."
+[Development fd83c15] Fixed Like() operator indexing.
+ Date: Sun Oct 25 14:06:39 2009 +0000
+ 1 file changed, 9 insertions(+), 7 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "25/Oct/2009 14:06:50" -m "Added Like() test for *library*TestProjectDLL*;*."
+[Development 7640e61] Added Like() test for *library*TestProjectDLL*;*.
+ Date: Sun Oct 25 14:06:50 2009 +0000
+ 1 file changed, 1 insertion(+)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "25/Oct/2009 17:05:31" -m "Removed Ansi references from Compare calls."
+[Development d7fef87] Removed Ansi references from Compare calls.
+ Date: Sun Oct 25 17:05:31 2009 +0000
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "25/Oct/2009 17:07:54" -m "Removed Ansi references from Compare calls."
+[Development 8ff4b5d] Removed Ansi references from Compare calls.
+ Date: Sun Oct 25 17:07:54 2009 +0000
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "12/Dec/2009 22:57:58" -m "Added a new function DGHPathRelativePathTo to calculate the relative path of files to a route folder."
+[Development 73e2149] Added a new function DGHPathRelativePathTo to calculate the relative path of files to a route folder.
+ Date: Sat Dec 12 22:57:58 2009 +0000
+ 1 file changed, 27 insertions(+)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "12/Dec/2009 22:59:18" -m "Added a new function DGHPathRelativePathTo to calculate the relative path of files to a route folder."
+[Development 187b7f3] Added a new function DGHPathRelativePathTo to calculate the relative path of files to a route folder.
+ Date: Sat Dec 12 22:59:18 2009 +0000
+ 1 file changed, 54 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "27/Dec/2009 15:21:21" -m "Removed unwanted code from the library."
+[Development d45419f] Removed unwanted code from the library.
+ Date: Sun Dec 27 15:21:21 2009 +0000
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/Jan/2010 20:41:51" -m "Fixed CharCount so that is accounts for double quoted sections, i.e. CSV files, if you wish."
+[Development 677f81a] Fixed CharCount so that is accounts for double quoted sections, i.e. CSV files, if you wish.
+ Date: Sat Jan 2 20:41:51 2010 +0000
+ 1 file changed, 20 insertions(+), 9 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/Jan/2010 21:55:56" -m "Fixed PosOfNthChar needing to be recoded to handle double quoted sections, i.e. CSV files."
+[Development 1af824b] Fixed PosOfNthChar needing to be recoded to handle double quoted sections, i.e. CSV files.
+ Date: Sat Jan 2 21:55:56 2010 +0000
+ 1 file changed, 19 insertions(+), 10 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/Jan/2010 22:07:01" -m "Fixed CharCount, PosOfNthChar and GetFields needing to be recoded to handle double quoted sections, i.e. CSV files.\n"
+[Development 3d79c71] Fixed CharCount, PosOfNthChar and GetFields needing to be recoded to handle double quoted sections, i.e. CSV files.\n
+ Date: Sat Jan 2 22:07:01 2010 +0000
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/Jan/2010 22:07:21" -m "Fixed GetField needing to be recoded to handle double quoted sections, i.e. CSV files."
+[Development bc8acbd] Fixed GetField needing to be recoded to handle double quoted sections, i.e. CSV files.
+ Date: Sat Jan 2 22:07:21 2010 +0000
+ 1 file changed, 15 insertions(+), 12 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "05/Mar/2010 22:31:50" -m "Implemented missing console colours."
+[Development 14bb1a9] Implemented missing console colours.
+ Date: Fri Mar 5 22:31:50 2010 +0000
+ 1 file changed, 16 insertions(+), 30 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\FileHandling.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\FileHandling.pas"
+add 'Source/FileHandling.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "07/Mar/2010 11:42:17" -m "Added support for search within ZIP archives."
+[Development ccc239b] Added support for search within ZIP archives.
+ Date: Sun Mar 7 11:42:17 2010 +0000
+ 1 file changed, 14 insertions(+), 11 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\ApplicationFunctions.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\ApplicationFunctions.pas"
+add 'Source/ApplicationFunctions.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "07/Mar/2010 11:42:24" -m "Added support for search within ZIP archives."
+[Development 60b1d6a] Added support for search within ZIP archives.
+ Date: Sun Mar 7 11:42:24 2010 +0000
+ 1 file changed, 29 insertions(+), 24 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\test\source\TestApplicationFunction.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestApplicationFunction.pas"
+add 'Test/Source/TestApplicationFunction.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "07/Mar/2010 11:50:56" -m "Initial import into the version control system."
+[Development 07ace95] Initial import into the version control system.
+ Date: Sun Mar 7 11:50:56 2010 +0000
+ 1 file changed, 954 insertions(+)
+ create mode 100644 Test/Source/TestApplicationFunction.pas
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+add 'Search.bdsproj'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "07/Mar/2010 11:54:15" -m "Added support for search within ZIP archives."
+[Development 48b27fa] Added support for search within ZIP archives.
+ Date: Sun Mar 7 11:54:15 2010 +0000
+ 4 files changed, 1443 insertions(+), 94 deletions(-)
+ create mode 100644 Search.dproj
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\test\SearchTests.dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\SearchTests.dpr"
+add 'Test/SearchTests.dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\test\SearchTests.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\SearchTests.res"
+add 'Test/SearchTests.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\test\SearchTests.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\SearchTests.bdsproj"
+add 'Test/SearchTests.bdsproj'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\test\SearchTests.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\SearchTests.dproj"
+add 'Test/SearchTests.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "07/Mar/2010 11:54:28" -m "Initial import into the version control system."
+[Development 862056a] Initial import into the version control system.
+ Date: Sun Mar 7 11:54:28 2010 +0000
+ 4 files changed, 1336 insertions(+)
+ create mode 100644 Test/SearchTests.bdsproj
+ create mode 100644 Test/SearchTests.dpr
+ create mode 100644 Test/SearchTests.dproj
+ create mode 100644 Test/SearchTests.res
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "10/Mar/2010 21:47:09" -m "Fixed bug in DGHPathRelativePathTo returning '.\'."
+[Development a626b0d] Fixed bug in DGHPathRelativePathTo returning '.\'.
+ Date: Wed Mar 10 21:47:09 2010 +0000
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "10/Mar/2010 21:47:45" -m "Fixed bug in DGHPathRelativePathTo returning '.\'."
+[Development 50482ab] Fixed bug in DGHPathRelativePathTo returning '.\'.
+ Date: Wed Mar 10 21:47:45 2010 +0000
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\ApplicationFunctions.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\ApplicationFunctions.pas"
+add 'Source/ApplicationFunctions.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/May/2010 12:51:22" -m "Updated for Unicode."
+[Development 9a0ab17] Updated for Unicode.
+ Date: Sun May 2 12:51:22 2010 +0100
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/May/2010 13:00:16" -m "Added a new function to check for the presence of a debugger as DebugHook does not work correctly in RAD Studio 2009 on a console app."
+[Development d90793e] Added a new function to check for the presence of a debugger as DebugHook does not work correctly in RAD Studio 2009 on a console app.
+ Date: Sun May 2 13:00:16 2010 +0100
+ 1 file changed, 27 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/May/2010 13:01:56" -m "Fixed memory leaks with 'SEARCH' and 'SEARCH *'"
+[Development 6a1bad2] Fixed memory leaks with 'SEARCH' and 'SEARCH *'
+ Date: Sun May 2 13:01:56 2010 +0100
+ 3 files changed, 9 insertions(+), 7 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/May/2010 13:18:49" -m "Allows files to search against their creation and last access date depending on the date settings."
+[Development 51603eb] Allows files to search against their creation and last access date depending on the date settings.
+ Date: Sun May 2 13:18:49 2010 +0100
+ 3 files changed, 36 insertions(+), 18 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\ApplicationFunctions.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\ApplicationFunctions.pas"
+add 'Source/ApplicationFunctions.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/May/2010 14:19:26" -m "Added a new option for specifying the siize output format:\n  k = Kilobytes\n  m = megabytes\n  g = gigabytes"
+[Development 749f711] Added a new option for specifying the siize output format:\n  k = Kilobytes\n  m = megabytes\n  g = gigabytes
+ Date: Sun May 2 14:19:26 2010 +0100
+ 1 file changed, 51 insertions(+), 4 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/May/2010 14:28:37" -m "Allowed the file size output to be in kilobytes, megabytes, etc. through a switch.\n\n"
+[Development 41dc80d] Allowed the file size output to be in kilobytes, megabytes, etc. through a switch.\n\n
+ Date: Sun May 2 14:28:37 2010 +0100
+ 3 files changed, 77 insertions(+), 11 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\FileHandling.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\FileHandling.pas"
+add 'Source/FileHandling.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/May/2010 15:31:16" -m "Added a cloning method to returns a copy of the file."
+[Development 1b8f914] Added a cloning method to returns a copy of the file.
+ Date: Sun May 2 15:31:16 2010 +0100
+ 1 file changed, 48 insertions(+), 4 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "02/May/2010 15:36:11" -m "Fixed various bugs."
+[Development a7aac3c] Fixed various bugs.
+ Date: Sun May 2 15:36:11 2010 +0100
+ 3 files changed, 115 insertions(+), 66 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\CompilerDefinitions.inc
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\CompilerDefinitions.inc"
+add 'Externals/CompilerDefinitions.inc'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "26/May/2010 20:09:41" -m "Updated for Delphi 2010."
+[Development f11a751] Updated for Delphi 2010.
+ Date: Wed May 26 20:09:41 2010 +0100
+ 1 file changed, 16 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "06/Jun/2010 16:16:33" -m "Changed DGHCreateProcess to pass 2 event handlers NOT an interface."
+[Development 507b87d] Changed DGHCreateProcess to pass 2 event handlers NOT an interface.
+ Date: Sun Jun 6 16:16:33 2010 +0100
+ 1 file changed, 26 insertions(+), 23 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "11/Jun/2010 17:51:52" -m "Updated DGHCreateProcess test for new interface signature."
+[Development 3784605] Updated DGHCreateProcess test for new interface signature.
+ Date: Fri Jun 11 17:51:52 2010 +0100
+ 1 file changed, 20 insertions(+), 15 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Jul/2010 19:21:39" -m "Removed unreachable statements."
+[Development 72d69f0] Removed unreachable statements.
+ Date: Sat Jul 3 19:21:39 2010 +0100
+ 1 file changed, 6 insertions(+), 12 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "19/Jul/2010 19:24:35" -m "Checked archives for validity."
+[Development c0ecbc5] Checked archives for validity.
+ Date: Mon Jul 19 19:24:35 2010 +0100
+ 3 files changed, 44 insertions(+), 41 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "19/Jul/2010 19:32:57" -m "Ensured the encrypted files are not processed."
+[Development b9adeac] Ensured the encrypted files are not processed.
+ Date: Mon Jul 19 19:32:57 2010 +0100
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "19/Jul/2010 19:48:19" -m "Fixed if the screen is too narrow the search path output goes into an infinite loop."
+[Development 9859a5e] Fixed if the screen is too narrow the search path output goes into an infinite loop.
+ Date: Mon Jul 19 19:48:19 2010 +0100
+ 3 files changed, 14 insertions(+), 8 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "29/Aug/2010 16:06:28" -m "Tested Like() with null text."
+[Development 224b484] Tested Like() with null text.
+ Date: Sun Aug 29 16:06:28 2010 +0100
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "29/Aug/2010 16:06:37" -m "Fixed bug in Like() with single *."
+[Development 2bfa815] Fixed bug in Like() with single *.
+ Date: Sun Aug 29 16:06:37 2010 +0100
+ 1 file changed, 11 insertions(+), 5 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "24/Dec/2010 17:22:53" -m "Updated test for different laptop returning a different CASE for the Windows directory."
+[Development 9e70f73] Updated test for different laptop returning a different CASE for the Windows directory.
+ Date: Fri Dec 24 17:22:53 2010 +0000
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "24/Dec/2010 18:13:36" -m "Updated the INI mechanism so that INI files are stored under the users profile not the EXE/DL directory."
+[Development ce36e36] Updated the INI mechanism so that INI files are stored under the users profile not the EXE/DL directory.
+ Date: Fri Dec 24 18:13:36 2010 +0000
+ 1 file changed, 93 insertions(+), 18 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "24/Jan/2011 20:05:30" -m "Fixed the non working alternate INI file options."
+[Development 89e4dd0] Fixed the non working alternate INI file options.
+ Date: Mon Jan 24 20:05:30 2011 +0000
+ 1 file changed, 17 insertions(+), 10 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "24/Jan/2011 20:43:31" -m "Updated CheckForUpdates for the following:\n * Disabled by default;\n * Checks for the Internet Connection first\n * Captures OLESysErrors if MS XML is not available."
+[Development dba07c8] Updated CheckForUpdates for the following:\n * Disabled by default;\n * Checks for the Internet Connection first\n * Captures OLESysErrors if MS XML is not available.
+ Date: Mon Jan 24 20:43:31 2011 +0000
+ 1 file changed, 659 insertions(+), 547 deletions(-)
+ rewrite Externals/checkforupdates.pas (92%)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "08/Apr/2011 21:04:42" -m "Fixed the bug where formatting of sizes (K, M, G, etc) does not work on summaries."
+[Development d7f56df] Fixed the bug where formatting of sizes (K, M, G, etc) does not work on summaries.
+ Date: Fri Apr 8 21:04:42 2011 +0100
+ 3 files changed, 797 insertions(+), 685 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "09/Apr/2011 12:28:16" -m "Made 'Size' column dymanic in size depending upon the output format."
+[Development bc4fc42] Made 'Size' column dymanic in size depending upon the output format.
+ Date: Sat Apr 9 12:28:16 2011 +0100
+ 3 files changed, 7 insertions(+), 7 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "10/Apr/2011 20:16:38" -m "Fix help output for file attributes."
+[Development f644e84] Fix help output for file attributes.
+ Date: Sun Apr 10 20:16:38 2011 +0100
+ 3 files changed, 11 insertions(+), 12 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "15/Apr/2011 20:52:17" -m "Made SHGetFolderPath work with all version of Delphi."
+[Development 90ae4d4] Made SHGetFolderPath work with all version of Delphi.
+ Date: Fri Apr 15 20:52:17 2011 +0100
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "15/Apr/2011 20:53:18" -m "Makd CheckForUpdates work with all version of Delphi."
+[Development ce65803] Makd CheckForUpdates work with all version of Delphi.
+ Date: Fri Apr 15 20:53:18 2011 +0100
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\ApplicationFunctions.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\ApplicationFunctions.pas"
+add 'Source/ApplicationFunctions.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "24/Apr/2011 10:23:35" -m "Added the ability to output tex in a CSV file format."
+[Development 6d750da] Added the ability to output tex in a CSV file format.
+ Date: Sun Apr 24 10:23:35 2011 +0100
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "01/May/2011 15:47:40" -m "Added the ability to output information into a CSV friendly format."
+[Development f5abef9] Added the ability to output information into a CSV friendly format.
+ Date: Sun May 1 15:47:40 2011 +0100
+ 3 files changed, 357 insertions(+), 248 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\test\SearchTests.dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\SearchTests.dpr"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\test\SearchTests.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\SearchTests.res"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\test\SearchTests.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\SearchTests.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\test\SearchTests.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\SearchTests.dproj"
+add 'Test/SearchTests.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "01/May/2011 15:47:49" -m "Disable Eurekalog."
+[Development 855e2aa] Disable Eurekalog.
+ Date: Sun May 1 15:47:49 2011 +0100
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "13/Jun/2011 19:20:46" -m "Fixed Check for Updates to stop the not disappearing after 5 seconds IF successful."
+[Development 5c04fb4] Fixed Check for Updates to stop the not disappearing after 5 seconds IF successful.
+ Date: Mon Jun 13 19:20:46 2011 +0100
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\CompilerDefinitions.inc
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\CompilerDefinitions.inc"
+add 'Externals/CompilerDefinitions.inc'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "04/Aug/2011 19:49:19" -m "Updated the compiler definitions for Delphi XE and XE2."
+[Development 9da5daf] Updated the compiler definitions for Delphi XE and XE2.
+ Date: Thu Aug 4 19:49:19 2011 +0100
+ 1 file changed, 35 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "05/Aug/2011 18:00:14" -m "Updated any references to TIniFile with TMemIniFile for improved performance."
+[Development b1a7313] Updated any references to TIniFile with TMemIniFile for improved performance.
+ Date: Fri Aug 5 18:00:14 2011 +0100
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "05/Aug/2011 18:00:29" -m "Updated any references to TIniFile with TMemIniFile for improved performance."
+[Development 1354471] Updated any references to TIniFile with TMemIniFile for improved performance.
+ Date: Fri Aug 5 18:00:29 2011 +0100
+ 1 file changed, 11 insertions(+), 9 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "31/Mar/2012 17:47:24" -m "Fixed a bug where Search would raises an exception if it can not open a file for GREP searches."
+[Development fe15d48] Fixed a bug where Search would raises an exception if it can not open a file for GREP searches.
+ Date: Sat Mar 31 17:47:24 2012 +0100
+ 3 files changed, 38 insertions(+), 6 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "31/Mar/2012 17:50:27" -m "Fixed a bug in the header ouotput for CSV output."
+[Development 71730c0] Fixed a bug in the header ouotput for CSV output.
+ Date: Sat Mar 31 17:50:27 2012 +0100
+ 3 files changed, 9 insertions(+), 9 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\SearchEngine.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\SearchEngine.pas"
+add 'Source/SearchEngine.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "31/Mar/2012 18:15:23" -m "Refactored the TSearch class into its own module for easier maintenance."
+[Development a40320c] Refactored the TSearch class into its own module for easier maintenance.
+ Date: Sat Mar 31 18:15:23 2012 +0100
+ 1 file changed, 2054 insertions(+)
+ create mode 100644 Source/SearchEngine.pas
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\SearchEngine.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\SearchEngine.pas"
+add 'Source/SearchEngine.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "31/Mar/2012 18:22:35" -m "Fixed the Title not outputting in the right colour."
+[Development baff96d] Fixed the Title not outputting in the right colour.
+ Date: Sat Mar 31 18:22:35 2012 +0100
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\SearchEngine.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\SearchEngine.pas"
+add 'Source/SearchEngine.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Apr/2012 16:17:44" -m "Protected against invalid file dates while converting."
+[Development 1639c53] Protected against invalid file dates while converting.
+ Date: Tue Apr 3 16:17:44 2012 +0100
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Apr/2012 16:19:11" -m "Fixed numerous bugs."
+[Development bf23157] Fixed numerous bugs.
+ Date: Tue Apr 3 16:19:11 2012 +0100
+ 3 files changed, 70 insertions(+), 2092 deletions(-)
+ rewrite Search.Dpr (98%)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "04/Jun/2012 15:59:56" -m "Added a title to the TProcessInfo record."
+[Development d24d831] Added a title to the TProcessInfo record.
+ Date: Mon Jun 4 15:59:56 2012 +0100
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "07/Jun/2012 18:14:24" -m "Ensured that GetField() returns a NULL string for non-valid fields."
+[Development c993cd6] Ensured that GetField() returns a NULL string for non-valid fields.
+ Date: Thu Jun 7 18:14:24 2012 +0100
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "21/Jul/2012 13:25:38" -m "Added a new function to extract the EXE file from the register knowing the file extension."
+[Development 514b98d] Added a new function to extract the EXE file from the register knowing the file extension.
+ Date: Sat Jul 21 13:25:38 2012 +0100
+ 1 file changed, 38 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "01/Aug/2012 20:37:21" -m "Updated to remove the references to MSXML and replace with TXMLDocument."
+[Development 0666106] Updated to remove the references to MSXML and replace with TXMLDocument.
+ Date: Wed Aug 1 20:37:21 2012 +0100
+ 1 file changed, 791 insertions(+), 664 deletions(-)
+ rewrite Externals/checkforupdates.pas (89%)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "21/Nov/2012 20:06:15" -m "Added tests for the new SetField function."
+[Development b30984c] Added tests for the new SetField function.
+ Date: Wed Nov 21 20:06:15 2012 +0000
+ 1 file changed, 1334 insertions(+), 1269 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "21/Nov/2012 20:06:25" -m "Added a new function to set the contents of a field in a separated string."
+[Development ad9f8d1] Added a new function to set the contents of a field in a separated string.
+ Date: Wed Nov 21 20:06:25 2012 +0000
+ 1 file changed, 53 insertions(+), 4 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\ApplicationFunctions.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\ApplicationFunctions.pas"
+add 'Source/ApplicationFunctions.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "17/Dec/2012 19:25:02" -m "Wrapped the FileDateToDateTime functions in an exception handler to handle invalid file dates."
+[Development a8b9769] Wrapped the FileDateToDateTime functions in an exception handler to handle invalid file dates.
+ Date: Mon Dec 17 19:25:02 2012 +0000
+ 1 file changed, 275 insertions(+), 211 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\source\SearchEngine.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Source\SearchEngine.pas"
+add 'Source/SearchEngine.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "17/Dec/2012 19:25:11" -m "Added event handler to the ZIP files to handle errors in the ZIP."
+[Development e5aa65e] Added event handler to the ZIP files to handle errors in the ZIP.
+ Date: Mon Dec 17 19:25:11 2012 +0000
+ 1 file changed, 127 insertions(+), 20 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\test\SearchTests32VersionInfo.RC
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\SearchTests32VersionInfo.RC"
+add 'Test/SearchTests32VersionInfo.RC'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "17/Dec/2012 19:49:54" -m "Initial import of the version info into the version control system."
+[Development dba588b] Initial import of the version info into the version control system.
+ Date: Mon Dec 17 19:49:54 2012 +0000
+ 1 file changed, 30 insertions(+)
+ create mode 100644 Test/SearchTests32VersionInfo.RC
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search32VersionInfo.RC
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search32VersionInfo.RC"
+add 'Search32VersionInfo.RC'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "17/Dec/2012 19:50:17" -m "Initial import of the version info into the version control system."
+[Development eac81d4] Initial import of the version info into the version control system.
+ Date: Mon Dec 17 19:50:17 2012 +0000
+ 1 file changed, 30 insertions(+)
+ create mode 100644 Search32VersionInfo.RC
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.Dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.Dpr"
+add 'Search.Dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\search.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "search.res"
+add 'search.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.bdsproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.bdsproj"
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search.dproj"
+add 'Search.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "17/Dec/2012 19:50:23" -m "Fixed issues with invalid dates on files and handle issues with ZIP files."
+[Development 7abfedd] Fixed issues with invalid dates on files and handle issues with ZIP files.
+ Date: Mon Dec 17 19:50:23 2012 +0000
+ 3 files changed, 197 insertions(+), 626 deletions(-)
+ rewrite Search.dproj (73%)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search64VersionInfo.RC
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search64VersionInfo.RC"
+add 'Search64VersionInfo.RC'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "17/Dec/2012 19:50:42" -m "Initial import of the version info into the version control system."
+[Development c37e36b] Initial import of the version info into the version control system.
+ Date: Mon Dec 17 19:50:42 2012 +0000
+ 1 file changed, 30 insertions(+)
+ create mode 100644 Search64VersionInfo.RC
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search64.dpr
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search64.dpr"
+add 'Search64.dpr'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search64.res
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search64.res"
+add 'Search64.res'
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Search64.dproj
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Search64.dproj"
+add 'Search64.dproj'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "17/Dec/2012 19:51:11" -m "Import into the version control system of a new 64 bit version of Search,"
+[Development 9382d09] Import into the version control system of a new 64 bit version of Search,
+ Date: Mon Dec 17 19:51:11 2012 +0000
+ 3 files changed, 227 insertions(+)
+ create mode 100644 Search64.dpr
+ create mode 100644 Search64.dproj
+ create mode 100644 Search64.res
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "22/Dec/2012 08:45:24" -m "Added 32/64bit tag to the application title."
+[Development 0771411] Added 32/64bit tag to the application title.
+ Date: Sat Dec 22 08:45:24 2012 +0000
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "31/Dec/2012 16:33:41" -m "Updated form for themes (no coloured text)."
+[Development 5659dc2] Updated form for themes (no coloured text).
+ Date: Mon Dec 31 16:33:41 2012 +0000
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "18/May/2013 18:09:36" -m "When creating INI file name removed the numbers from the end (version / platform numbers)."
+[Development be0e34e] When creating INI file name removed the numbers from the end (version / platform numbers).
+ Date: Sat May 18 18:09:36 2013 +0100
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\CompilerDefinitions.inc
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\CompilerDefinitions.inc"
+add 'Externals/CompilerDefinitions.inc'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "09/Nov/2014 14:02:08" -m "Updated these definitions for XE7."
+[Development 014b2e1] Updated these definitions for XE7.
+ Date: Sun Nov 9 14:02:08 2014 +0000
+ 1 file changed, 105 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "05/Oct/2015 19:46:38" -m "Updated console output to show full date."
+[Development e544adb] Updated console output to show full date.
+ Date: Mon Oct 5 19:46:38 2015 +0100
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "19/Oct/2015 15:36:32" -m "Added a function to checkthat a form is on the desktop, if not move it to being on the desktop."
+[Development d6814da] Added a function to checkthat a form is on the desktop, if not move it to being on the desktop.
+ Date: Mon Oct 19 15:36:32 2015 +0100
+ 1 file changed, 44 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\CompilerDefinitions.inc
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\CompilerDefinitions.inc"
+add 'Externals/CompilerDefinitions.inc'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "27/Mar/2016 09:08:58" -m "Updated the definiitons for XE10."
+[Development 84d1d86] Updated the definiitons for XE10.
+ Date: Sun Mar 27 09:08:58 2016 +0100
+ 1 file changed, 92 insertions(+), 4 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "17/Apr/2016 15:49:28" -m "Fixed test issue."
+[Development 82ec177] Fixed test issue.
+ Date: Sun Apr 17 15:49:28 2016 +0100
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\CompilerDefinitions.inc
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\CompilerDefinitions.inc"
+add 'Externals/CompilerDefinitions.inc'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "30/Apr/2016 18:10:11" -m "Updated for RAD Studio XE10.1 Berlin"
+[Development 8d0b716] Updated for RAD Studio XE10.1 Berlin
+ Date: Sat Apr 30 18:10:11 2016 +0100
+ 1 file changed, 32 insertions(+), 6 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "10/Jun/2016 21:03:49" -m "Fixed the change of directory to RAD Studio."
+[Development b5f5f3b] Fixed the change of directory to RAD Studio.
+ Date: Fri Jun 10 21:03:49 2016 +0100
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "10/Jun/2016 21:11:32" -m "Allowed paths to expand environment variables."
+[Development 370a00a] Allowed paths to expand environment variables.
+ Date: Fri Jun 10 21:11:32 2016 +0100
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Jul/2016 09:28:29" -m "Removed Exception eating and make it specific."
+[Development 193a007] Removed Exception eating and make it specific.
+ Date: Sun Jul 3 09:28:29 2016 +0100
+ 1 file changed, 11 insertions(+), 8 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "03/Jul/2016 09:48:19" -m "Removed Exception eating and make it specific."
+[Development b617c3d] Removed Exception eating and make it specific.
+ Date: Sun Jul 3 09:48:19 2016 +0100
+ 1 file changed, 15 insertions(+), 12 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Test\Source\TestDGHLibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Test\Source\TestDGHLibrary.pas"
+add 'Test/Source/TestDGHLibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "12/Feb/2017 16:36:58" -m "Fixed deprecated CallerAddr (should be ReturnAddress)."
+[Development 27e237b] Fixed deprecated CallerAddr (should be ReturnAddress).
+ Date: Sun Feb 12 16:36:58 2017 +0000
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "12/Feb/2017 16:55:16" -m "Patched Compilerdefinitions.inc file locatiom."
+[Development d37875b] Patched Compilerdefinitions.inc file locatiom.
+ Date: Sun Feb 12 16:55:16 2017 +0000
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\checkforupdates.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\checkforupdates.pas"
+add 'Externals/checkforupdates.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "12/Feb/2017 18:04:37" -m "Removed compiler definitions"
+[Development 20074d7] Removed compiler definitions
+ Date: Sun Feb 12 18:04:37 2017 +0000
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "31/Mar/2017 20:10:05" -m "Fixed issues with integer wrap around."
+[Development 1e0c686] Fixed issues with integer wrap around.
+ Date: Fri Mar 31 20:10:05 2017 +0100
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\dghlibrary.pas
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\dghlibrary.pas"
+add 'Externals/dghlibrary.pas'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "11/Apr/2017 10:13:42" -m "Fixed TRect for width and height not existing in earlier versions of the IDE."
+[Development 212c30f] Fixed TRect for width and height not existing in earlier versions of the IDE.
+ Date: Tue Apr 11 10:13:42 2017 +0100
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\CompilerDefinitions.inc
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\CompilerDefinitions.inc"
+add 'Externals/CompilerDefinitions.inc'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "12/Apr/2017 10:27:29" -m "Updated compiler definitions for XE 10.2 Tokyo."
+[Development cf17f85] Updated compiler definitions for XE 10.2 Tokyo.
+ Date: Wed Apr 12 10:27:29 2017 +0100
+ 1 file changed, 28 insertions(+), 1 deletion(-)
+
+Extracting: D:\Documents\RAD Studio\Applications\Search.GIT\Externals\CompilerDefinitions.inc
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe add -v "Externals\CompilerDefinitions.inc"
+add 'Externals/CompilerDefinitions.inc'
+
+D:\Documents\RAD Studio\Applications\Search.GIT\GIT.exe commit -v --date "23/Apr/2017 07:48:37" -m "Updated conditional defines with a catch for future compilers that will cause and error and therefore require a change."
+[Development 352dffd] Updated conditional defines with a catch for future compilers that will cause and error and therefore require a change.
+ Date: Sun Apr 23 07:48:37 2017 +0100
+ 1 file changed, 32 insertions(+), 1 deletion(-)
+

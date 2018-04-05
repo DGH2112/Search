@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    15 Dec 2012
+  @Date    22 Jan 2017
 
 **)
 Unit ApplicationFunctions;
@@ -36,7 +36,7 @@ Type
     clsQuiet,                        { /q or -q }
     clsOwner,                        { /w or -w }
     clsOrderBy,                      { /o or -o }
-    clsSearchIn,                     { /i or -i }
+    clsRegExSearch,                  { /i or -i }
     clsDateType,                     { /e or -e }
     clsDisplayCriteria,              { /c or -c }
     clsExclusions,                   { /x or -x }
@@ -91,7 +91,7 @@ Var
   Procedure GetOrderBy(slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var OrderFilesDirection: TOrderDirection; Var OrderFilesBy: TOrderBy);
   Procedure GetSearchInInfo(slParams: TStringList; Var iSwitch, iIndex: Integer;
-    Var strSearchInText: String);
+    Var strRegExText: String; var iSurroundingLines : Integer);
   Procedure GetDateType(slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var DateType: TDateType);
   Procedure GetExclusions(slParams: TStringList; Var iSwitch, iIndex: Integer;
@@ -117,7 +117,8 @@ Var
 Implementation
 
 Uses
-  DGHLibrary;
+  DGHLibrary,
+  RegularExpressions;
 
 ResourceString
   (** An exception message for a missing [ in a Date Range. **)
@@ -157,9 +158,7 @@ ResourceString
   (** An exception message for an invalid Date Type criteria. **)
   strInvalidDateTypeDirective = 'Invalid date type definition.';
   (** An exception message for a missing ] in an Search definition. **)
-  strCloseSquareExpectedInGREPSearchDef = '"]" Expected in GREP Search Definition';
-  (** An exception message for a missing [ in an Search definition. **)
-  strOpenSquareExpectedInGREPSearchDef = '"[" Expected in GREP Search Definition.';
+  strCloseSquareExpectedInRegExSearchDef = '"]" Expected in RegEx Search Definition';
   (** A resource string for formatting information. **)
   strSummaryLevelException = 'The summary level "%s" is invalid.';
   (** A resource string for formatting information. **)
@@ -502,35 +501,38 @@ End;
 
 (**
 
-  This method gets the command line parameter for the search in text file for
-  a text string option.
+  This method gets the command line parameter for the search in text file for a text string option.
 
   @precon  None.
-  @postcon Gets the command line parameter for the search in text file for
-           a text string option.
+  @postcon Gets the command line parameter for the search in text file for a text string option.
 
-  @param   slParams        as a TStringList
-  @param   iSwitch         as an Integer as a reference
-  @param   iIndex          as an Integer as a reference
-  @param   strSearchInText as a String as a reference
+  @param   slParams          as a TStringList
+  @param   iSwitch           as an Integer as a reference
+  @param   iIndex            as an Integer as a reference
+  @param   strRegExText      as a String as a reference
+  @param   iSurroundingLines as an Integer as a reference
 
 **)
 Procedure GetSearchInInfo(slParams: TStringList; Var iSwitch, iIndex: Integer;
-  Var strSearchInText: String);
+  var strRegExText: String; var iSurroundingLines : Integer);
+
+Var
+  RE : TRegEx;
+  M: TMatch;
+  i: Integer;
+  iErrorCode: Integer;
 
 Begin
-  Include(CommandLineSwitches, clsSearchIn);
-  IncrementSwitchPosition(slParams, iIndex, iSwitch,
-    strOpenSquareExpectedInGREPSearchDef);
-  If slParams[iSwitch][iIndex] <> '[' Then
-    Raise ESearchException.Create(strOpenSquareExpectedInGREPSearchDef);
-  IncrementSwitchPosition(slParams, iIndex, iSwitch, strMissingSearchText);
-  strSearchInText := '';
-  While (iIndex <= Length(slParams[iSwitch])) And (slParams[iSwitch][iIndex] <> ']') Do
+  iSurroundingLines := 0;
+  Include(CommandLineSwitches, clsRegExSearch);
+  RE.Create('([0-9]*)[[](.*)\]', [roIgnoreCase, roSingleLine, roCompiled]);
+  M := RE.Match(slParams[iSwitch]);
+  If M.Success Then
     Begin
-      strSearchInText := strSearchInText + slParams[iSwitch][iIndex];
-      IncrementSwitchPosition(slParams, iIndex, iSwitch,
-        strCloseSquareExpectedInGREPSearchDef);
+      Val(M.Groups[1].Value, iSurroundingLines, iErrorCode);
+      strRegExText := M.Groups[2].Value;
+      For i := 1 To Length(M.Value) Do
+        IncrementSwitchPosition(slParams, iIndex, iSwitch, strCloseSquareExpectedInRegExSearchDef);
     End;
 End;
 

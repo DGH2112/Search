@@ -4,9 +4,9 @@
  is designed to provide regular expression search capabilities for files on
  disk.
 
- @Version 1.0
+ @Version 1.1
  @Author  David Hoyle
- @Date    17 Dec 2012
+ @Date    06 Jan 2017
 
  **)
 Program Search64;
@@ -18,9 +18,9 @@ Program Search64;
 
 uses
   SysUtils,
-  DGHLibrary in '..\..\library\DGHLibrary.pas',
+  DGHLibrary in 'Externals\DGHLibrary.pas',
   FileHandling in 'Source\FileHandling.pas',
-  checkforupdates in '..\..\LIBRARY\checkforupdates.pas',
+  checkforupdates in 'Externals\checkforupdates.pas',
   ApplicationFunctions in 'Source\ApplicationFunctions.pas',
   SearchEngine in 'Source\SearchEngine.pas';
 

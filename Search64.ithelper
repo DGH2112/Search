@@ -1,0 +1,33 @@
+[Setup]
+IncBuild=0
+CopyVersionInfoFrom=D:\HoylD\RAD Studio\Applications\Search\Search.exe
+ExcludedResExts=.dcr
+EnabledVersionInfo=1
+IncludeInProject=1
+CompileWithBRCC32=0
+MajorVer=1
+MinorVer=1
+ReleaseVer=23
+BuildVer=660
+ResourceName=Search64VersionInfo
+WarnBefore=0
+WarnAfter=0
+
+[Zipping]
+Enabled=1
+ZipFile=D:\Documents\Web Page\Zips\search.zip
+BasePath=D:\Documents\RAD Studio\
+ExclusionFiles=
+
+[VersionInfo]
+CompanyName=Season's Fall Music
+FileDescription=A Win64 command line file search tool
+FileVersion=1.1.23.660
+InternalName=Search64
+LegalCopyright=Season's Fall Music
+LegalTrademarks=Season's Fall Music
+OriginalFilename=Search64
+ProductName=Search64
+ProductVersion=1.1
+Comments=
+
