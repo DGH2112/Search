@@ -43,7 +43,8 @@ type
 implementation
 
 Uses
-  ApplicationFunctions, DGHLibrary, FileHandling;
+  Search.Functions,
+  FileHandling;
 
 procedure TDGHTestCase.CheckTolerance(dblExpected, dblActual,
   dblTolerance: Double; strMsg: String = '');

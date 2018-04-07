@@ -111,10 +111,8 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="..\Externals\DGHLibrary.pas"/>
-        <DCCReference Include="Source\TestDGHLibrary.pas"/>
         <DCCReference Include="Source\TestApplicationFunction.pas"/>
-        <DCCReference Include="..\Source\ApplicationFunctions.pas"/>
+        <DCCReference Include="..\Source\Search.Functions.pas"/>
         <DCCReference Include="..\Source\FileHandling.pas"/>
         <RcCompile Include="SearchTests32VersionInfo.RC">
             <Form>SearchTests32VersionInfo.res</Form>

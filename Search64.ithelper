@@ -1,9 +1,9 @@
 [Setup]
 IncBuild=0
-CopyVersionInfoFrom=D:\HoylD\RAD Studio\Applications\Search\Search.exe
+CopyVersionInfoFrom=
 ExcludedResExts=.dcr
-EnabledVersionInfo=1
-IncludeInProject=1
+EnabledVersionInfo=0
+IncludeInProject=0
 CompileWithBRCC32=0
 MajorVer=1
 MinorVer=1

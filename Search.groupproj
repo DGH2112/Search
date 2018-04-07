@@ -10,7 +10,7 @@
             <Dependencies/>
         </Projects>
         <Projects Include="Search64.dproj">
-            <Dependencies/>
+            <Dependencies>Search.dproj</Dependencies>
         </Projects>
     </ItemGroup>
     <ProjectExtensions>
@@ -38,13 +38,13 @@
     <Target Name="Search:Make">
         <MSBuild Projects="Search.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Search64">
+    <Target Name="Search64" DependsOnTargets="Search">
         <MSBuild Projects="Search64.dproj"/>
     </Target>
-    <Target Name="Search64:Clean">
+    <Target Name="Search64:Clean" DependsOnTargets="Search:Clean">
         <MSBuild Projects="Search64.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="Search64:Make">
+    <Target Name="Search64:Make" DependsOnTargets="Search:Make">
         <MSBuild Projects="Search64.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">

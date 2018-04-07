@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    05 Apr 2018
+  @Date    07 Apr 2018
 
 **)
 Unit SearchEngine;
@@ -17,8 +17,8 @@ Uses
   Windows,
   ZipForge,
   Graphics,
-  FileHandling,
-  ApplicationFunctions;
+  FileHandling, 
+  Search.Functions;
 
 Type
   (** This class defines the working that searches the directories and files
@@ -174,7 +174,6 @@ Uses
   ActiveX,
   IniFiles,
   Math,
-  DGHLibrary,
   System.RegularExpressions;
 
   (**
@@ -292,8 +291,6 @@ Resourcestring
   strMsg1 = '  Found %s bytes in %1.0n Files in %1.0n Directories.';
   (** A resource string for formatting information. **)
   strMsg2 = '  Total space %s bytes and %s bytes free.';
-  (** A resource string for formatting information. **)
-  strTitle = 'Search %d.%d%s (Build %s) File Find and Summary Tool [%s].';
   (** A resource string for formatting information. **)
   strSummaryFormat = '%s%s%s';
   (** A resource string for formatting information. **)
@@ -541,7 +538,7 @@ Var
 Begin
   If Not (clsOutputAsCSV In CommandLineSwitches) Then
     Begin
-      OutputToConsoleLn(FStd, GetConsoleTitle(strTitle), FTitleColour);
+      OutputToConsoleLn(FStd, GetConsoleTitle, FTitleColour);
       OutputToConsoleLn(FStd);
       If clsDisplayCriteria In CommandLineSwitches Then
         DisplayCriteria;

@@ -8,10 +8,10 @@ EnabledVersionInfo=1
 IncludeInProject=1
 CompileWithBRCC32=0
 MajorVer=1
-MinorVer=1
-ReleaseVer=23
-BuildVer=710
-ResourceName=Search32VersionInfo
+MinorVer=2
+ReleaseVer=0
+BuildVer=716
+ResourceName=SearchVersionInfo
 
 [Zipping]
 Enabled=1
@@ -19,22 +19,22 @@ ZipFile=D:\Documents\Web Page\Zips\Search.zip
 BasePath=D:\Documents\RAD Studio\
 ExclusionFiles=
 
-[VersionInfo]
-CompanyName=Season's Fall Music
-FileDescription=Win32 Command line file search tool
-FileVersion=1.1.23.710
-InternalName=Search
-LegalCopyright=Season's Fall Music
-LegalTrademarks=Season's Fall Music
-OriginalFilename=Search
-ProductName=Search
-ProductVersion=1.1
-Comments=
-
 [Pre-Compilation]
 {$PROJDRIVE$}\HoylD\Borland Studio Projects\Applications\Search\Test\SearchTests.exe||{$PROJDRIVE$}\HoylD\Borland Studio Projects\Applications\Search\Test\|SearchTests.exe=0
 
 [Post-Compilation]
 {$PROJDRIVE$}\HoylD\Borland Studio Projects\Applications\Update HoylD XML\HoylDXML.exe|Search.exe "..\..\..\Web Page\HoylD-LIVE.xml"|{$PROJDRIVE$}\HoylD\Borland Studio Projects\Applications\Search\|HoylDXML.exe=0
 C:\Program Files (x86)\Inno Setup 5\ISCC.exe|"Search Setup.iss"|{$PROJDRIVE$}\HoylD\Borland Studio Projects\Applications\Search\INNO Setup\|ISCC.exe=0
+
+[VersionInfo]
+CompanyName=Season's Fall Music
+FileDescription=Win32 Command line file search tool
+FileVersion=1.2.0.716
+InternalName=Search
+LegalCopyright=Season's Fall Music
+LegalTrademarks=Season's Fall Music
+OriginalFilename=Search
+ProductName=Search
+ProductVersion=1.2
+Comments=
 

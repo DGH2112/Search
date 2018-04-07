@@ -78,7 +78,7 @@
         <DCC_ExeOutput>$(Platform)\$(Config)</DCC_ExeOutput>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <Icon_MainIcon>Search_Icon1.ico</Icon_MainIcon>
+        <Icon_MainIcon>Search.ico</Icon_MainIcon>
         <Debugger_RunParams>*.jpg /spcaw!</Debugger_RunParams>
         <DCC_Namespace>Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Locale>1033</VerInfo_Locale>
@@ -89,7 +89,7 @@
         <Manifest_File>(None)</Manifest_File>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <Icon_MainIcon>Search_Icon1.ico</Icon_MainIcon>
+        <Icon_MainIcon>Search.ico</Icon_MainIcon>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -104,10 +104,10 @@
         <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
-        <Icon_MainIcon>Search_Icon1.ico</Icon_MainIcon>
+        <Icon_MainIcon>Search.ico</Icon_MainIcon>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
-        <Icon_MainIcon>Search_Icon1.ico</Icon_MainIcon>
+        <Icon_MainIcon>Search.ico</Icon_MainIcon>
         <Manifest_File>None</Manifest_File>
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
         <DCC_RangeChecking>true</DCC_RangeChecking>
@@ -125,17 +125,17 @@
         <VerInfo_Release>0</VerInfo_Release>
         <VerInfo_Build>0</VerInfo_Build>
         <Icon_MainIcon>Search.ico</Icon_MainIcon>
+        <DCC_Define>EUREKALOG_VER7;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <RcCompile Include="Search32VersionInfo.RC">
-            <Form>Search32VersionInfo.res</Form>
+        <RcCompile Include="SearchVersionInfo.RC">
+            <Form>SearchVersionInfo.res</Form>
         </RcCompile>
-        <DCCReference Include="Externals\DGHLibrary.pas"/>
         <DCCReference Include="Source\FileHandling.pas"/>
-        <DCCReference Include="Source\ApplicationFunctions.pas"/>
+        <DCCReference Include="Source\Search.Functions.pas"/>
         <DCCReference Include="Source\SearchEngine.pas"/>
         <None Include="..\..\LIBRARY\CompilerDefinitions.inc"/>
         <BuildConfiguration Include="Debug">
@@ -219,6 +219,12 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="SearchVersionInfo.RC" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="$(BDS)\Redist\iossimulator\libPCRE.dylib" Class="DependencyModule">
                     <Platform Name="iOSSimulator">
                         <Overwrite>true</Overwrite>
@@ -226,12 +232,6 @@
                 </DeployFile>
                 <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule">
                     <Platform Name="iOSSimulator">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Search32VersionInfo.RC" Configuration="Debug" Class="ProjectFile">
-                    <Platform Name="Win32">
-                        <RemoteDir>.\</RemoteDir>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

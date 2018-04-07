@@ -4,9 +4,9 @@
  is designed to provide regular expression search capabilities for files on
  disk.
 
- @Version 1.1
+ @Version 1.2
  @Author  David Hoyle
- @Date    06 Jan 2017
+ @Date    07 Apr 2018
 
  **)
 Program Search64;
@@ -14,13 +14,26 @@ Program Search64;
 {$APPTYPE CONSOLE}
 {$R *.RES}          
 
-{$R 'Search64VersionInfo.res' 'Search64VersionInfo.RC'}
+
+
+{$R 'SearchVersionInfo.res' 'SearchVersionInfo.RC'}
 
 uses
+  {$IFDEF EurekaLog}
+  EMemLeaks,
+  EResLeaks,
+  ESendMailMAPI,
+  ESendMailSMAPI,
+  EDialogConsole,
+  EDebugExports,
+  EDebugJCL,
+  EMapWin32,
+  EAppConsole,
+  ExceptionLog7,
+  {$ENDIF EurekaLog}
   SysUtils,
-  DGHLibrary in 'Externals\DGHLibrary.pas',
   FileHandling in 'Source\FileHandling.pas',
-  ApplicationFunctions in 'Source\ApplicationFunctions.pas',
+  Search.Functions in 'Source\Search.Functions.pas',
   SearchEngine in 'Source\SearchEngine.pas';
 
 ResourceString
@@ -34,10 +47,10 @@ Var
   boolException: Boolean;
 
 Begin
-  {$IFDEF EURALOG}
-  SetEurekaLogState(Not IsDebuggerPresent);
+  {$IFDEF EUREKALOG}
+  SetEurekaLogState(DebugHook = 0);
   {$ENDIF}
-  ReportMemoryLeaksOnShutdown := IsDebuggerPresent;
+  ReportMemoryLeaksOnShutdown := DebugHook <> 0;
   boolException := False;
   With TSearch.Create Do
     Try
