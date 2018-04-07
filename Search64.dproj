@@ -109,7 +109,7 @@
         <RcCompile Include="SearchVersionInfo.RC">
             <Form>SearchVersionInfo.res</Form>
         </RcCompile>
-        <DCCReference Include="Source\FileHandling.pas"/>
+        <DCCReference Include="Source\Search.FilesCls.pas"/>
         <DCCReference Include="Source\Search.Functions.pas"/>
         <DCCReference Include="Source\SearchEngine.pas"/>
         <DCCReference Include="Source\Search.Types.pas"/>

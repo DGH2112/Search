@@ -45,7 +45,7 @@ implementation
 
 Uses
   Search.Functions,
-  FileHandling, 
+  Search.FilesCls, 
   Search.Types;
 
 procedure TDGHTestCase.CheckTolerance(dblExpected, dblActual,

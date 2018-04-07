@@ -30,7 +30,7 @@ uses
   ExceptionLog7,
   {$ENDIF EurekaLog}
   SysUtils,
-  FileHandling in 'Source\FileHandling.pas',
+  Search.FilesCls in 'Source\Search.FilesCls.pas',
   Search.Functions in 'Source\Search.Functions.pas',
   SearchEngine in 'Source\SearchEngine.pas',
   Search.Types in 'Source\Search.Types.pas',

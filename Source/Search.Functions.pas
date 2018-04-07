@@ -17,7 +17,7 @@ Uses
   System.Classes,
   WinAPI.Windows,
   VCL.Graphics,
-  FileHandling, 
+  Search.FilesCls, 
   Search.Types;
 
 Const

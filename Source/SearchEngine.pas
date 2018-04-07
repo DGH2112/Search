@@ -16,8 +16,7 @@ Uses
   Classes,
   Windows,
   ZipForge,
-  Graphics,
-  FileHandling, 
+  Graphics, 
   Search.Functions, 
   Search.Types, 
   Search.Interfaces;
@@ -86,11 +85,11 @@ Type
     FZipFileColour: TColor;
     FErrorLog : TStringList;
     FUNCPath : Boolean;
-    Procedure OutputDateTimeAndSize(FilesCollection: TFiles; Var strOutput: String;
+    Procedure OutputDateTimeAndSize(FilesCollection: ISearchFiles; Var strOutput: String;
       i: Integer);
-    Procedure OutputFileAttributes(i: Integer; FilesCollection: TFiles;
+    Procedure OutputFileAttributes(i: Integer; FilesCollection: ISearchFiles;
       Var strOutput: String);
-    Procedure OutputFileOwner(FilesCollection: TFiles; Var strOutput: String; i: Integer);
+    Procedure OutputFileOwner(FilesCollection: ISearchFiles; Var strOutput: String; i: Integer);
     Procedure OutputRegExInformation(strPath : String; boolRegEx: Boolean; FileInfo: ISearchFile);
     Procedure OutputDirectoryOrZIPFile(Var boolDirPrinted: Boolean; strPath: String);
   Strict Protected
@@ -105,18 +104,18 @@ Type
     Function  LookupAccountBySID(SID: PSID): String;
     Function  OutputOwner(strFileName: String): String;
     Function  CheckFiles(recSearch: TSearchRec; Var iDirFiles: Integer;
-      strPath, strOwner: String; FilesCollection: TFiles): Int64;
+      strPath, strOwner: String; FilesCollection: ISearchFiles): Int64;
     Function  CheckZipFiles(ZipArchive: TZipForge; ZFAI: TZFArchiveItem;
-      Var iDirFiles: Integer; strPath, strOwner: String; FilesCollection: TFiles): Int64;
+      Var iDirFiles: Integer; strPath, strOwner: String; FilesCollection: ISearchFiles): Int64;
     Procedure WorkaroundLargeFiles(Var iSize: Int64; recSearch: TSearchRec);
     Procedure OutputFilesToConsole(strPath: String; boolDirPrinted: Boolean;
-      FilesCollection: TFiles);
+      FilesCollection: ISearchFiles);
     Function  RecurseDirectories(strPath: String; Var iLevel: Integer;
       slPatterns: TStringList): Int64;
     Function  SearchForPatterns(slPatterns: TStringList; iDirFiles: Integer;
-      strPath: String; FilesCollection: TFiles): Int64;
+      strPath: String; FilesCollection: ISearchFiles): Int64;
     Function  SearchForPatternsInZip(strFileName: String; slPatterns: TStringList;
-      iDirFiles: Integer; strPath: String; FilesCollection: TFiles): Int64;
+      iDirFiles: Integer; strPath: String; FilesCollection: ISearchFiles): Int64;
     Function  SearchDirectory(strPath: String; slPatterns: TStringList;
       Var iLevel: Integer): Int64;
     Function  SearchZip(strFileName: String; slPatterns: TStringList;
@@ -177,7 +176,8 @@ Uses
   IniFiles,
   Math,
   System.RegularExpressions, 
-  Search.RegExMatches;
+  Search.RegExMatches, 
+  Search.FilesCls;
 
   (**
 
@@ -1226,22 +1226,21 @@ End;
 
 (**
 
-  This method adds the file to the collection and increments the various
-  counters.
+  This method adds the file to the collection and increments the various counters.
 
   @precon  None.
   @postcon Adds the file to the collection and increments the various counters.
 
   @param   recSearch       as a TSearchRec
   @param   iDirFiles       as an Integer as a reference
-  @param   strPath         as a string
-  @param   strOwner        as a string
-  @param   FilesCollection as a TFiles
+  @param   strPath         as a String
+  @param   strOwner        as a String
+  @param   FilesCollection as an ISearchFiles
   @return  an Int64
 
 **)
 Function TSearch.CheckFiles(recSearch: TSearchRec; Var iDirFiles: Integer;
-  strPath, strOwner: String; FilesCollection: TFiles): Int64;
+  strPath, strOwner: String; FilesCollection: ISearchFiles): Int64;
 
   (**
 
@@ -1315,24 +1314,22 @@ End;
 
 (**
 
-  This method adds the zip file to the collection and increments the various
-  counters.
+  This method adds the zip file to the collection and increments the various counters.
 
   @precon  None.
-  @postcon Adds the zip file to the collection and increments the various
-           counters.
+  @postcon Adds the zip file to the collection and increments the various counters.
 
   @param   ZipArchive      as a TZipForge
   @param   ZFAI            as a TZFArchiveItem
   @param   iDirFiles       as an Integer as a reference
-  @param   strPath         as a string
-  @param   strOwner        as a string
-  @param   FilesCollection as a TFiles
+  @param   strPath         as a String
+  @param   strOwner        as a String
+  @param   FilesCollection as an ISearchFiles
   @return  an Int64
 
 **)
 Function TSearch.CheckZipFiles(ZipArchive: TZipForge; ZFAI: TZFArchiveItem;
-  Var iDirFiles: Integer; strPath, strOwner: String; FilesCollection: TFiles): Int64;
+  Var iDirFiles: Integer; strPath, strOwner: String; FilesCollection: ISearchFiles): Int64;
 
   (**
 
@@ -1451,13 +1448,13 @@ End;
   @precon  None.
   @postcon Outputs the files that have met the criteria to the console.
 
-  @param   strPath         as a string
+  @param   strPath         as a String
   @param   boolDirPrinted  as a Boolean
-  @param   FilesCollection as a TFiles
+  @param   FilesCollection as an ISearchFiles
 
 **)
 Procedure TSearch.OutputFilesToConsole(strPath: String; boolDirPrinted: Boolean;
-  FilesCollection: TFiles);
+  FilesCollection: ISearchFiles);
 
 Var
   iFile: Integer;
@@ -1596,22 +1593,20 @@ End;
 
 (**
 
-  This method search the current directory for files which match all the
-  specified search patterns.
+  This method search the current directory for files which match all the specified search patterns.
 
   @precon  None.
-  @postcon Search the current directory for files which match all the specified
-           search patterns.
+  @postcon Search the current directory for files which match all the specified search patterns.
 
   @param   slPatterns      as a TStringList
   @param   iDirFiles       as an Integer
-  @param   strPath         as a string
-  @param   FilesCollection as a TFiles
+  @param   strPath         as a String
+  @param   FilesCollection as an ISearchFiles
   @return  an Int64
 
 **)
 Function TSearch.SearchForPatterns(slPatterns: TStringList; iDirFiles: Integer;
-  strPath: String; FilesCollection: TFiles): Int64;
+  strPath: String; FilesCollection: ISearchFiles): Int64;
 
 Var
   iPattern: Integer;
@@ -1691,7 +1686,7 @@ End;
 
 **)
 Function TSearch.SearchForPatternsInZip(strFileName: String; slPatterns: TStringList;
-  iDirFiles: Integer; strPath: String; FilesCollection: TFiles): Int64;
+  iDirFiles: Integer; strPath: String; FilesCollection: ISearchFiles): Int64;
 
 Var
   Z: TZipForge;
@@ -1778,13 +1773,13 @@ Function TSearch.SearchZip(strFileName: String; slPatterns: TStringList;
 Var
   boolDirPrinted: Boolean;
   iDirFiles: Integer;
-  FilesCollection: TFiles;
-  PathCollections: TObjectList;
+  FilesCollection: ISearchFiles;
+  PathCollections: TInterfaceList;
   iPath: Integer;
-  PathCollection: TFiles;
+  PathCollection: ISearchFiles;
   iFile: Integer;
   strPath: String;
-  Files: TFiles;
+  Files: ISearchFiles;
 
 Begin
   OutputCurrentSearchPath(strFileName);
@@ -1794,13 +1789,13 @@ Begin
   Inc(FDirectories);
   boolDirPrinted := False;
   (* Find Files in Zip *)
-  FilesCollection := TFiles.Create(FilesExceptionHandler, FRegExSearch);
+  FilesCollection := TSearchFiles.Create(FilesExceptionHandler, FRegExSearch);
   Try
     Inc(Result, SearchForPatternsInZip(strFileName, slPatterns, iDirFiles, strFileName,
         FilesCollection));
     // Break down files into individual paths
     FilesCollection.OrderBy(obName, odAscending);
-    PathCollections := TObjectList.Create(True);
+    PathCollections := TInterfaceList.Create;
     Try
       strPath := '';
       Files := Nil;
@@ -1809,7 +1804,7 @@ Begin
           If (strPath <> ExtractFilePath(FilesCollection.FileInfo[iFile].FileName)) Or
             (Files = Nil) Then
             Begin
-              Files := TFiles.Create(FilesExceptionHandler, FRegExSearch);
+              Files := TSearchFiles.Create(FilesExceptionHandler, FRegExSearch);
               PathCollections.Add(Files);
               strPath := ExtractFilePath(FilesCollection.FileInfo[iFile].FileName);
               Files.Path := strPath;
@@ -1819,7 +1814,7 @@ Begin
         End;
       For iPath := 0 To PathCollections.Count - 1 Do
         Begin
-          PathCollection := PathCollections[iPath] As TFiles;
+          PathCollection := PathCollections[iPath] As ISearchFiles;
           If FOrderFilesBy <> obNone Then
             PathCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
           OutputFilesToConsole(strFileName + '\' + PathCollection.Path, boolDirPrinted,
@@ -1829,7 +1824,7 @@ Begin
       PathCollections.Free;
     End;
   Finally
-    FilesCollection.Free;
+    FilesCollection := Nil;
   End;
   If Not(clsSummaryLevel In CommandLineSwitches) Then
     If iDirFiles > 0 Then
@@ -1896,7 +1891,7 @@ Var
   boolDirPrinted: Boolean;
   iDirFiles: Integer;
   strOutput: String;
-  FilesCollection: TFiles;
+  FilesCollection: ISearchFiles;
 
 Begin
   OutputCurrentSearchPath(strPath);
@@ -1906,14 +1901,14 @@ Begin
   Inc(FDirectories);
   boolDirPrinted := False;
   (* Find Files *)
-  FilesCollection := TFiles.Create(FilesExceptionHandler, FRegExSearch);
+  FilesCollection := TSearchFiles.Create(FilesExceptionHandler, FRegExSearch);
   Try
     Inc(Result, SearchForPatterns(slPatterns, iDirFiles, strPath, FilesCollection));
     If FOrderFilesBy <> obNone Then
       FilesCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
     OutputFilesToConsole(strPath, boolDirPrinted, FilesCollection);
   Finally
-    FilesCollection.Free;
+    FilesCollection := Nil;
   End;
   If Not(clsSummaryLevel In CommandLineSwitches) Then
     If iDirFiles > 0 Then
@@ -1938,19 +1933,17 @@ End;
 
 (**
 
-  This method outputs the file date and time and its size to the passed output
-  string.
+  This method outputs the file date and time and its size to the passed output string.
 
   @precon  FilesCollection must be a valid instance.
-  @postcon Outputs the file date and time and its size to the passed output
-           string.
+  @postcon Outputs the file date and time and its size to the passed output string.
 
-  @param   FilesCollection as a TFiles
+  @param   FilesCollection as an ISearchFiles
   @param   strOutput       as a String as a reference
   @param   i               as an Integer
 
 **)
-Procedure TSearch.OutputDateTimeAndSize(FilesCollection: TFiles; Var strOutput: String;
+Procedure TSearch.OutputDateTimeAndSize(FilesCollection: ISearchFiles; Var strOutput: String;
   i: Integer);
 
 Begin
@@ -1983,11 +1976,11 @@ End;
   @postcon Outputs the files attributes to the passed output string.
 
   @param   i               as an Integer
-  @param   FilesCollection as a TFiles
+  @param   FilesCollection as an ISearchFiles
   @param   strOutput       as a String as a reference
 
 **)
-Procedure TSearch.OutputFileAttributes(i: Integer; FilesCollection: TFiles;
+Procedure TSearch.OutputFileAttributes(i: Integer; FilesCollection: ISearchFiles;
   Var strOutput: String);
 
 Begin
@@ -2005,12 +1998,12 @@ End;
   @precon  FilesCollection must be a valid instance.
   @postcon Outputs the file owner.
 
-  @param   FilesCollection as a TFiles
+  @param   FilesCollection as an ISearchFiles
   @param   strOutput       as a String as a reference
   @param   i               as an Integer
 
 **)
-Procedure TSearch.OutputFileOwner(FilesCollection: TFiles; Var strOutput: String;
+Procedure TSearch.OutputFileOwner(FilesCollection: ISearchFiles; Var strOutput: String;
   i: Integer);
 
 Var
@@ -2040,7 +2033,7 @@ End;
 
   @param   strPath   as a String
   @param   boolRegEx as a Boolean
-  @param   FileInfo  as a TFile
+  @param   FileInfo  as an ISearchFile
 
 **)
 Procedure TSearch.OutputRegExInformation(strPath : String; boolRegEx: Boolean; FileInfo: ISearchFile);
@@ -2058,7 +2051,6 @@ Var
   REZip: TRegEx;
   MZip : TMatch;
   Z: TZipForge;
-  ZFAI: TZFArchiveItem;
   strText: String;
 
 Begin

@@ -11,7 +11,7 @@ CompileWithBRCC32=0
 MajorVer=1
 MinorVer=0
 ReleaseVer=0
-BuildVer=879
+BuildVer=882
 ResourceName=SearchTests32VersionInfo
 
 [Zipping]
@@ -23,7 +23,7 @@ ExclusionFiles=
 [VersionInfo]
 CompanyName=Season's Fall Music
 FileDescription=Search Tests
-FileVersion=1.0.0.879
+FileVersion=1.0.0.882
 InternalName=SearchTests
 LegalCopyright=Season's Fall Music
 LegalTrademarks=Season's Fall Music
