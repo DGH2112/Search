@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    05 Apr 2018
+  @Date    07 Apr 2018
 
 **)
 Unit FileHandling;
@@ -17,23 +17,11 @@ Uses
   Classes,
   Contnrs,
   RegularExpressions,
-  Generics.Collections;
+  Generics.Collections, 
+  Search.Types;
 
 Type
-  (** An enumerate to define the order for sorting the files. **)
-  TOrderBy = (obNone, obName, obSize, obDate, obOwner, obAttribute);
-
-  (** An enumberate to define whether the files should be ascending or
-      descending **)
-  TOrderDirection = (odAscending, odDescending);
-
-  TRegExMatch = Record
-    FIndex : Integer;
-    FLength : Integer;
-  End;
-
-  TArrayOfMatch = Array Of TRegExMatch;
-
+  (** A record to manage the regular expression matches in a grep search. **)
   TRegExMatches = Record
   Strict Private
     FLineNum    : Integer;

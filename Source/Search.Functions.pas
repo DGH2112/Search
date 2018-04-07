@@ -17,55 +17,8 @@ Uses
   System.Classes,
   WinAPI.Windows,
   VCL.Graphics,
-  FileHandling;
-
-Type
-  (** A custom Exception for any exceptions raised by incorrect information
-      in the search criteria. **)
-  ESearchException = Class(Exception);
-
-  (** This is a list of boolean on / off command line switches. **)
-  TCommandLineSwitch = (clsShowHelp, { /? or -? or /h or -h }
-    clsSubDirectories,               { /s or -s }
-    clsDebug,                        { /!       }
-    clsShowAttribs,                  { /a or -a }
-    clsSummaryLevel,                 { /1..9 or -1..9 }
-    clsSupressZeros,                 { /0 or -0 }
-    clsDateRange,                    { /d or -d }
-    clsSizeRange,                    { /z or -z }
-    clsAttrRange,                    { /t or -t }
-    clsQuiet,                        { /q or -q }
-    clsOwner,                        { /w or -w }
-    clsOrderBy,                      { /o or -o }
-    clsRegExSearch,                  { /i or -i }
-    clsDateType,                     { /e or -e }
-    clsDisplayCriteria,              { /c or -c }
-    clsExclusions,                   { /x or -x }
-    clsSearchZip,                    { /p or -p }
-    clsSizeOutput,                   { /f or -f }
-    clsOutputAsCSV                   { /v or -v }
-    );
-
-  (** This is a set of boolean command line switches. **)
-  TCommandLineSwitches = Set Of TCommandLineSwitch;
-
-  (** An enumerate to define the type of date to display and search on. **)
-  TDateType = (dtCreation, dtLastAccess, dtLastWrite);
-
-  (** This is an enumerate to defines whether the owner should be searched. **)
-  TOwnerSearch = (osEquals, osNotEquals);
-
-  (** This is an enumerate to defines where the owner should be searched. **)
-  TOwnerSearchPos = (ospNone, ospExact, ospStart, ospMiddle, ospEnd);
-
-  (** This is an enumerate to defines the output size formats. **)
-  TSizeFormat = (sfNone, sfKilobytes, sfMegaBytes, sfGigaBytes, sfTeraBytes);
-
-  (** A Procedure for feeding back errors. **)
-  TLogErrorProc = Procedure(strErrorMsg, strFileNmae: String) Of Object;
-
-  (** This is a procedure type for handling Exception messages in ParseMacro. **)
-  TExceptionProcedure = Procedure(strExceptionMsg : String) Of Object;
+  FileHandling, 
+  Search.Types;
 
 Const
   (** A constant to define that only files should be listed. **)
@@ -100,8 +53,8 @@ Var
   Procedure GetExclusions(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var strExlFileName: String);
   Procedure GetOwnerSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
-  Var OwnerSearch: TOwnerSearch; Var OwnerSearchPos: TOwnerSearchPos;
-  Var strOwnerSearch: String);
+    Var OwnerSearch: TOwnerSearch; Var OwnerSearchPos: TOwnerSearchPos;
+    Var strOwnerSearch: String);
   Function OutputAttributes(Const iAttr: Integer): String;
   Procedure CheckDateRange(Const iDateTime: Integer; Const dtLDate, dtUdate: Double;
     Var boolFound: Boolean; Const strFileName : String; Const LogErrorProc : TLogErrorProc);
@@ -129,8 +82,7 @@ Var
   Function Like(Const strPattern, strText : String) : Boolean;
   Function CharCount(Const cChar : Char; Const strText : String;
     Const boolIgnoreQuotes : Boolean = True) : Integer;
-  Function BuildRootKey(Const slParams : TStringList;
-    Const ExceptionProc : TExceptionProcedure) : String;
+  Function BuildRootKey(Const slParams : TStringList) : String;
   Function GetField(Const strText : String; Const Ch : Char; Const iIndex : Integer;
     Const boolIgnoreQuotes : Boolean = True): String;
   
@@ -204,6 +156,18 @@ ResourceString
   (** An execption messages for a missing size format definition. **)
   strInvalidSizeFormatDirective = 'Invalid size format definition.';
 
+Const
+  (** Number of hours in a day **)
+  iHoursInDay = 23;
+  (** Number of minutes in an hour **)
+  iMinutesInHour = 59;
+  (** Number of seconds in a minute **)
+  iSecondsInMinute = 59;
+  (** Number of days in a month **)
+  iDaysInMonth = 31;
+  (** Number of months in a year **)
+  iMonthsInYear = 12;
+
 Var
   (** A private variable to hold the console output mode **)
   ConsoleMode : TConsoleMode;
@@ -228,6 +192,9 @@ Var
 **)
 Function BackGroundColour(Const iColour, iNone : TColor) : Integer;
 
+ResourceString
+  strInvalidConsoleColour = 'Invalid console colour.';
+
 Begin
   Case iColour Of
     clBlack  : Result := 0;
@@ -247,7 +214,7 @@ Begin
     clWhite   :Result := BACKGROUND_BLUE Or BACKGROUND_GREEN Or BACKGROUND_RED Or BACKGROUND_INTENSITY;
     clNone    :Result  := iNone;
   Else
-    Raise Exception.Create('Invalid console colour.');
+    Raise Exception.Create(strInvalidConsoleColour);
   End;
 End;
 
@@ -261,66 +228,14 @@ End;
            handle for the module.
 
   @param   slParams      as a TStringList as a constant
-  @param   ExceptionProc as a TExceptionProcedure as a constant
   @return  a String
 
 **)
-Function BuildRootKey(Const slParams : TStringList; Const ExceptionProc : TExceptionProcedure) : String;
+Function BuildRootKey(Const slParams : TStringList) : String;
 
 ResourceString
-  strExpectedSquare = 'Expected "[" at position 3 in alternate INI file parameter.';
-  strExpectedClosingSquare = 'Expected a closing "]" in alternate INI file parameter.';
-  strPathDoesNotExist = 'The path "%s" does not exist for the alternate INI file.';
   strINIPattern = '%s Settings for %s on %s.INI';
   strSeasonsFall = '\Season''s Fall\';
-
-  (**
-
-    This function parses the alternate INI filename from the parameter.
-
-    @precon  None.
-    @postcon Parses the alternate INI filename from the parameter.
-
-    @param   strDefaultINI as a String
-    @param   strParam      as a String
-    @return  a String
-
-  **)
-  Function ParseAlternateINIFile(strDefaultINI, strParam : String) : String;
-
-  Var
-    i : Integer;
-    strFileName : String;
-
-  Begin
-    Result := strDefaultINI;
-    i := 3;
-    If strParam[i] <> '[' Then
-      If Assigned(ExceptionProc) Then
-        Begin
-          ExceptionProc(strExpectedSquare);
-          Exit;
-        End;
-    Inc(i);
-    strFileName := '';
-    While (i <= Length(strParam)) And (strParam[i] <> ']') Do
-      Begin
-        strFileName := strFileName + strParam[i];
-        Inc(i);
-        If i > Length(strParam) Then
-          If Assigned(ExceptionProc) Then
-            Begin
-              ExceptionProc(strExpectedClosingSquare);
-              Exit;
-            End;
-      End;
-    strFileName := ExpandUNCFileName(strFileName);
-    If DirectoryExists(ExtractFilePath(strFileName)) Then
-      Result := strFileName
-    Else
-      If Assigned(ExceptionProc) Then
-        ExceptionProc(Format(strPathDoesNotExist, [ExtractFilePath(strFileName)]));
-  End;
 
 var
   strModuleName : String;
@@ -330,16 +245,16 @@ var
   iParam : Integer;
   iSize : Integer;                                                              
 
-begin
+Begin
   SetLength(strBuffer, MAX_PATH);
   iSize := GetModuleFileName(hInstance, PChar(strBuffer), MAX_PATH);
   SetLength(strBuffer, iSize);
   strModuleName := strBuffer;
   strINIFileName := ChangeFileExt(ExtractFileName(strBuffer), '');
-  While (Length(strIniFilename) > 0) And
-    (CharInSet(strIniFileName[Length(strIniFilename)], ['0'..'9'])) Do
-    strIniFileName := Copy(strIniFileName, 1, Length(strIniFileName) - 1);
-  strINIFileName :=  Format(strINIPattern, [strIniFileName, UserName, ComputerName]);
+  While (Length(strINIFileName) > 0) And
+    (CharInSet(strINIFileName[Length(strINIFileName)], ['0' .. '9'])) Do
+    strINIFileName := Copy(strINIFileName, 1, Length(strINIFileName) - 1);
+  strINIFileName := Format(strINIPattern, [strINIFileName, UserName, ComputerName]);
   SetLength(strBuffer, MAX_PATH);
   SHGetFolderPath(0, CSIDL_APPDATA Or CSIDL_FLAG_CREATE, 0, SHGFP_TYPE_CURRENT, PChar(strBuffer));
   strBuffer := StrPas(PChar(strBuffer));
@@ -347,21 +262,9 @@ begin
   If Not DirectoryExists(strUserAppDataPath) Then
     ForceDirectories(strUserAppDataPath);
   Result := strUserAppDataPath + strINIFileName;
-  If Like('*.exe', ExtractFileExt(strModuleName)) Then
-    If slParams <> Nil Then
-      For iParam := 1 To ParamCount Do
-        Begin
-          If Length(ParamStr(iParam)) > 0 Then
-            If CharInSet(ParamStr(iParam)[1], ['-', '/']) Then
-              If Length(ParamStr(iParam)) > 1 Then
-                If CharInSet(ParamStr(iParam)[2], ['@']) Then
-                  Begin
-                    Result := ParseAlternateINIFile(Result, ParamStr(iParam));
-                    Continue;
-                  End;
-          slParams.Add(ParamStr(iParam));
-        End;
-end;
+  For iParam := 1 To ParamCount Do
+    slParams.Add(ParamStr(iParam));
+End;
 
 (**
 
@@ -587,7 +490,7 @@ Var
   i : Cardinal;
 
 Begin
-  i := 1024;
+  i := MAX_PATH;
   SetLength(Result, i);
   GetComputerName(@Result[1], i);
   Win32Check(LongBool(i));
@@ -646,6 +549,8 @@ Const
     10, 10,
     9, 9
   );
+  iMinYear = 1900;
+  iNextCentury = 2000;
 
 Var
   i : Integer;
@@ -806,7 +711,8 @@ Begin
             If sl.Count = 3 Then
               Begin
                 ProcessValue(iIndex2, recDate.iYear, False); // Get Year
-                If recDate.iYear < 1900 Then Inc(recDate.iYear, 2000);
+                If recDate.iYear < iMinYear Then
+                  Inc(recDate.iYear, iNextCentury);
               End;
         End;
     Else
@@ -814,18 +720,18 @@ Begin
         Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
     End;
     // Output result.
-    If Not (recDate.iHour In [0..23]) Then
+    If Not (recDate.iHour In [0..iHoursInDay]) Then
       Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-    If Not (recDate.iMinute In [0..59]) Then
+    If Not (recDate.iMinute In [0..iMinutesInHour]) Then
       Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-    If Not (recDate.iSecond In [0..59]) Then
+    If Not (recDate.iSecond In [0..iSecondsInMinute]) Then
       Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
     Result := EncodeTime(recDate.iHour, recDate.iMinute, recDate.iSecond, recDate.iMilli);
     If recDate.iYear * recDate.iMonth * recDate.iDay <> 0 Then
       Begin
-        If Not (recDate.iDay In [1..31]) Then
+        If Not (recDate.iDay In [1..iDaysInMonth]) Then
           Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-        If Not (recDate.iMonth In [1..12]) Then
+        If Not (recDate.iMonth In [1..iMonthsInYear]) Then
           Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
         Result := Result + EncodeDate(recDate.iYear, recDate.iMonth, recDate.iDay);
       End;
@@ -850,6 +756,9 @@ End;
 **)
 Function ForeGroundColour(Const iColour, iNone : TColor): Integer;
 
+ResourceString
+  strInvalidConsoleColour = 'Invalid console colour.';
+
 Begin
   Case iColour Of
     clBlack  : Result := 0;
@@ -869,7 +778,7 @@ Begin
     clWhite   :Result := FOREGROUND_BLUE Or FOREGROUND_GREEN Or FOREGROUND_RED Or FOREGROUND_INTENSITY;
     clNone  : Result  := iNone;
   Else
-    Raise Exception.Create('Invalid console colour.');
+    Raise Exception.Create(strInvalidConsoleColour);
   End;
 End;
 
@@ -921,14 +830,12 @@ End;
 
 (**
 
-  This routine extract the build number from the EXE resources for
-  display in the app title.
+  This routine extract the build number from the EXE resources for display in the app title.
 
   @precon  None.
-  @postcon Extract the build number from the EXE resources for display in the
-           app title.
+  @postcon Extract the build number from the EXE resources for display in the app title.
 
-  @param   strFileName as a String
+  @param   strFileName as a String as a constant
   @param   iMajor      as an Integer as a reference
   @param   iMinor      as an Integer as a reference
   @param   iBugfix     as an Integer as a reference
@@ -936,11 +843,16 @@ End;
   @return  a String
 
 **)
-Function GetBuildNumber(strFileName : String; var iMajor, iMinor, iBugfix,
+Function GetBuildNumber(Const strFileName : String; var iMajor, iMinor, iBugfix,
   iBuild : Integer) : String;
+
+ResourceString
+  strExeHasNoVerInfo = 'The executable "%s" does not contain any version information.';
 
 Const
   strBuild = '%d.%d.%d.%d';
+  iShiftRight = 16;
+  iWordMask = $FFFF;
 
 Var
   VerInfoSize: DWORD;
@@ -954,20 +866,19 @@ Begin
   If VerInfoSize <> 0 Then
     Begin
       GetMem(VerInfo, VerInfoSize);
-      GetFileVersionInfo(PChar(strFileName), 0, VerInfoSize, VerInfo);
-      VerQueryValue(VerInfo, '\', Pointer(VerValue), VerValueSize);
-      with VerValue^ do
-      begin
-        iMajor := dwFileVersionMS shr 16;
-        iMinor := dwFileVersionMS and $FFFF;
-        iBugfix := dwFileVersionLS shr 16;
-        iBuild := dwFileVersionLS and $FFFF;
+      Try
+        GetFileVersionInfo(PChar(strFileName), 0, VerInfoSize, VerInfo);
+        VerQueryValue(VerInfo, '\', Pointer(VerValue), VerValueSize);
+        iMajor := VerValue^.dwFileVersionMS shr iShiftRight;
+        iMinor := VerValue^.dwFileVersionMS and iWordMask;
+        iBugfix := VerValue^.dwFileVersionLS shr iShiftRight;
+        iBuild := VerValue^.dwFileVersionLS and iWordMask;
         Result := Format(strBuild, [iMajor, iMinor, iBugfix, iBuild]);
-      end;
-      FreeMem(VerInfo, VerInfoSize);
+      Finally
+        FreeMem(VerInfo, VerInfoSize);
+      End;
     End Else
-      Raise ESearchException.CreateFmt(
-        'The executable "%s" does not contain any version information.', [strFileName]);
+      Raise ESearchException.CreateFmt(strExeHasNoVerInfo, [strFileName]);
 End;
 
 (**
@@ -988,31 +899,33 @@ Function GetConsoleTitle : String;
 ResourceString
   strTitle = 'Search %d.%d%s (%sBuild %s) File Find and Summary Tool [%s].';
   strBugFix = ' abcdefghijklmnopqrstuvwxyz';
-  
+  strWrittenByDavidHoyle = 'Written by David Hoyle (c) %s';
+
+Const
+  {$IFDEF DEBUG}
+  strConfig = 'DEBUG ';
+  {$ELSE}
+  strConfig = '';
+  {$ENDIF}
+  {$IFDEF WIN64}
+  strPlatform = '64-bit';
+  {$ELSE}
+  strPlatform = '32-bit';
+  {$ENDIF}
+  strDateFmt = 'ddd dd/mmm/yyyy';
+
 Var
   iMajor, iMinor, iBugfix, iBuild : Integer;
   strBuildNumber  : String;
   dtDate : TDateTime;
-  strPlatform : String;
-  strConfig : String;
 
 Begin
   strBuildNumber := GetBuildNumber(ParamStr(0), iMajor, iMinor, iBugFix, iBuild);
-  {$IFDEF DEBUG}
-  strConfig := 'DEBUG ';
-  {$ELSE}
-  strConfig := '';
-  {$ENDIF}
-  {$IFDEF WIN64}
-  strPlatform := '64-bit';
-  {$ELSE}
-  strPlatform := '32-bit';
-  {$ENDIF}
   Result := Format(strTitle, [iMajor, iMinor, strBugFix[iBugFix + 1], strConfig, strBuildNumber,
     strPlatform]);
   FileAge(ParamStr(0), dtDate);
   Result := Result + #13#10 +
-    Format('Written by David Hoyle (c) %s', [FormatDateTime('ddd dd/mmm/yyyy', dtDate)]);
+    Format(strWrittenByDavidHoyle, [FormatDateTime(strDateFmt, dtDate)]);
 End;
 
 (**
@@ -1033,9 +946,6 @@ Procedure GetDateRange(Const slParams: TStringList; Var iSwitch, iIndex: Integer
   Var dtLDate, dtUdate: Double);
 
 Const
-  iHoursInDay = 23;
-  iMinutesInHour = 59;
-  iSecondsInMinute = 59;
   iMilliSecInSec = 999;
   strDefaultEndDate = '31/Dec/2099 23:59:59.999';
   strDefaultStartDate = '01/Jan/1900 00:00:00';
@@ -1415,6 +1325,9 @@ End;
 Procedure GetSizeRange(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
   Var iLSize, iUSize: Int64);
 
+Const
+  iUpperLimit = $F00000000000000;
+
 Var
   strSize: String;
 
@@ -1432,6 +1345,12 @@ Var
   **)
   Procedure GetSize(Var iSize: Int64; Const strExceptionMsg: String; Const iDefault: Int64);
 
+  Const
+    iTerraByte = $10000000000;
+    iGigaByte = $40000000;
+    iMegaByte = $100000;
+    iKiloByte = $400;
+
   Var
     iErrorCode: Integer;
     iFactor   : Int64;
@@ -1440,15 +1359,14 @@ Var
     If strSize <> '' Then
       Begin
         Case strSize[Length(strSize)] Of
-          'k', 'K': iFactor := $400;
-          'm', 'M': iFactor := $100000;
-          'g', 'G': iFactor := $40000000;
-          't', 'T': iFactor := $10000000000;
+          'k', 'K': iFactor := iKiloByte;
+          'm', 'M': iFactor := iMegaByte;
+          'g', 'G': iFactor := iGigaByte;
+          't', 'T': iFactor := iTerraByte;
         Else
           iFactor := 1;
         End;
-        If CharInSet(strSize[Length(strSize)], ['k', 'K', 'm', 'M', 'g', 'G', 't',
-            'T']) Then
+        If CharInSet(strSize[Length(strSize)], ['k', 'K', 'm', 'M', 'g', 'G', 't', 'T']) Then
           strSize := Copy(strSize, 1, Length(strSize) - 1);
         Val(strSize, iSize, iErrorCode);
         If iErrorCode > 0 Then
@@ -1467,7 +1385,7 @@ Begin
   GetRangeString(slParams, '-', strMissingSizeRangeSeparater, iIndex, iSwitch, strSize);
   GetSize(iLSize, strInvalidLowerSizeRange, 0);
   GetRangeString(slParams, ']', strCloseSquareExpectedInSize, iIndex, iSwitch, strSize);
-  GetSize(iUSize, strInvalidUpperSizeRange, $F00000000000000);
+  GetSize(iUSize, strInvalidUpperSizeRange, iUpperLimit);
 End;
 
 (**
@@ -1882,7 +1800,7 @@ Var
   i : Cardinal;
 
 Begin
-  i := 1024;
+  i := MAX_PATH;
   SetLength(Result, i);
   GetUserName(@Result[1], i);
   Win32Check(LongBool(i));

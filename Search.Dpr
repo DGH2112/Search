@@ -32,7 +32,8 @@ uses
   SysUtils,
   FileHandling in 'Source\FileHandling.pas',
   Search.Functions in 'Source\Search.Functions.pas',
-  SearchEngine in 'Source\SearchEngine.pas';
+  SearchEngine in 'Source\SearchEngine.pas',
+  Search.Types in 'Source\Search.Types.pas';
 
 ResourceString
   (** A resource string to define the Exception output format. **)

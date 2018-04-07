@@ -18,7 +18,8 @@ Uses
   ZipForge,
   Graphics,
   FileHandling, 
-  Search.Functions;
+  Search.Functions, 
+  Search.Types;
 
 Type
   (** This class defines the working that searches the directories and files
@@ -1543,7 +1544,7 @@ Var
 
 Begin
   GetConsoleInformation;
-  FRootKey := BuildRootKey(FParams, FilesExceptionHandler);
+  FRootKey := BuildRootKey(FParams);
   LoadSettings;
   GetCommandLineSwitches;
   PrintTitle;

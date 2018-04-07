@@ -1,3 +1,4 @@
+//: @nochecks for testing @nometrics for testing 
 unit TestApplicationFunction;
 {
 
@@ -44,7 +45,8 @@ implementation
 
 Uses
   Search.Functions,
-  FileHandling;
+  FileHandling, 
+  Search.Types;
 
 procedure TDGHTestCase.CheckTolerance(dblExpected, dblActual,
   dblTolerance: Double; strMsg: String = '');
