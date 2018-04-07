@@ -139,6 +139,8 @@
         <DCCReference Include="Source\SearchEngine.pas"/>
         <DCCReference Include="Source\Search.Types.pas"/>
         <DCCReference Include="Source\Search.RegExMatches.pas"/>
+        <DCCReference Include="Source\Search.FileCls.pas"/>
+        <DCCReference Include="Source\Search.Interfaces.pas"/>
         <None Include="..\..\LIBRARY\CompilerDefinitions.inc"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>

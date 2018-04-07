@@ -34,7 +34,9 @@ uses
   Search.Functions in 'Source\Search.Functions.pas',
   SearchEngine in 'Source\SearchEngine.pas',
   Search.Types in 'Source\Search.Types.pas',
-  Search.RegExMatches in 'Source\Search.RegExMatches.pas';
+  Search.RegExMatches in 'Source\Search.RegExMatches.pas',
+  Search.FileCls in 'Source\Search.FileCls.pas',
+  Search.Interfaces in 'Source\Search.Interfaces.pas';
 
 ResourceString
   (** A resource string to define the Exception output format. **)

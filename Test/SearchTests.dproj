@@ -116,6 +116,8 @@
         <DCCReference Include="..\Source\FileHandling.pas"/>
         <DCCReference Include="..\Source\Search.Types.pas"/>
         <DCCReference Include="..\Source\Search.RegExMatches.pas"/>
+        <DCCReference Include="..\Source\Search.FileCls.pas"/>
+        <DCCReference Include="..\Source\Search.Interfaces.pas"/>
         <RcCompile Include="SearchTests32VersionInfo.RC">
             <Form>SearchTests32VersionInfo.res</Form>
         </RcCompile>

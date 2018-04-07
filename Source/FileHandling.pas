@@ -16,79 +16,24 @@ Uses
   SysUtils,
   Classes,
   Contnrs,
-  RegularExpressions,
-  Generics.Collections, 
   Search.Types, 
-  Search.RegExMatches;
+  System.RegularExpressions, 
+  Search.Interfaces;
 
 Type
-  (** A class to hold a files information. **)
-  TFile = Class
-  Strict Private
-    FDate : TDateTime;
-    FSize : Int64;
-    FAttr : String;
-    FOwner : String;
-    FName : String;
-    FRegExLines : TList<TRegExMatches>;
-  Strict Protected
-  Public
-    Constructor Create(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
-      strName : String);
-    Procedure AddRegExLine(iLine : Integer; Matches : TMatchCollection);
-    Destructor Destroy; Override;
-    Function Clone : TFile;
-    (**
-      A property to read and write the files date and time.
-      @precon  None.
-      @postcon None.
-      @return  a TDateTime
-    **)
-    Property Date : TDateTime Read FDate;
-    (**
-      A property to read and write the files size.
-      @precon  None.
-      @postcon None.
-      @return  an Int64
-    **)
-    Property Size : Int64 Read FSize;
-    (**
-      A property to read and write the files Attributes.
-      @precon  None.
-      @postcon None.
-      @return  a String
-    **)
-    Property Attr : String Read FAttr;
-    (**
-      A property to read and write the files owner.
-      @precon  None.
-      @postcon None.
-      @return  a String
-    **)
-    Property Owner : String Read FOwner;
-    (**
-      A property to read and write the files name.
-      @precon  None.
-      @postcon None.
-      @return  a String
-    **)
-    Property FileName : String Read FName;
-    Property RegExMatches : TList<TRegExMatches> Read FRegExLines;
-  End;
-
   (** This is a procedure declaration for an exception event handler. **)
   TFilesExceptionHandler = Procedure(strException : String) Of Object;
 
   (** A class to hold a collection of files. **)
   TFiles = Class
   Private
-    FFiles : TObjectList;
+    FFiles : TInterfaceList;
     FExceptionHandler : TFilesExceptionHandler;
     FPath : String;
     FRegEx : TRegEx;
     FRegExSearch : Boolean;
   Protected
-    Function GetFile(iIndex : Integer) : TFile;
+    Function GetFile(iIndex : Integer) : ISearchFile;
     Function GetCount : Integer;
   Public
     Constructor Create(ExceptionHandler : TFilesExceptionHandler; strRegExSearchText : String);
@@ -97,7 +42,7 @@ Type
       strName, strSearchText : String; iFileAttrs : Integer) : Boolean; Overload;
     Function OwnerWidth : Integer;
     Procedure OrderBy(OrderBy : TOrderBy; OrderDirection : TOrderDirection);
-    Function Add(FileInfo : TFile) : Boolean; Overload;
+    Function Add(FileInfo : ISearchFile) : Boolean; Overload;
     (**
       A property to return a specific file from the collection.
       @precon  iIndex must be a valid index.
@@ -105,7 +50,7 @@ Type
       @param   iIndex as       an Integer
       @return  a TFile
     **)
-    Property FileInfo[iIndex : Integer] : TFile Read GetFile;
+    Property FileInfo[iIndex : Integer] : ISearchFile Read GetFile;
     (**
       A property to return the number of files in the collection.
       @precon  None.
@@ -126,85 +71,8 @@ Implementation
 
 Uses
   RegularExpressionsCore,
-  Windows;
-
-(**
-
-  This method adds the given text as a RegEx line.
-
-  @precon  None.
-  @postcon Adds the given text as a RegEx line.
-
-  @param   iLine   as an Integer
-  @param   Matches as a TMatchCollection
-
-**)
-Procedure TFile.AddRegExLine(iLine : Integer; Matches : TMatchCollection);
-
-begin
-  FRegExLines.Add(TRegExMatches.Create(iLine, Matches));
-end;
-
-(**
-
-  This method returns a clone (copy) of the TFile instance.
-
-  @precon  None.
-  @postcon Returns a clone (copy) of the TFile instance.
-
-  @return  a TFile
-
-**)
-function TFile.Clone: TFile;
-var
-  R: TRegExMatches;
-
-begin
-  Result := TFile.Create(FDate, FSize, FAttr, FOwner, ExtractFileName(FName));
-  For R In FRegExLines Do
-    Result.FRegExLines.Add(R);
-end;
-
-(**
-
-  This is the constructor method for the TFile class.
-
-  @precon  None.
-  @postcon Constructs a TFile class.
-
-  @param   dtDate   as a TDateTime
-  @param   iSize    as an Int64
-  @param   strAttr  as a String
-  @param   strOwner as a String
-  @param   strName  as a String
-
-**)
-constructor TFile.Create(dtDate: TDateTime; iSize: Int64; strAttr, strOwner,
-  strName: String);
-
-begin
-  inherited Create;
-  FRegExLines := TList<TRegExMatches>.Create;
-  FDate := dtDate;
-  FSize := iSize;
-  FAttr := strAttr;
-  FOwner := strOwner;
-  FName := strName;
-end;
-
-(**
-
-  This is the destructor method for the TFile class.
-
-  @precon  None.
-  @postcon Destroys the class instance.
-
-**)
-destructor TFile.Destroy;
-begin
-  FRegExLines.Free;
-  inherited Destroy;
-end;
+  Windows, 
+  Search.FileCls;
 
 (**
 
@@ -217,7 +85,8 @@ end;
   @return  a Boolean
 
 **)
-function TFiles.Add(FileInfo: TFile): Boolean;
+function TFiles.Add(FileInfo: ISearchFile): Boolean;
+
 begin
   Result := True;
   FFiles.Add(FileInfo);
@@ -240,7 +109,7 @@ Const
   strRegExError = 'Reg Ex Error: %s ("%s")';
 
 Begin
-  FFiles := TObjectList.Create(True);
+  FFiles := TInterfaceList.Create;
   FExceptionHandler := ExceptionHandler;
   FRegExSearch := False;
   Try
@@ -294,14 +163,14 @@ Function TFiles.Add(dtDate : TDateTime; iSize : Int64; strAttr, strOwner,
   strName, strSearchText : String; iFileAttrs : Integer) : Boolean;
 
 Var
-  FFile : TFile;
+  FFile : ISearchFile;
   iLine: Integer;
   slFile : TStringList;
   M: TMatchCollection;
 
 Begin
   Result := True;
-  FFile := TFile.Create(dtDate, iSize, strAttr, strOwner, strName);
+  FFile := TSearchFile.Create(dtDate, iSize, strAttr, strOwner, strName);
   If FRegExSearch Then
     Begin
       If  iFileAttrs And faDirectory = 0 Then
@@ -331,7 +200,7 @@ Begin
         End Else
           Result := False;
       If Not Result Then
-        FFile.Free;
+        FFile := Nil;
     End Else
       FFiles.Add(FFile);
 End;
@@ -347,10 +216,10 @@ End;
   @return  a TFile
 
 **)
-Function TFiles.GetFile(iIndex : Integer) : TFile;
+Function TFiles.GetFile(iIndex : Integer) : ISearchFile;
 
 Begin
-  Result :=  FFiles.Items[iIndex] As TFile;
+  Result :=  FFiles.Items[iIndex] As TSearchFile;
 End;
 
 (**

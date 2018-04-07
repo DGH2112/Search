@@ -19,7 +19,8 @@ Uses
   Graphics,
   FileHandling, 
   Search.Functions, 
-  Search.Types;
+  Search.Types, 
+  Search.Interfaces;
 
 Type
   (** This class defines the working that searches the directories and files
@@ -90,7 +91,7 @@ Type
     Procedure OutputFileAttributes(i: Integer; FilesCollection: TFiles;
       Var strOutput: String);
     Procedure OutputFileOwner(FilesCollection: TFiles; Var strOutput: String; i: Integer);
-    Procedure OutputRegExInformation(strPath : String; boolRegEx: Boolean; FileInfo: TFile);
+    Procedure OutputRegExInformation(strPath : String; boolRegEx: Boolean; FileInfo: ISearchFile);
     Procedure OutputDirectoryOrZIPFile(Var boolDirPrinted: Boolean; strPath: String);
   Strict Protected
     Procedure GetConsoleInformation;
@@ -2042,7 +2043,7 @@ End;
   @param   FileInfo  as a TFile
 
 **)
-Procedure TSearch.OutputRegExInformation(strPath : String; boolRegEx: Boolean; FileInfo: TFile);
+Procedure TSearch.OutputRegExInformation(strPath : String; boolRegEx: Boolean; FileInfo: ISearchFile);
 
 Var
   iMatch: Integer;
