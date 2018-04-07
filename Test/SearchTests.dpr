@@ -5,7 +5,8 @@ uses
   TestApplicationFunction in 'Source\TestApplicationFunction.pas',
   Search.Functions in '..\Source\Search.Functions.pas',
   FileHandling in '..\Source\FileHandling.pas',
-  Search.Types in '..\Source\Search.Types.pas';
+  Search.Types in '..\Source\Search.Types.pas',
+  Search.RegExMatches in '..\Source\Search.RegExMatches.pas';
 
 {$R *.RES}
 

@@ -18,23 +18,10 @@ Uses
   Contnrs,
   RegularExpressions,
   Generics.Collections, 
-  Search.Types;
+  Search.Types, 
+  Search.RegExMatches;
 
 Type
-  (** A record to manage the regular expression matches in a grep search. **)
-  TRegExMatches = Record
-  Strict Private
-    FLineNum    : Integer;
-    FMatches    : TArrayOfMatch;
-    FCount      : Integer;
-    Function GetMatch(iIndex : Integer) : TRegExMatch;
-  Public
-    Constructor Create(iLine : Integer; Matches : TMatchCollection);
-    Property LineNum : Integer Read FLineNum;
-    Property Count : Integer Read FCount;
-    Property Group[iIndex : Integer] : TRegExMatch Read GetMatch;
-  End;
-
   (** A class to hold a files information. **)
   TFile = Class
   Strict Private
@@ -141,30 +128,6 @@ Uses
   RegularExpressionsCore,
   Windows;
 
-{ TRegExRecord }
-
-Constructor TRegExMatches.Create(iLine: Integer; Matches : TMatchCollection);
-
-Var
-  iMatch: Integer;
-
-Begin
-  FLineNum := iLine;
-  SetLength(FMatches, Matches.Count);
-  For iMatch := 0 To Matches.Count - 1 Do
-    Begin
-      FMatches[iMatch].FIndex := Matches.Item[iMatch].Index;
-      FMatches[iMatch].FLength := Matches.Item[iMatch].Length;
-    End;
-  FCount := Matches.Count;
-End;
-
-Function TRegExMatches.GetMatch(iIndex: Integer): TRegExMatch;
-
-Begin
-  Result := FMatches[iIndex];
-End;
-
 (**
 
   This method adds the given text as a RegEx line.
@@ -172,10 +135,8 @@ End;
   @precon  None.
   @postcon Adds the given text as a RegEx line.
 
-  @param   strText as a String
   @param   iLine   as an Integer
-  @param   iIndex  as an Integer
-  @param   iLength as an Integer
+  @param   Matches as a TMatchCollection
 
 **)
 Procedure TFile.AddRegExLine(iLine : Integer; Matches : TMatchCollection);

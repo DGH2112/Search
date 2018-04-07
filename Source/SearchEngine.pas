@@ -175,7 +175,8 @@ Uses
   ActiveX,
   IniFiles,
   Math,
-  System.RegularExpressions;
+  System.RegularExpressions, 
+  Search.RegExMatches;
 
   (**
 

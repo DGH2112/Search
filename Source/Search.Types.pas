@@ -66,15 +66,6 @@ Type
       descending **)
   TOrderDirection = (odAscending, odDescending);
 
-  (** A record to describe the index and length of a regex match. **)
-  TRegExMatch = Record
-    FIndex : Integer;
-    FLength : Integer;
-  End;
-
-  (** A type to define an array of regular expression matches. **)
-  TArrayOfMatch = Array Of TRegExMatch;
-
 Implementation
 
 End.
