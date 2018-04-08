@@ -6,7 +6,7 @@
 
  @Version 1.2
  @Author  David Hoyle
- @Date    07 Apr 2018
+ @Date    08 Apr 2018
 
  **)
 Program Search64;
@@ -49,6 +49,8 @@ ResourceString
 Var
   (** A variable to hold whether an exception has occurred. **)
   boolException: Boolean;
+  (** An interface reference for calling the search engine. **)
+  SearchEngine : ISearchEngine;
 
 Begin
   {$IFDEF EUREKALOG}
@@ -56,25 +58,22 @@ Begin
   {$ENDIF}
   ReportMemoryLeaksOnShutdown := DebugHook <> 0;
   boolException := False;
-  With TSearch.Create Do
-    Try
-      Try
-        Run;
-      Except
-        On E: ESearchException Do
-          Begin
-            OutputToConsoleLn(ErrorHnd, Format(strException, [E.Message]), ExceptionColour);
-            boolException := True;
-          End;
+  SearchEngine := TSearch.Create;
+  Try
+    SearchEngine.Run;
+  Except
+    On E: ESearchException Do
+      Begin
+        OutputToConsoleLn(SearchEngine.ErrHnd, Format(strException, [E.Message]),
+          SearchEngine.ExceptionColour);
+        boolException := True;
       End;
-      If clsDebug In CommandLineSwitches Then
-        Begin
-          OutputToConsoleLn(StdHnd);
-          OutputToConsole(StdHnd, strPressEnterToFinish);
-          Readln;
-        End;
-    Finally
-      Free;
+  End;
+  If clsDebug In CommandLineSwitches Then
+    Begin
+      OutputToConsoleLn(SearchEngine.StdHnd);
+      OutputToConsole(SearchEngine.StdHnd, strPressEnterToFinish);
+      Readln;
     End;
   If boolException Then
     Halt(1);

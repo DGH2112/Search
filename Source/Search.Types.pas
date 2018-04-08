@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    07 Apr 2018
+  @Date    08 Apr 2018
   
 **)
 Unit Search.Types;
@@ -57,7 +57,7 @@ Type
   TSizeFormat = (sfNone, sfKilobytes, sfMegaBytes, sfGigaBytes, sfTeraBytes);
 
   (** A Procedure for feeding back errors. **)
-  TLogErrorProc = Procedure(strErrorMsg, strFileNmae: String) Of Object;
+  TLogErrorProc = Procedure(Const strErrorMsg, strFileNmae: String) Of Object;
 
   (** An enumerate to define the order for sorting the files. **)
   TOrderBy = (obNone, obName, obSize, obDate, obOwner, obAttribute);

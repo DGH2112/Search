@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    07 Apr 2018
+  @Date    08 Apr 2018
   
 **)
 Unit Search.Interfaces;
@@ -14,6 +14,7 @@ Interface
 Uses
   System.RegularExpressions, 
   System.Generics.Collections, 
+  VCL.Graphics,
   Search.RegExMatches, 
   Search.Types;
 
@@ -107,6 +108,36 @@ Type
       @return  a String
     **)
     Property Path : String Read GetPath Write SetPath;
+  End;
+
+  (** An interface for the main search engine. **)
+  ISearchEngine = Interface
+  ['{678751F5-EF72-4159-B0A6-9097D790D3E0}']
+    Function  GetExceptionColour : TColor;
+    Function  GetStdHnd : THandle;
+    Function  GetErrHnd : THandle;
+    Procedure Run;
+    (**
+     This property returns the Exception colour to outside the class.
+     @precon  None.
+     @postcon Returns the Exception colour to outside the class.
+     @return  a TColor
+     **)
+    Property ExceptionColour: TColor Read GetExceptionColour;
+    (**
+      This property returns the error handle for console output.
+      @precon  None.
+      @postcon Returns the error handle for console output.
+      @return  a THandle
+    **)
+    Property ErrHnd : THandle Read GetErrHnd;
+    (**
+      This property returns the standard handle for console output.
+      @precon  None.
+      @postcon Returns the standard handle for console output.
+      @return  a THandle
+    **)
+    Property StdHnd : THandle Read GetStdHnd;
   End;
   
 Implementation

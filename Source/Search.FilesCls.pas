@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    07 Apr 2018
+  @Date    08 Apr 2018
 
 **)
 Unit Search.FilesCls;
@@ -22,7 +22,7 @@ Uses
 
 Type
   (** This is a procedure declaration for an exception event handler. **)
-  TFilesExceptionHandler = Procedure(strException : String) Of Object;
+  TFilesExceptionHandler = Procedure(Const strException : String) Of Object;
 
   (** A class to hold a collection of files. **)
   TSearchFiles = Class(TInterfacedObject, ISearchFiles)
