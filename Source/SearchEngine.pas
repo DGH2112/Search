@@ -110,7 +110,8 @@ Type
       Var strOutput: String);
     Procedure OutputFileAttributes(Const i: Integer; Const FilesCollection: ISearchFiles;
       Var strOutput: String);
-    Procedure OutputFileOwner(Const FilesCollection: ISearchFiles; Var strOutput: String; Const i: Integer); //: @refactor Refactor for ISearchFile
+    Procedure OutputFileOwner(Const SearchFile: ISearchFile; Const iOwnerWidth : Integer;
+      Var strOutput: String);
     Procedure OutputRegExInformation(Const strPath : String; Const boolRegEx: Boolean;
       Const FileInfo: ISearchFile);
     Procedure OutputDirectoryOrZIPFile(Var boolDirPrinted: Boolean; Const strPath: String);
@@ -1275,28 +1276,20 @@ End;
   @precon  FilesCollection must be a valid instance.
   @postcon Outputs the file owner.
 
-  @param   FilesCollection as an ISearchFiles as a constant
-  @param   strOutput       as a String as a reference
-  @param   i               as an Integer as a constant
+  @param   SearchFile  as an ISearchFile as a constant
+  @param   iOwnerWidth as an Integer as a constant
+  @param   strOutput   as a String as a reference
 
 **)
-Procedure TSearch.OutputFileOwner(Const FilesCollection: ISearchFiles; Var strOutput: String;
-  Const i: Integer);
-
-Var
-  iOwnerWidth: Integer;
+Procedure TSearch.OutputFileOwner(Const SearchFile: ISearchFile; Const iOwnerWidth : Integer;
+  Var strOutput: String);
 
 Begin
   If clsOwner In CommandLineSwitches Then
     If Not(clsOutputAsCSV In CommandLineSwitches) Then
-      Begin
-        iOwnerWidth := FilesCollection.OwnerWidth;
-        strOutput := strOutput + Format('%-*s  ', [iOwnerWidth, FilesCollection.FileInfo[i].Owner]);
-      End
+      strOutput := strOutput + Format('%-*s  ', [iOwnerWidth, SearchFile.Owner])
     Else
-      Begin
-        strOutput := strOutput + Format('%s,', [FilesCollection.FileInfo[i].Owner]);
-      End;
+      strOutput := strOutput + Format('%s,', [SearchFile.Owner]);
 End;
 
 (**
@@ -1326,7 +1319,7 @@ Begin
       OutputDateTime(FilesCollection.FileInfo[iFile], strOutput);
       OutputSize(FilesCollection.FileInfo[iFile], FilesCollection.HasCompressed, strOutput);
       OutputFileAttributes(iFile, FilesCollection, strOutput);
-      OutputFileOwner(FilesCollection, strOutput, iFile);
+      OutputFileOwner(FilesCollection.FileInfo[iFile], FilesCollection.OwnerWidth, strOutput);
       If Not(clsOutputAsCSV In CommandLineSwitches) Then
         OutputDirectoryOrZIPFile(boolDirPrinted, strPath);
       boolRegEx := (clsRegExSearch In CommandLineSwitches) And
