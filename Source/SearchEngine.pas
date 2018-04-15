@@ -53,8 +53,6 @@ Type
     FWidth: Integer;
     (** This is a list of file attributes that are required in a search. **)
     FFileAttrs: TSearchFileAttrs;
-    (** This is a list of file type attributes that are required in a search. **)
-    //: @debug FTypeAttrs: TSearchFileAttrs;
     (** This is a list of search parameters that are not part of the command line switches. **)
     FSearchParams: TStringList;
     (** This is the level of directory of summarisation required. **)
@@ -1461,7 +1459,7 @@ Begin
                 iStart := M.Group[iGroup].FIndex + M.Group[iGroup].FLength;
               End;
             OutputToConsoleLn(FStdHnd, strLine, FRegExLineOutputColour, clNone);
-            For iLine := Min(slText.Count, M.LineNum + 1) To (M.LineNum + FRegExSurroundingLines) Do
+            For iLine := Min(slText.Count, M.LineNum + 1) To Min(slText.Count, M.LineNum + FRegExSurroundingLines) Do
               Begin
                 OutputToConsole(FStdHnd, Format('  %10.0n: ', [Int(iLine)]), FRegExLineNumbersColour);
                 OutputToConsoleLn(FStdHnd, slText[iLine - 1], FRegExLineOutputColour, clNone);
@@ -2335,8 +2333,7 @@ Begin
   FilesCollection := TSearchFiles.Create(FilesExceptionHandler, FRegExSearch);
   Try
     Inc(Result, SearchForPatterns(slPatterns, iDirFiles, strPath, FilesCollection));
-    //: @debug If FOrderFilesBy <> obNone Then
-      FilesCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
+    FilesCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
     OutputFilesToConsole(strPath, boolDirPrinted, FilesCollection);
   Finally
     FilesCollection := Nil;
@@ -2589,8 +2586,7 @@ Begin
       For iPath := 0 To PathCollections.Count - 1 Do
         Begin
           PathCollection := PathCollections[iPath] As ISearchFiles;
-          //: @debug If FOrderFilesBy <> obNone Then
-            PathCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
+          PathCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
           OutputFilesToConsole(strFileName + '\' + PathCollection.Path, boolDirPrinted, PathCollection);
         End;
     Finally
