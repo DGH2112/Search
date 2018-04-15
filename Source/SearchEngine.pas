@@ -11,7 +11,6 @@
   @todo    Check that GREP will work with multi-line matches.
   @todo    Allow a switch to change a default colour.
   
-  @bug     Will not search without a file pattern. if one is not given assume *.
   @bug     Fix the AV bug in asking for extra lines around GREP searches.
 
 **)
@@ -104,6 +103,7 @@ Type
     FRegExFindOutputFGColour: TColor;
     FRegExFindOutputBGColour: TColor;
     FSummaryOutputColour: TColor;
+    FWarningColour: TColor;
     FExceptionColour: TColor;
     FZipFileColour: TColor;
     FErrorLog : TStringList;
@@ -244,6 +244,8 @@ Const
   strRegExFindOutputBGKey = 'RegExFindOutputBG';
   (** An ini key for the Summary Output colour **)
   strSummaryOutputKey = 'SummaryOutput';
+  (** An ini key for the Warning colour **)
+  strWarningKey = 'Warning';
   (** An ini key for the Exception colour **)
   strExceptionKey = 'Exception';
   (** An ini key for the Zip File colour **)
@@ -870,7 +872,6 @@ Procedure TSearch.GetCommandLineSwitches;
 
 ResourceString
   strInvalidCommandLineSwitch = 'Invalid command line switch "%s" in parameter "%s."';
-  strNeedToSpecifyCriteria = 'You need to specify at least one search criteria.';
 
 Const
   iSwitchLetterStart = 2;
@@ -933,7 +934,12 @@ Begin
     If FParams.Count = 0 Then
       Include(CommandLineSwitches, clsShowHelp)
     Else
-      Raise ESearchException.Create(strNeedToSpecifyCriteria);
+      Begin
+        OutputToConsoleLn(FStdHnd, 'No search pattern provided! Searching for all files...',
+          FWarningColour);
+        OutputToConsoleLn(FStdHnd);
+        FSearchParams.AddPair(GetCurrentDir, '*.*');
+      End;
 End;
 
 (**
@@ -1033,6 +1039,7 @@ Const
   strDefaultRegExFindoutputFG = 'clRed';
   strDefaultRegExFindoutputBG = 'clYellow';
   strDefaultSummaryOutput = 'clNone';
+  strDefaultWarning = 'clYellow';
   strDefaultException = 'clRed';
   strDefaultZipFile = 'clFuchsia';
 
@@ -1058,6 +1065,7 @@ Begin
     FRegExFindOutputFGColour := StringToColor(iniFile.ReadString(strColoursINISection, strRegExFindOutputFGKey, strDefaultRegExFindoutputFG));
     FRegExFindOutputBGColour := StringToColor(iniFile.ReadString(strColoursINISection, strRegExFindOutputBGKey, strDefaultRegExFindoutputBG));
     FSummaryOutputColour := StringToColor(iniFile.ReadString(strColoursINISection, strSummaryOutputKey, strDefaultSummaryOutput));
+    FWarningColour := StringToColor(iniFile.ReadString(strColoursINISection, strWarningKey, strDefaultWarning));
     FExceptionColour := StringToColor(iniFile.ReadString(strColoursINISection, strExceptionKey, strDefaultException));
     FZipFileColour := StringToColor(iniFile.ReadString(strColoursINISection, strZipFileKey, strDefaultZipFile));
   Finally
@@ -2141,8 +2149,8 @@ Begin
   GetConsoleInformation;
   FRootKey := BuildRootKey(FParams);
   LoadSettings;
-  GetCommandLineSwitches;
   PrintTitle;
+  GetCommandLineSwitches;
   If Not(clsExclusions In CommandLineSwitches) Or
     ((clsExclusions In CommandLineSwitches) And FileExists(FExlFileName)) Then
     Begin
@@ -2219,6 +2227,7 @@ Begin
     iniFile.WriteString(strColoursINISection, strRegExFindOutputFGKey, ColorToString(FRegExFindOutputFGColour));
     iniFile.WriteString(strColoursINISection, strRegExFindOutputBGKey, ColorToString(FRegExFindOutputBGColour));
     iniFile.WriteString(strColoursINISection, strSummaryOutputKey, ColorToString(FSummaryOutputColour));
+    iniFile.WriteString(strColoursINISection, strWarningKey, ColorToString(FWarningColour));
     iniFile.WriteString(strColoursINISection, strExceptionKey, ColorToString(FExceptionColour));
     iniFile.WriteString(strColoursINISection, strZipFileKey, ColorToString(FZipFileColour));
     iniFile.UpdateFile;
