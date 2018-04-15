@@ -24,7 +24,7 @@ Type
   ['{A9EB7CB7-F77E-4270-941E-12FD6CD5810C}']
     Function  GetDate : TDateTime;
     Function  GetSize : Int64;
-    Function  GetAttr : String;
+    Function  GetAttributes : TSearchFileAttrs;
     Function  GetOwner : String;
     Function  GetName : String;
     Function  GetRegExMatches : TList<TRegExMatches>;
@@ -48,9 +48,9 @@ Type
       A property to read and write the files Attributes.
       @precon  None.
       @postcon None.
-      @return  a String
+      @return  a TSearchFileAttrs
     **)
-    Property Attr : String Read GetAttr;
+    Property Attributes : TSearchFileAttrs Read GetAttributes;
     (**
       A property to read and write the files owner.
       @precon  None.
@@ -81,8 +81,8 @@ Type
     Function  GetCount : Integer;
     Function  GetPath : String;
     Procedure SetPath(Const strPath : String);
-    Function  Add(Const dtDate : TDateTime; Const iSize : Int64; Const strAttr, strOwner,
-      strName, strSearchText : String; Const iFileAttrs : Integer) : Boolean; Overload;
+    Function  Add(Const dtDate : TDateTime; Const iSize : Int64; Const setAttrs : TSearchFileAttrs;
+      Const strOwner, strName, strSearchText : String) : Boolean; Overload;
     Function  OwnerWidth : Integer;
     Procedure OrderBy(Const OrderBy : TOrderBy; Const OrderDirection : TOrderDirection);
     Function  Add(Const FileInfo : ISearchFile) : Boolean; Overload;

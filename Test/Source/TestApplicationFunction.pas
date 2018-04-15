@@ -1,4 +1,4 @@
-//: @nochecks for testing @nometrics for testing 
+//: @nochecks for testing @nometrics for testing
 unit TestApplicationFunction;
 {
 
@@ -99,50 +99,49 @@ procedure TestApplicationFunctions.TestCheckFileAttributes;
 
 Var
   recSearch : TSearchRec;
-  iFileAttrs, iTypeAttrs : Integer;
+  setSearchAttrs : TSearchFileAttrs;
   boolFound : Boolean;
 
 begin
   CommandLineSwitches := [clsAttrRange];
   recSearch.Attr := 0;
-  iFileAttrs := faReadOnly;
-  iTypeAttrs := iFileOnly;
+  setSearchAttrs := [sfaReadOnly];
   boolFound := True;
-  CheckFileAttributes(recSearch.Attr, iFileAttrs, iTypeAttrs, boolFound);
+  CheckFileAttributes(setSearchAttrs, FileAttrsToAttrsSet(recSearch.Attr), boolFound);
   CheckEquals(False, boolFound, 'Test 1');
   recSearch.Attr := faReadOnly Or faArchive Or faSysFile Or faHidden;
-  iFileAttrs := iFileOnly;
+  setSearchAttrs := [sfaFile];
   boolFound := True;
-  CheckFileAttributes(recSearch.Attr, iFileAttrs, iTypeAttrs, boolFound);
-  CheckEquals(False, boolFound, 'Test 2');
-  iFileAttrs := faReadOnly;
+  CheckFileAttributes(setSearchAttrs, FileAttrsToAttrsSet(recSearch.Attr), boolFound);
+  CheckEquals(True, boolFound, 'Test 2');
+  setSearchAttrs := [sfaReadOnly];
   boolFound := True;
-  CheckFileAttributes(recSearch.Attr, iFileAttrs, iTypeAttrs, boolFound);
+  CheckFileAttributes(setSearchAttrs, FileAttrsToAttrsSet(recSearch.Attr), boolFound);
   CheckEquals(True, boolFound, 'Test 3');
-  iFileAttrs := faArchive;
+  setSearchAttrs := [sfaArchive];
   boolFound := True;
-  CheckFileAttributes(recSearch.Attr, iFileAttrs, iTypeAttrs, boolFound);
+  CheckFileAttributes(setSearchAttrs, FileAttrsToAttrsSet(recSearch.Attr), boolFound);
   CheckEquals(True, boolFound, 'Test 4');
-  iFileAttrs := 0;
+  setSearchAttrs := [];
   boolFound := True;
-  CheckFileAttributes(recSearch.Attr, iFileAttrs, iTypeAttrs, boolFound);
+  CheckFileAttributes(setSearchAttrs, FileAttrsToAttrsSet(recSearch.Attr), boolFound);
   CheckEquals(True, boolFound, 'Test 5');
-  iFileAttrs := faSysFile;
+  setSearchAttrs := [sfaSystem];
   boolFound := True;
-  CheckFileAttributes(recSearch.Attr, iFileAttrs, iTypeAttrs, boolFound);
+  CheckFileAttributes(setSearchAttrs, FileAttrsToAttrsSet(recSearch.Attr), boolFound);
   CheckEquals(True, boolFound, 'Test 6');
-  iFileAttrs := faHidden;
+  setSearchAttrs := [sfaHidden];
   boolFound := True;
-  CheckFileAttributes(recSearch.Attr, iFileAttrs, iTypeAttrs, boolFound);
+  CheckFileAttributes(setSearchAttrs, FileAttrsToAttrsSet(recSearch.Attr), boolFound);
   CheckEquals(True, boolFound, 'Test 7');
-  iFileAttrs := faReadOnly or faArchive;
+  setSearchAttrs := [sfaReadOnly, sfaArchive];
   boolFound := True;
-  CheckFileAttributes(recSearch.Attr, iFileAttrs, iTypeAttrs, boolFound);
+  CheckFileAttributes(setSearchAttrs, FileAttrsToAttrsSet(recSearch.Attr), boolFound);
   CheckEquals(True, boolFound, 'Test 8');
-  iFileAttrs := 0;
+  setSearchAttrs := [];
   boolFound := True;
-  CheckFileAttributes(recSearch.Attr, iFileAttrs, iTypeAttrs, boolFound);
-  CheckEquals(True, boolFound, 'Test 5');
+  CheckFileAttributes(setSearchAttrs, FileAttrsToAttrsSet(recSearch.Attr), boolFound);
+  CheckEquals(True, boolFound, 'Test 9');
 end;
 
 procedure TestApplicationFunctions.TestCheckOwner;
@@ -196,70 +195,63 @@ procedure TestApplicationFunctions.TestGetAttributes;
 
 Var
   slParams : TStringList;
-  iSwitch, iIndex, iFileAttrs, iTypeAttrs : Integer;
+  iSwitch, iIndex : Integer;
+  setFileAttrs : TSearchFileAttrs;
 
-begin
+Begin
   slParams := TstringList.Create;
   Try
     slParams.Text := 'My.exe'#13#10'*.pas';
     iSwitch := 1;
     iIndex := 2;
     Try
-      GetAttributes(slParams, iSwitch, iIndex, iFileAttrs, iTypeAttrs);
+      GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
     Except
       On E : ESearchException Do
         Check(True);
       Else
         Check(False);
     End;
-    slParams.Text := 'my.exe'#13#10'/t[f]';
+    slParams.Text := 'my.exe'#13#10'/t[F]';
     iSwitch := 1;
     iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, iFileAttrs, iTypeAttrs);
-    Check(iFileAttrs = 0);
-    Check(iTypeAttrs = iFileOnly);
-    slParams.Text := 'my.exe'#13#10'/t[d]';
+    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
+    Check(setFileAttrs = [sfaFile]);
+    slParams.Text := 'my.exe'#13#10'/t[D]';
     iSwitch := 1;
     iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, iFileAttrs, iTypeAttrs);
-    Check(iFileAttrs = 0);
-    Check(iTypeAttrs = faDirectory);
-    slParams.Text := 'my.exe'#13#10'/t[v]';
+    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
+    Check(setFileAttrs = [sfaDirectory]);
+    slParams.Text := 'my.exe'#13#10'/t[V]';
     iSwitch := 1;
     iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, iFileAttrs, iTypeAttrs);
-    Check(iFileAttrs = 0);
-    Check(iTypeAttrs = faVolumeID);
-    slParams.Text := 'my.exe'#13#10'/t[r]';
+    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
+    Check(setFileAttrs = [sfaVolume]);
+    slParams.Text := 'my.exe'#13#10'/t[R]';
     iSwitch := 1;
     iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, iFileAttrs, iTypeAttrs);
-    Check(iFileAttrs = faReadOnly);
-    Check(iTypeAttrs = iFileOnly);
-    slParams.Text := 'my.exe'#13#10'/t[a]';
+    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
+    Check(setFileAttrs = [sfaReadOnly]);
+    slParams.Text := 'my.exe'#13#10'/t[A]';
     iSwitch := 1;
     iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, iFileAttrs, iTypeAttrs);
-    Check(iFileAttrs = faArchive);
-    Check(iTypeAttrs = iFileOnly);
-    slParams.Text := 'my.exe'#13#10'/t[s]';
+    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
+    Check(setFileAttrs = [sfaArchive]);
+    slParams.Text := 'my.exe'#13#10'/t[S]';
     iSwitch := 1;
     iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, iFileAttrs, iTypeAttrs);
-    Check(iFileAttrs = faSysFile);
-    Check(iTypeAttrs = iFileOnly);
-    slParams.Text := 'my.exe'#13#10'/t[h]';
+    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
+    Check(setFileAttrs = [sfaSystem]);
+    slParams.Text := 'my.exe'#13#10'/t[H]';
     iSwitch := 1;
     iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, iFileAttrs, iTypeAttrs);
-    Check(iFileAttrs = faHidden);
-    Check(iTypeAttrs = iFileOnly);
-    slParams.Text := 'my.exe'#13#10'/t[frash]';
+    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
+    Check(setFileAttrs = [sfaHidden]);
+    slParams.Text := 'my.exe'#13#10'/t[FRASH]';
     iSwitch := 1;
     iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, iFileAttrs, iTypeAttrs);
-    Check(iFileAttrs = faReadOnly Or faArchive Or faSysFile Or faHidden);
-    Check(iTypeAttrs = iFileOnly);
+    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
+    Check(setFileAttrs = [sfaReadOnly, sfaArchive, sfaSystem, sfaHidden, sfaFile]);
   Finally
     slParams.Free;
   End;
@@ -521,22 +513,6 @@ begin
     Check(OrderFilesBy = obName, 'Test 1.6');
     iSwitch := 1;
     iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/o:a';
-    GetOrderBy(slParams, iSwitch, iIndex, OrderFilesDirection, OrderFilesBy);
-    Check(OrderFilesDirection = odAscending, 'Test 2.1');
-    Check(OrderFilesBy = obAttribute, 'Test 2.2');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/o:+a';
-    GetOrderBy(slParams, iSwitch, iIndex, OrderFilesDirection, OrderFilesBy);
-    Check(OrderFilesDirection = odAscending, 'Test 2.3');
-    Check(OrderFilesBy = obAttribute, 'Test 2.4');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/o:-a';
-    GetOrderBy(slParams, iSwitch, iIndex, OrderFilesDirection, OrderFilesBy);
-    Check(OrderFilesDirection = odDescending, 'Test 2.5');
-    Check(OrderFilesBy = obAttribute, 'Test 2.6');
     iSwitch := 1;
     iIndex := 2;
     slParams.Text := 'my.exe'#13#10'/o:d';
@@ -932,22 +908,22 @@ Var
   S : String;
 
 begin
-  S := OutputAttributes(0);
-  CheckEquals('....F..', S, '....F..');
-  S := OutputAttributes(faArchive);
-  CheckEquals('.A..F..', S, '.A..F..');
-  S := OutputAttributes(faReadOnly);
-  CheckEquals('R...F..', S, 'R...F..');
-  S := OutputAttributes(faSysFile);
-  CheckEquals('..S.F..', S, '..S.F..');
-  S := OutputAttributes(faHidden);
-  CheckEquals('...HF..', S, '...HF..');
-  S := OutputAttributes(faReadOnly Or faArchive Or faSysFile Or faHidden);
-  CheckEquals('RASHF..', S, 'RASHF..');
-  S := OutputAttributes(faReadOnly Or faArchive Or faSysFile Or faHidden or faDirectory);
-  CheckEquals('RASH.D.', S, 'RASH.D.');
-  S := OutputAttributes(faReadOnly Or faArchive Or faSysFile Or faHidden Or faVolumeID);
-  CheckEquals('RASH..V', S, 'RASH..V');
+  S := OutputAttributes([]);
+  CheckEquals('....F..........', S, 'Empty');
+  S := OutputAttributes([sfaArchive]);
+  CheckEquals('.A..F..........', S, 'Archive');
+  S := OutputAttributes([sfaReadOnly]);
+  CheckEquals('R...F..........', S, 'ReadOnly');
+  S := OutputAttributes([sfaSystem]);
+  CheckEquals('..S.F..........', S, 'System');
+  S := OutputAttributes([sfaHidden]);
+  CheckEquals('...HF..........', S, 'Hidden');
+  S := OutputAttributes([sfaReadOnly, sfaArchive, sfaSystem, sfaHidden]);
+  CheckEquals('RASHF..........', S, 'Readony, Archive, System, Hidden and File');
+  S := OutputAttributes([sfaReadOnly, sfaArchive, sfaSystem, sfaHidden, sfaDirectory]);
+  CheckEquals('RASHD..........', S, 'RASHD');
+  S := OutputAttributes([sfaReadOnly, sfaArchive, sfaSystem, sfaHidden, sfaVolume]);
+  CheckEquals('RASHV..........', S, 'RASHV');
 end;
 
 initialization

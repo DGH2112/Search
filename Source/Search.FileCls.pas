@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    07 Apr 2018
+  @Date    08 Apr 2018
   
 **)
 Unit Search.FileCls;
@@ -14,9 +14,10 @@ Interface
 
 Uses
   Search.RegExMatches, 
-  RegularExpressions,
+  System.RegularExpressions,
   System.Generics.Collections, 
-  Search.Interfaces;
+  Search.Interfaces, 
+  Search.Types;
 
 Type
   (** A class to hold a files information. **)
@@ -24,7 +25,7 @@ Type
   Strict Private
     FDate : TDateTime;
     FSize : Int64;
-    FAttr : String;
+    FAttributes : TSearchFileAttrs;
     FOwner : String;
     FName : String;
     FRegExMatches : TList<TRegExMatches>;
@@ -32,15 +33,15 @@ Type
     // ISearchFile
     Procedure AddRegExLine(Const iLine: Integer; Const Matches: TMatchCollection);
     Function  Clone: ISearchFile;
-    Function  GetAttr: String;
+    Function  GetAttributes: TSearchFileAttrs;
     Function  GetDate: TDateTime;
     Function  GetName: String;
     Function  GetOwner: String;
     Function  GetRegExMatches: TList<TRegExMatches>;
     Function  GetSize: Int64;
   Public
-    Constructor Create(Const dtDate : TDateTime; Const iSize : Int64; Const strAttr, strOwner,
-      strName : String);
+    Constructor Create(Const dtDate : TDateTime; Const iSize : Int64; Const setAttrs : TSearchFileAttrs;
+      Const strOwner, strName : String);
     Destructor Destroy; Override;
   End;
 
@@ -81,7 +82,7 @@ Var
   R: TRegExMatches;
 
 Begin
-  Result := TSearchFile.Create(FDate, FSize, FAttr, FOwner, ExtractFileName(FName));
+  Result := TSearchFile.Create(FDate, FSize, FAttributes, FOwner, ExtractFileName(FName));
   For R In FRegExMatches Do
     Result.RegExMatches.Add(R);
 End;
@@ -95,20 +96,20 @@ End;
 
   @param   dtDate   as a TDateTime as a constant
   @param   iSize    as an Int64 as a constant
-  @param   strAttr  as a String as a constant
+  @param   setAttrs as a TSearchFileAttrs as a constant
   @param   strOwner as a String as a constant
   @param   strName  as a String as a constant
 
 **)
-Constructor TSearchFile.Create(Const dtDate: TDateTime; Const iSize: Int64; Const strAttr, strOwner,
-  strName: String);
+Constructor TSearchFile.Create(Const dtDate: TDateTime; Const iSize: Int64;
+  Const setAttrs : TSearchFileAttrs; Const strOwner, strName: String);
 
 Begin
   Inherited Create;
   FRegExMatches := TList<TRegExMatches>.Create;
   FDate := dtDate;
   FSize := iSize;
-  FAttr := strAttr;
+  FAttributes := setAttrs;
   FOwner := strOwner;
   FName := strName;
 End;
@@ -135,13 +136,13 @@ End;
   @precon  None.
   @postcon Returns the attributes of the file as a string representation.
 
-  @return  a String
+  @return  a TSearchFileAttrs
 
 **)
-Function TSearchFile.GetAttr: String;
+Function TSearchFile.GetAttributes: TSearchFileAttrs;
 
 Begin
-  Result := FAttr;
+  Result := FAttributes;
 End;
 
 (**

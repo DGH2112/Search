@@ -38,9 +38,8 @@ Type
     Function  GetFile(Const iIndex: Integer): ISearchFile;
     Function  GetPath: String;
     Procedure SetPath(Const strPath: String);
-    Function  Add(Const dtDate: TDateTime; Const iSize: Int64; Const strAttr: String;
-      Const strOwner: String; Const strName: String; Const strSearchText: String;
-      Const iFileAttrs: Integer): Boolean; Overload;
+    Function  Add(Const dtDate: TDateTime; Const iSize: Int64; Const setAttrs : TSearchFileAttrs;
+      Const strOwner, strName, strSearchText: String): Boolean; Overload;
     Procedure OrderBy(Const OrderBy: TOrderBy; Const OrderDirection: TOrderDirection);
     Function  OwnerWidth: Integer;
     Function  Add(Const FileInfo : ISearchFile) : Boolean; Overload;
@@ -84,16 +83,15 @@ end;
 
   @param   dtDate        as a TDateTime as a constant
   @param   iSize         as an Int64 as a constant
-  @param   strAttr       as a String as a constant
+  @param   setAttrs      as a TSearchFileAttrs as a constant
   @param   strOwner      as a String as a constant
   @param   strName       as a String as a constant
   @param   strSearchText as a String as a constant
-  @param   iFileAttrs    as an Integer as a constant
   @return  a Boolean
 
 **)
-Function TSearchFiles.Add(Const dtDate : TDateTime; Const iSize : Int64; Const strAttr, strOwner,
-  strName, strSearchText : String; Const iFileAttrs : Integer) : Boolean;
+Function TSearchFiles.Add(Const dtDate : TDateTime; Const iSize : Int64;
+  Const setAttrs : TSearchFileAttrs; Const strOwner, strName, strSearchText : String) : Boolean;
 
 Var
   FFile : ISearchFile;
@@ -103,10 +101,10 @@ Var
 
 Begin
   Result := True;
-  FFile := TSearchFile.Create(dtDate, iSize, strAttr, strOwner, strName);
+  FFile := TSearchFile.Create(dtDate, iSize, setAttrs, strOwner, strName);
   If FRegExSearch Then
     Begin
-      If  iFileAttrs And faDirectory = 0 Then
+      If sfaDirectory In setAttrs Then
         Begin
           slFile := TStringList.Create;
           Try
@@ -280,7 +278,6 @@ Begin
           obName:      If CompareText(SFI.FileName, FFI.FileName) < 0 Then iMin := j;
           obDate:      If SFI.Date < FFI.Date                         Then iMin := j;
           obSize:      If SFI.Size < FFI.Size                         Then iMin := j;
-          obAttribute: If CompareText(SFI.Attr, FFI.Attr) < 0         Then iMin := j;
           obOwner:     If CompareText(SFI.Owner, FFI.Owner) < 0       Then iMin := j;
         End;
         If iMin > -1 Then FFiles.Exchange(i, iMin);

@@ -94,7 +94,7 @@
         <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
         <DCC_UNIT_PLATFORM>false</DCC_UNIT_PLATFORM>
         <DCC_DcuOutput>$(Platform)\$(Config)</DCC_DcuOutput>
-        <Debugger_RunParams>&quot;D:\Documents\RAD Studio\IDE Addins\*.cpp;*.h&quot; /si[CBT]!</Debugger_RunParams>
+        <Debugger_RunParams>L:\C512\OneDrive\* /a /t[DC]!</Debugger_RunParams>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>None</Manifest_File>
         <DCC_ExeOutput>$(Platform)\$(Config)</DCC_ExeOutput>

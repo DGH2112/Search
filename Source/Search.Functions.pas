@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    07 Apr 2018
+  @Date    08 Apr 2018
 
 **)
 Unit Search.Functions;
@@ -43,7 +43,7 @@ Var
   Procedure GetSizeRange(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var iLSize, iUSize: Int64);
   Procedure GetAttributes(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
-    Var iFileAttrs, iTypeAttrs: Integer);
+    Var setFileAttrs: TSearchFileAttrs);
   Procedure GetOrderBy(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var OrderFilesDirection: TOrderDirection; Var OrderFilesBy: TOrderBy);
   Procedure GetSearchInInfo(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
@@ -55,11 +55,11 @@ Var
   Procedure GetOwnerSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var OwnerSearch: TOwnerSearch; Var OwnerSearchPos: TOwnerSearchPos;
     Var strOwnerSearch: String);
-  Function OutputAttributes(Const iAttr: Integer): String;
+  Function OutputAttributes(Const setAttributes: TSearchFileAttrs): String;
   Procedure CheckDateRange(Const iDateTime: Integer; Const dtLDate, dtUdate: Double;
     Var boolFound: Boolean; Const strFileName : String; Const LogErrorProc : TLogErrorProc);
   Procedure CheckSizeRange(Const iSize, iLSize, iUSize: Int64; Var boolFound: Boolean);
-  Procedure CheckFileAttributes(Const SearchAttrs: Integer; Const iFileAttrs, iTypeAttrs: Integer;
+  Procedure CheckFileAttributes(Const setSearchAttrs, setFileAttrs : TSearchFileAttrs;
     Var boolFound: Boolean);
   Procedure CheckExclusions(Const strPath, strFilename: String; Var boolFound: Boolean;
     Const slExclusions: TStringList);
@@ -85,6 +85,7 @@ Var
   Function BuildRootKey(Const slParams : TStringList) : String;
   Function GetField(Const strText : String; Const Ch : Char; Const iIndex : Integer;
     Const boolIgnoreQuotes : Boolean = True): String;
+  Function  FileAttrsToAttrsSet(Const iAttributes : Integer) : TSearchFileAttrs;
   
 Implementation
 
@@ -388,30 +389,17 @@ End;
   @precon  None.
   @postcon Returns boolFound as true is the file has the attributes.
 
-  @param   SearchAttrs as an Integer as a constant
-  @param   iFileAttrs  as an Integer as a constant
-  @param   iTypeAttrs  as an Integer as a constant
-  @param   boolFound   as a Boolean as a reference
+  @param   setSearchAttrs as a TSearchFileAttrs as a constant
+  @param   setFileAttrs   as a TSearchFileAttrs as a constant
+  @param   boolFound      as a Boolean as a reference
 
 **)
-Procedure CheckFileAttributes(Const SearchAttrs: Integer; Const iFileAttrs, iTypeAttrs: Integer;
+Procedure CheckFileAttributes(Const setSearchAttrs, setFileAttrs : TSearchFileAttrs;
   Var boolFound: Boolean);
-
-Var
-  iAttributes: Integer;
 
 Begin
   If clsAttrRange In CommandLineSwitches Then
-    Begin
-      If faDirectory And SearchAttrs > 0 Then
-        iAttributes := faDirectory
-      Else If faVolumeID And SearchAttrs > 0 Then
-        iAttributes := faVolumeID
-      Else
-        iAttributes := iFileOnly;
-      boolFound     := boolFound And (iAttributes And iTypeAttrs > 0);
-      boolFound := boolFound And ((SearchAttrs And iFileAttrs > 0) Or (iFileAttrs = 0));
-    End;
+    boolFound := boolFound And (setSearchAttrs <= setFileAttrs);
 End;
 
 (**
@@ -596,15 +584,21 @@ Var
   **)
   Procedure AssignIndexes();
 
+  Const
+    iDefaultDayIdx = 0;
+    iDefaultMonthIdx = 1;
+    iDefaultYearIdx = 2;
+    iDayOfMonthLen = 2;
+
   Var
     slFormat : TStringList;
     str : String;
     j : Integer;
 
   Begin
-    iIndex0 := 0; // Default Day / Month / Year
-    iIndex1 := 1;
-    iIndex2 := 2;
+    iIndex0 := iDefaultDayIdx; // Default Day / Month / Year
+    iIndex1 := iDefaultMonthIdx;
+    iIndex2 := iDefaultYearIdx;
     slFormat := TStringList.Create;
     Try
       str := '';
@@ -616,7 +610,7 @@ Var
       AddToken(slFormat, str);
       // Remove day of week
       For j := slFormat.Count - 1 DownTo 0 Do
-        If (CharInSet(slFormat[j][1], ['d', 'D'])) And (Length(slFormat[j]) > 2) Then
+        If (CharInSet(slFormat[j][1], ['d', 'D'])) And (Length(slFormat[j]) > iDayOfMonthLen) Then
           slFormat.Delete(j);
       For j := 0 To slFormat.Count - 1 Do
         Begin
@@ -742,6 +736,64 @@ End;
 
 (**
 
+  This method returns a set of search file attributes for the given set of file attributes.
+
+  @precon  None.
+  @postcon A set of search file attributes is returned for the given file attributes.
+
+  @param   iAttributes as an Integer as a constant
+  @return  a TSearchFileAttrs
+
+**)
+Function  FileAttrsToAttrsSet(Const iAttributes : Integer) : TSearchFileAttrs;
+
+  (**
+
+    This procedure added the search file attribute to the result of the given attribute is in the files 
+    attributes.
+
+    @precon  None.
+    @postcon The text attribute is added if found in the file attributes.
+
+    @param   iAttr      as an Integer as a constant
+    @param   eFileAttr  as a TSearchFileAttr as a constant
+    @param   setResults as a TSearchFileAttrs as a reference
+    @return  a Boolean
+
+  **)
+  Function TestAttr(Const iAttr : Integer; Const eFileAttr : TSearchFileAttr;
+    Var setResults : TSearchFileAttrs) : Boolean;
+
+  Begin
+    Result := iAttr And iAttributes > 0;
+    If Result Then
+      Include(setResults, eFileAttr);
+  End;
+
+Begin
+  Result := [sfaFile];
+  TestAttr(faReadOnly, sfaReadOnly, Result);
+  TestAttr(faSysFile, sfaSystem, Result);
+  TestAttr(faHidden, sfaHidden, Result);
+  If TestAttr(faDirectory, sfaDirectory, Result) Then
+    Exclude(Result, sfaFile);
+  If TestAttr(faVolumeID, sfaVolume, Result) Then
+    Exclude(Result, sfaFile);
+  TestAttr(faArchive, sfaArchive, Result);
+  TestAttr(FILE_ATTRIBUTE_DEVICE, sfaDevice, Result);
+  TestAttr(faNormal, sfaNormal, Result);
+  TestAttr(faTemporary, sfaTemporary, Result);
+  TestAttr(FILE_ATTRIBUTE_SPARSE_FILE, sfaSparse, Result);
+  TestAttr(faSymLink, sfaReparse, Result);
+  TestAttr(faCompressed, sfaCompressed, Result);
+  TestAttr(FILE_ATTRIBUTE_OFFLINE, sfaOffLine, Result);
+  TestAttr(FILE_ATTRIBUTE_NOT_CONTENT_INDEXED, sfaIndexed, Result);
+  TestAttr(faEncrypted, sfaEncrypted, Result);
+  TestAttr(faVirtual, sfaVirtual, Result);
+End;
+
+(**
+
   This function returns the background colour attribute for the console associated with the given cl#### 
   colour. Colour Matrix: Red(Maroon) Yellow(Olive) Lime(Green) White(Gray) Aqua(Teal) Blue(Navy)
 
@@ -789,15 +841,14 @@ End;
   @precon  None.
   @postcon Determines the attribute range from the command line.
 
-  @param   slParams   as a TStringList as a constant
-  @param   iSwitch    as an Integer as a reference
-  @param   iIndex     as an Integer as a reference
-  @param   iFileAttrs as an Integer as a reference
-  @param   iTypeAttrs as an Integer as a reference
+  @param   slParams     as a TStringList as a constant
+  @param   iSwitch      as an Integer as a reference
+  @param   iIndex       as an Integer as a reference
+  @param   setFileAttrs as a TSearchFileAttrs as a reference
 
 **)
 Procedure GetAttributes(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
-  Var iFileAttrs, iTypeAttrs: Integer);
+  Var setFileAttrs: TSearchFileAttrs);
 
 Begin
   Include(CommandLineSwitches, clsAttrRange);
@@ -805,18 +856,27 @@ Begin
   If slParams[iSwitch][iIndex] <> '[' Then
     Raise ESearchException.Create(strOpenSquareExpectedInAttribDef);
   IncrementSwitchPosition(slParams, iIndex, iSwitch, strMissingAttribDirective);
-  iFileAttrs := 0;
-  iTypeAttrs := 0;
+  setFileAttrs := [];
   While (iIndex <= Length(slParams[iSwitch])) And (slParams[iSwitch][iIndex] <> ']') Do
     Begin
       Case slParams[iSwitch][iIndex] Of
-        'r', 'R': iFileAttrs := iFileAttrs Or faReadOnly;
-        'a', 'A': iFileAttrs := iFileAttrs Or faArchive;
-        's', 'S': iFileAttrs := iFileAttrs Or faSysFile;
-        'h', 'H': iFileAttrs := iFileAttrs Or faHidden;
-        'f', 'F': iTypeAttrs := iTypeAttrs Or iFileOnly;
-        'd', 'D': iTypeAttrs := iTypeAttrs Or faDirectory;
-        'v', 'V': iTypeAttrs := iTypeAttrs Or faVolumeID;
+        'R': Include(setFileAttrs, sfaReadOnly);
+        'A': Include(setFileAttrs, sfaArchive);
+        'S': Include(setFileAttrs, sfaSystem);
+        'H': Include(setFileAttrs, sfaHidden);
+        'F': Include(setFileAttrs, sfaFile);
+        'D': Include(setFileAttrs, sfaDirectory);
+        'V': Include(setFileAttrs, sfaVolume);
+        'd': Include(setFileAttrs, sfaDevice);
+        'N': Include(setFileAttrs, sfaNormal);
+        'T': Include(setFileAttrs, sfaTemporary);
+        's': Include(setFileAttrs, sfaSparse);
+        'r': Include(setFileAttrs, sfaReparse);
+        'C': Include(setFileAttrs, sfaCompressed);
+        'O': Include(setFileAttrs, sfaOffLine);
+        'I': Include(setFileAttrs, sfaIndexed);
+        'E': Include(setFileAttrs, sfaEncrypted);
+        'v': Include(setFileAttrs, sfaVirtual);
       Else
         Raise ESearchException.CreateFmt(strNotAValidAttrList,
           [slParams[iSwitch][iIndex]]);
@@ -824,8 +884,6 @@ Begin
       IncrementSwitchPosition(slParams, iIndex, iSwitch,
         strCloseSquareExpectedInAttribDef);
     End;
-  If iTypeAttrs = 0 Then
-    iTypeAttrs := iFileOnly;
 End;
 
 (**
@@ -1124,16 +1182,10 @@ Begin
       IncrementSwitchPosition(slParams, iIndex, iSwitch, strMissingOrderByDirective);
     End;
   Case slParams[iSwitch][iIndex] Of
-    'n', 'N':
-      OrderFilesBy := obName;
-    'd', 'D':
-      OrderFilesBy := obDate;
-    's', 'S':
-      OrderFilesBy := obSize;
-    'a', 'A':
-      OrderFilesBy := obAttribute;
-    'o', 'O':
-      OrderFilesBy := obOwner;
+    'n', 'N': OrderFilesBy := obName;
+    'd', 'D': OrderFilesBy := obDate;
+    's', 'S': OrderFilesBy := obSize;
+    'o', 'O': OrderFilesBy := obOwner;
   Else
     Raise ESearchException.Create(strInvalidOrderByDirective);
   End
@@ -1255,6 +1307,11 @@ End;
 Procedure GetSearchInInfo(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
   var strRegExText: String; var iSurroundingLines : Integer);
 
+Const
+  strRegExSwitchPattern = '(?<SurroundLines>[0-9]*)[[](?<RegExText>.*)\]';
+  iNoOfSurroundingLines = 1;
+  iRegExText = 2;
+
 Var
   RE : TRegEx;
   M: TMatch;
@@ -1264,12 +1321,12 @@ Var
 Begin
   iSurroundingLines := 0;
   Include(CommandLineSwitches, clsRegExSearch);
-  RE.Create('([0-9]*)[[](.*)\]', [roIgnoreCase, roSingleLine, roCompiled]);
+  RE.Create(strRegExSwitchPattern, [roIgnoreCase, roSingleLine, roCompiled]);
   M := RE.Match(slParams[iSwitch]);
   If M.Success Then
     Begin
-      Val(M.Groups[1].Value, iSurroundingLines, iErrorCode);
-      strRegExText := M.Groups[2].Value;
+      Val(M.Groups[iNoOfSurroundingLines].Value, iSurroundingLines, iErrorCode);
+      strRegExText := M.Groups[iRegExText].Value;
       For i := 1 To Length(M.Value) Do
         IncrementSwitchPosition(slParams, iIndex, iSwitch, strCloseSquareExpectedInRegExSearchDef);
     End;
@@ -1567,28 +1624,56 @@ End;
   @precon  None.
   @postcon Outputs the files attributes if they are requireed at the command line.
 
-  @param   iAttr as an Integer as a constant
+  @param   setAttributes as a TSearchFileAttrs as a constant
   @return  a String
 
 **)
-Function OutputAttributes(Const iAttr: Integer): String;
+Function OutputAttributes(Const setAttributes: TSearchFileAttrs): String;
+
+Type
+  TSearchAttrPos = (sapReadOnlyPos, sapArchivePos, sapSystemPos, sapHiddenPos, sapDirFileVolPos,
+    sapNormalPos, sapDevicePos, sapTemporaryPos, sapSparsePos, sapReparsePos,
+    sapCompressedPos, sapOffLinePos, sapIndexedPos, sapEncryptedPos, sapVirtualPos);
+
+  (**
+
+    This procedure added the text attribute to the result of tge given attrivute is in the files 
+    attributes.
+
+    @precon  None.
+    @postcon The text attribute is added if found in the file attributes.
+
+    @param   iAttr     as a TSearchFileAttr as a constant
+    @param   eFileAttr as a TSearchAttrPos as a constant
+    @param   C         as a Char as a constant
+
+  **)
+  Procedure TestAttr(Const iAttr : TSearchFileAttr; Const eFileAttr : TSearchAttrPos; Const C : Char);
+
+  Begin
+    If iAttr In setAttributes Then
+      Result[Succ(Integer(eFileAttr))] := C;
+  End;
 
 Begin
-  Result := '.......';
-  If faReadOnly And iAttr > 0 Then
-    Result[1] := 'R';
-  If faArchive And iAttr > 0 Then
-    Result[2] := 'A';
-  If faSysFile And iAttr > 0 Then
-    Result[3] := 'S';
-  If faHidden And iAttr > 0 Then
-    Result[4] := 'H';
-  If faDirectory And iAttr > 0 Then
-    Result[6] := 'D'
-  Else If faVolumeID And iAttr > 0 Then
-    Result[7] := 'V'
-  Else
-    Result[5] := 'F';
+  //         RASHDNdTsrCOIEv
+  Result := '....F..........';
+  TestAttr(sfaReadOnly, sapReadOnlyPos, 'R');
+  TestAttr(sfaSystem, sapSystemPos, 'S');
+  TestAttr(sfaHidden, sapHiddenPos, 'H');
+  TestAttr(sfaDirectory, sapDirFileVolPos, 'D');
+  TestAttr(sfaVolume, sapDirFileVolPos, 'V');
+  TestAttr(sfaArchive, sapArchivePos, 'A');
+  TestAttr(sfaDevice, sapDevicePos, 'd');
+  TestAttr(sfaNormal, sapNormalPos, 'N');
+  TestAttr(sfaTemporary, sapTemporaryPos, 'T');
+  TestAttr(sfaSparse, sapSparsePos, 's');
+  TestAttr(sfaReparse, sapReparsePos, 'r');
+  TestAttr(sfaCompressed, sapCompressedPos, 'C');
+  TestAttr(sfaOffLine, sapOffLinePos, 'O');
+  TestAttr(sfaIndexed, sapIndexedPos, 'I');
+  TestAttr(sfaEncrypted, sapEncryptedPos, 'E');
+  TestAttr(sfaVirtual, sapVirtualPos, 'v');
 End;
 
 (**
@@ -1612,6 +1697,10 @@ Procedure OutputToConsole(Const hndConsole : THandle; Const strText : String = '
   Const iTextColour : TColor = clNone; Const iBackColour : TColor = clNone;
   Const boolUpdateCursor : Boolean = True);
 
+Const
+  iForegroundMask = $0F;
+  iBackgroundMask = $F0;
+
 Var
   ConsoleInfo : TConsoleScreenBufferInfo;
   wChars : DWord;
@@ -1633,8 +1722,8 @@ Begin
         Win32Check(WriteConsoleOutputCharacter(hndConsole, PChar(strTABText), Length(strTABText),
           ConsoleInfo.dwCursorPosition, wChars));
         SetLength(Attrs, wChars);
-        iForeAttrColour := ForeGroundColour(iTextColour, ConsoleInfo.wAttributes And $0F);
-        iBackAttrColour := BackGroundColour(iBackColour, ConsoleInfo.wAttributes And $F0);
+        iForeAttrColour := ForeGroundColour(iTextColour, ConsoleInfo.wAttributes And iForegroundMask);
+        iBackAttrColour := BackGroundColour(iBackColour, ConsoleInfo.wAttributes And iBackgroundMask);
         If wChars > 0 Then
           For iChar := 0 To wChars - 1 Do
             Attrs[iChar] := iForeAttrColour Or iBackAttrColour;
@@ -1650,7 +1739,7 @@ Begin
           End;
         If strTABText <> '' Then
           Begin
-            Win32Check(WriteConsole(hndConsole, PChar(#13#10), 2, wChars, Nil));
+            Win32Check(WriteConsole(hndConsole, PChar(#13#10), Length(#13#10), wChars, Nil));
             Inc(NewPos.Y);
             NewPos.X := 0;
           End;
@@ -1660,7 +1749,7 @@ Begin
           // The only time the below fails is at the end of the buffer and a new
           // line is required, hence the new line on failure.
           If Not SetConsoleCursorPosition(hndConsole, NewPos) Then
-            Win32Check(WriteConsole(hndConsole, PChar(#13#10), 2, wChars, Nil));
+            Win32Check(WriteConsole(hndConsole, PChar(#13#10), Length(#13#10), wChars, Nil));
         End Else
           Win32Check(SetConsoleCursorPosition(hndConsole, OldPos));
     End Else
@@ -1705,7 +1794,7 @@ Begin
           Begin
             OutputToConsole(hndConsole, sl[i], iTextColour, iBackColour,
               boolUpdateCursor);
-            Win32Check(WriteConsole(hndConsole, PChar(#13#10), 2, wChars, Nil));
+            Win32Check(WriteConsole(hndConsole, PChar(#13#10), Length(#13#10), wChars, Nil));
           End Else
             WriteLn(sl[i]);
       End;

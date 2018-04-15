@@ -60,11 +60,35 @@ Type
   TLogErrorProc = Procedure(Const strErrorMsg, strFileNmae: String) Of Object;
 
   (** An enumerate to define the order for sorting the files. **)
-  TOrderBy = (obNone, obName, obSize, obDate, obOwner, obAttribute);
+  TOrderBy = (obNone, obName, obSize, obDate, obOwner);
 
   (** An enumberate to define whether the files should be ascending or
       descending **)
   TOrderDirection = (odAscending, odDescending);
+
+  (** An enumerate to define the attributes of a file. **)
+  TSearchFileAttr = (
+    sfaReadOnly,
+    sfaArchive,
+    sfaSystem,
+    sfaHidden,
+    sfaDirectory,
+    sfaFile,
+    sfaVolume,
+    sfaNormal,
+    sfaDevice,
+    sfaTemporary,
+    sfaSparse,
+    sfaReparse,
+    sfaCompressed,
+    sfaOffLine,
+    sfaIndexed,
+    sfaEncrypted,
+    sfaVirtual
+  );
+
+  (** A set of file attributes. **)
+  TSearchFileAttrs = Set Of TSearchFileAttr;
 
 Implementation
 
