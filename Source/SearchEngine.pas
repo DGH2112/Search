@@ -6,7 +6,7 @@
   @Version 1.0
   @Date    15 Apr 2018
 
-  @todo    Add number of GREP matches to output (only IF GREP enabled)
+  @todo    Add the ability to check for a single date and assume start and end of the day
   @todo    Add switch for RegEx filename matching
   @todo    Check that GREP will work with multi-line matches
   @todo    Allow a switch to change a default colour
@@ -85,6 +85,7 @@ Type
     FRootKey: String;
     FParams: TStringList;
     FLevel: Integer;
+    FGrepCount : Integer;
     FSearchPathColour: TColor;
     FTitleColour: TColor;
     FHeaderColour: TColor;
@@ -397,7 +398,6 @@ Var
   dtDate, dtDateLocal: TFileTime;
   iTime: Integer;
   boolAdded: Boolean;
-  dtFileDate: TDateTime;
   iCompressedSize: Int64;
   iFileSizeHigh: DWORD;
   iFileSizeLow: DWORD;
@@ -416,7 +416,6 @@ Begin
       iTime := 0;
       If Not FileTimeToDosDateTime(dtDateLocal, LongRec(iTime).Hi, LongRec(iTime).Lo) Then
         iTime := 0;
-      dtFileDate := SafeFileDateToDateTime(iTime, strPath + recSearch.Name, AddErrorToLog);
       iCompressedSize := 0;
       If [sfaFile, sfaCompressed] <= setAttrs Then
         Begin
@@ -424,8 +423,8 @@ Begin
           iCompressedSize := Int64(iFileSizeHigh) * Int64(MAXDWORD);
           iCompressedSize := iCompressedSize + iFileSizeLow;
         End;
-      boolAdded := FilesCollection.Add(TSearchFileRec.Create(dtFileDate, recSearch.Size, iCompressedSize,
-        setAttrs, strOwner, recSearch.Name), GetFileText);
+      boolAdded := FilesCollection.Add(TSearchFileRec.Create(recSearch.TimeStamp, recSearch.Size, 
+        iCompressedSize, setAttrs, strOwner, recSearch.Name), GetFileText, FGREPCount);
     End
   Else
     boolAdded := True;
@@ -488,7 +487,7 @@ Begin
       LongRec(iTime).Hi := ZFAI.LastModFileDate;
       boolAdded := FilesCollection.Add(TSearchFileRec.Create(FileDateToDateTime(iTime),
         ZFAI.UncompressedSize, ZFAI.CompressedSize, FileAttrsToAttrsSet(ZFAI.ExternalFileAttributes),
-        strOwner, ZFAI.StoredPath + ZFAI.FileName), GetZipFileText);
+        strOwner, ZFAI.StoredPath + ZFAI.FileName), GetZipFileText, FGREPCount);
     End
   Else
     boolAdded := True;
@@ -518,6 +517,7 @@ Begin
   FErrorLog := TStringList.Create;
   CoInitialize(Nil);
   FLevel := -1;
+  FGrepCount := 0;
   SetRoundMode(rmUp);
 End;
 
@@ -1570,7 +1570,8 @@ End;
 Procedure TSearch.PrintFooter(Const strPath: String);
 
 ResourceString
-  strMsg1 = '  Found %s bytes in %1.0n Files in %1.0n Directories.';
+  strGREPResults = 'Found %1.0n RegEx Matches, ';
+  strSearchResults = 'Found %s bytes in %1.0n Files in %1.0n Directories.';
   strMsg2 = '  Total space %s bytes and %s bytes free.';
 
 Var
@@ -1579,11 +1580,14 @@ Var
 Begin
   If Not(clsOutputAsCSV In CommandLineSwitches) Then
     Begin
-      GetDiskFreeSpaceEx(PChar(strPath), iFreeBytesAvailableToCaller,
-        iTotalNumberOfBytes, @iTotalNumberOfFreeBytes);
+      GetDiskFreeSpaceEx(PChar(strPath), iFreeBytesAvailableToCaller, iTotalNumberOfBytes,
+        @iTotalNumberOfFreeBytes);
       If CheckConsoleMode(FStdHnd) Then
         OutputToConsole(FStdHnd, StringOfChar(#32, FWidth - 1), clNone, clNone, False);
-      OutputToConsoleLn(FStdHnd, Format(strMsg1, [Trim(FormatSize(FFileSize)), Int(FFiles),
+      OutputToConsole(FStdHnd, #32#32);
+      If clsRegExSearch In CommandLineSwitches Then
+        OutputToConsole(FStdHnd, Format(strGREPResults, [Int(FGREPCount)]), FFooterColour);
+      OutputToConsoleLn(FStdHnd, Format(strSearchResults, [Trim(FormatSize(FFileSize)), Int(FFiles),
           Int(FDirectories)]), FFooterColour);
       OutputToConsoleLn(FStdHnd, Format(strMsg2, [Trim(FormatSize(iTotalNumberOfBytes)),
           Trim(FormatSize(iTotalNumberOfFreeBytes))]), FFooterColour);
@@ -2405,20 +2409,17 @@ Begin
                   FileTimeToSystemTime(recSearch.FindData.ftCreationTime, ST);
                   dtDate := EncodeDate(ST.wYear, ST.wMonth, ST.wDay) + EncodeTime
                     (ST.wHour, ST.wMinute, ST.wSecond, ST.wMilliseconds);
-                  CheckDateRange(DateTimeToFileDate(dtDate), FLDate, FUDate, boolFound,
-                    strPath + recSearch.Name, AddErrorToLog);
+                  CheckDateRange(dtDate, FLDate, FUDate, boolFound);
                 End;
               dtLastAccess:
                 Begin
                   FileTimeToSystemTime(recSearch.FindData.ftLastAccessTime, ST);
                   dtDate := EncodeDate(ST.wYear, ST.wMonth, ST.wDay) + EncodeTime
                     (ST.wHour, ST.wMinute, ST.wSecond, ST.wMilliseconds);
-                  CheckDateRange(DateTimeToFileDate(dtDate), FLDate, FUDate, boolFound,
-                    strPath + recSearch.Name, AddErrorToLog);
+                  CheckDateRange(dtDate, FLDate, FUDate, boolFound);
                 End
               Else
-                CheckDateRange(recSearch.Time, FLDate, FUDate, boolFound,
-                  strPath + recSearch.Name, AddErrorToLog);
+                CheckDateRange(recSearch.TimeStamp, FLDate, FUDate, boolFound);
             End;
             CheckExclusions(strPath, recSearch.Name, boolFound, FExclusions);
             If clsOwner In CommandLineSwitches Then
@@ -2495,8 +2496,7 @@ Begin
                     // Zip files only contain the last write date of a file.
                     LongRec(iDateTime).Lo := ZFAI.LastModFileTime;
                     LongRec(iDateTime).Hi := ZFAI.LastModFileDate;
-                    CheckDateRange(iDateTime, FLDate, FUDate, boolFound,
-                      strFileName + '\' + ZFAI.StoredPath + ZFAI.FileName, AddErrorToLog);
+                    CheckDateRange(FileDateToDateTime(iDateTime), FLDate, FUDate, boolFound);
                     CheckExclusions(strPath, ZFAI.StoredPath + ZFAI.FileName, boolFound,
                       FExclusions);
                     If clsOwner In CommandLineSwitches Then

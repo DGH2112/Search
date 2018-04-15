@@ -90,7 +90,8 @@ Type
     Function  GetPath : String;
     Function  GetHasCompressed : Boolean;
     Procedure SetPath(Const strPath : String);
-    Function  Add(Const SearchFileRec : TSearchFileRec; Const strSearchText : String) : Boolean; Overload;
+    Function  Add(Const SearchFileRec : TSearchFileRec; Const strSearchText : String;
+      Var iGREPCount : Integer) : Boolean; Overload;
     Function  OwnerWidth : Integer;
     Procedure OrderBy(Const OrderBy : TOrderBy; Const OrderDirection : TOrderDirection);
     Function  Add(Const FileInfo : ISearchFile) : Boolean; Overload;

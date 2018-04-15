@@ -41,7 +41,8 @@ Type
     Function  GetPath: String;
     Function  GetHasCompressed : Boolean;
     Procedure SetPath(Const strPath: String);
-    Function  Add(Const SearchFileRec : TSearchFileRec; Const strSearchText: String): Boolean; Overload;
+    Function  Add(Const SearchFileRec : TSearchFileRec; Const strSearchText: String;
+      Var iGREPCount : Integer): Boolean; Overload;
     Procedure OrderBy(Const OrderBy: TOrderBy; Const OrderDirection: TOrderDirection);
     Function  OwnerWidth: Integer;
     Function  Add(Const FileInfo : ISearchFile) : Boolean; Overload;
@@ -93,10 +94,12 @@ end;
 
   @param   SearchFileRec as a TSearchFileRec as a constant
   @param   strSearchText as a String as a constant
+  @param   iGREPCount    as an Integer as a reference
   @return  a Boolean
 
 **)
-Function TSearchFiles.Add(Const SearchFileRec : TSearchFileRec; Const strSearchText : String) : Boolean;
+Function TSearchFiles.Add(Const SearchFileRec : TSearchFileRec; Const strSearchText : String;
+  Var iGREPCount : Integer) : Boolean;
   
 Var
   FFile : ISearchFile;
@@ -117,9 +120,11 @@ Begin
         Begin
           iMatchCount := GrepFile(FFile, SearchFileRec.FName, strSearchText);
           If iMatchCount > 0 Then
-            Collection.Add(FFile)
-          Else
-            Result := False;
+            Begin
+              Collection.Add(FFile);
+              Inc(iGREPCount, iMatchCount);
+            End Else
+              Result := False;
         End Else
           Result := False;
       If Not Result Then

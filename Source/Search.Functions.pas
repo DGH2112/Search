@@ -56,8 +56,7 @@ Var
     Var OwnerSearch: TOwnerSearch; Var OwnerSearchPos: TOwnerSearchPos;
     Var strOwnerSearch: String);
   Function  OutputAttributes(Const setAttributes: TSearchFileAttrs): String;
-  Procedure CheckDateRange(Const iDateTime: Integer; Const dtLDate, dtUdate: Double;
-    Var boolFound: Boolean; Const strFileName : String; Const LogErrorProc : TLogErrorProc);
+  Procedure CheckDateRange(Const dtFileDateTime, dtLDate, dtUdate: TDateTime; Var boolFound: Boolean);
   Procedure CheckSizeRange(Const iSize, iLSize, iUSize: Int64; Var boolFound: Boolean);
   Procedure CheckFileAttributes(Const setSearchAttrs, setFileAttrs : TSearchFileAttrs;
     Var boolFound: Boolean);
@@ -67,8 +66,6 @@ Var
     Const OwnerSearch: TOwnerSearch; Var boolFound: Boolean);
   Procedure GetSizeFormat(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var SizeFormat: TSizeFormat);
-  Function  SafeFileDateToDateTime(Const iFileDate: Integer; Const strFilename: String;
-    Const LogErrorProc: TLogErrorProc): TDateTime;
   Function  PosOfNthChar(Const strText : String; Const Ch : Char; Const iIndex : Integer;
     Const boolIgnoreQuotes : Boolean = True): Integer;
   Function  CheckConsoleMode(Const hndConsole : THandle) : Boolean;
@@ -334,24 +331,19 @@ End;
   @precon  None.
   @postcon Returns boolFound as true if the file date is within the date range.
 
-  @param   iDateTime    as an Integer as a constant
-  @param   dtLDate      as a Double as a constant
-  @param   dtUdate      as a Double as a constant
-  @param   boolFound    as a Boolean as a reference
-  @param   strFileName  as a String as a constant
-  @param   LogErrorProc as a TLogErrorProc as a constant
+  @param   dtFileDateTime as a TDateTime as a constant
+  @param   dtLDate        as a TDateTime as a constant
+  @param   dtUdate        as a TDateTime as a constant
+  @param   boolFound      as a Boolean as a reference
 
 **)
-Procedure CheckDateRange(Const iDateTime: Integer; Const dtLDate, dtUdate: Double;
-  Var boolFound: Boolean; Const strFileName : String; Const LogErrorProc : TLogErrorProc);
+Procedure CheckDateRange(Const dtFileDateTime, dtLDate, dtUdate: TDateTime; Var boolFound: Boolean);
 
 Begin
   If clsDateRange In CommandLineSwitches Then
     Begin
-      boolFound := boolFound And 
-        (SafeFileDateToDateTime(iDateTime, strFileName, LogErrorProc) >= dtLDate);
-      boolFound := boolFound And
-        (SafeFileDateToDateTime(iDateTime, strFileName, LogErrorProc) <= dtUdate);
+      boolFound := boolFound And (dtFileDateTime >= dtLDate);
+      boolFound := boolFound And (dtFileDateTime <= dtUdate);
     End;
 End;
 
@@ -1843,34 +1835,6 @@ Begin
           Exit;
         End;
     End;
-End;
-
-(**
-
-  This method encapsulates the FileDateToDateTime function in an exception handler to handle instance
-  where fils have invalid dates.
-
-  @precon  None.
-  @postcon Returns the Date Time for the file.
-
-  @param   iFileDate    as an Integer as a constant
-  @param   strFilename  as a String as a constant
-  @param   LogErrorProc as a TLogErrorProc as a constant
-  @return  a TDateTime
-
-**)
-Function SafeFileDateToDateTime(Const iFileDate: Integer; Const strFilename: String;
-  Const LogErrorProc: TLogErrorProc): TDateTime;
-
-Begin
-  Result := 0;
-  Try
-    Result := FileDateToDateTime(iFileDate);
-  Except
-    On E: EConvertError Do
-      If Assigned(LogErrorProc) Then
-        LogErrorProc(E.Message, strFilename);
-  End;
 End;
 
 (**
