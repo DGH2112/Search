@@ -34,8 +34,8 @@ Var
 
   Procedure IncrementSwitchPosition(Const slParams: TStringList; Var iIndex, iSwitch: Integer;
     Const strExceptionMsg: String);
-  Procedure GetRangeString(Const slParams: TStringList; Const chEndToken: Char;
-    Const strExceptionMsg: String; Var iIndex, iSwitch: Integer; Var strValue: String);
+  Function  GetRangeString(Const slParams: TStringList; Const chEndToken: TSearchCharSet;
+    Const strExceptionMsg: String; Var iIndex, iSwitch: Integer; Var strValue: String) : Char;
   Procedure GetDateRange(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var dtLDate, dtUdate: Double);
   Procedure GetSummaryLevel(Const slParams: TStringList; Var iSwitch: Integer; Const iIndex: Integer;
@@ -95,12 +95,6 @@ Type
   TConsoleMode = (cmUnknown, cmStandard, cmRedirected);
 
 ResourceString
-  (** An exception message for a missing [ in a Date Range. **)
-  strOpenSquareExpectedInDate = '"[" Expected in Date Range.';
-  (** An exception message for a missing date range separater. **)
-  strMissingDateRangeSeparater = 'Missing Start Date Range Separater "-".';
-  (** An exception message for a missing ] in the date range. **)
-  strCloseSquareExpectedInDate = '"]" Expected in Date Range.';
   (** An exception message for a missing [ in a size Range. **)
   strOpenSquareExpectedInSize = '"[" Expected in Size Range.';
   (** An exception message for a missing size range separater. **)
@@ -995,6 +989,11 @@ End;
 Procedure GetDateRange(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
   Var dtLDate, dtUdate: Double);
 
+ResourceString
+  strOpenSquareExpectedInDate = '"[" Expected in Date Range.';
+  strMissingDateRangeSeparater = 'Missing Start Date Range Separater "-".';
+  strCloseSquareExpectedInDate = '"]" Expected in Date Range.';
+
 Const
   iMilliSecInSec = 999;
   strDefaultEndDate = '31/Dec/2099 23:59:59.999';
@@ -1003,13 +1002,14 @@ Const
 Var
   strDate        : String;
   wH, wM, wS, wMS: Word;
+  C : Char;
 
 Begin
   Include(CommandLineSwitches, clsDateRange);
   IncrementSwitchPosition(slParams, iIndex, iSwitch, strOpenSquareExpectedInDate);
   If slParams[iSwitch][iIndex] <> '[' Then
     Raise ESearchException.Create(strOpenSquareExpectedInDate);
-  GetRangeString(slParams, '-', strMissingDateRangeSeparater, iIndex, iSwitch, strDate);
+  C := GetRangeString(slParams, ['-', ']'], strMissingDateRangeSeparater, iIndex, iSwitch, strDate);
   If strDate <> '' Then
     Begin
       dtLDate := ConvertDate(strDate);
@@ -1017,9 +1017,9 @@ Begin
       If (wH = 0) And (wM = 0) And (wS = 0) And (wMS = 0) Then
         dtLDate := dtLDate + EncodeTime(0, 0, 0, 0);
     End
-  Else
-    dtLDate := ConvertDate(strDefaultStartDate);
-  GetRangeString(slParams, ']', strCloseSquareExpectedInDate, iIndex, iSwitch, strDate);
+  Else 
+      dtLDate := ConvertDate(strDefaultStartDate);
+  GetRangeString(slParams, [']'], strCloseSquareExpectedInDate, iIndex, iSwitch, strDate);
   If strDate <> '' Then
     Begin
       dtUdate := ConvertDate(strDate);
@@ -1027,8 +1027,13 @@ Begin
       If (wH = 0) And (wM = 0) And (wS = 0) And (wMS = 0) Then
         dtUdate := dtUdate + EncodeTime(iHoursInDay, iSecondsInMinute, iMinutesInHour, iMilliSecInSec);
     End
+  Else If C = ']' Then
+    Begin
+      dtUdate := Int(dtLDate);   
+      dtUdate := dtUdate + EncodeTime(iHoursInDay, iSecondsInMinute, iMinutesInHour, iMilliSecInSec);
+    End
   Else
-    dtUdate := ConvertDate(strDefaultEndDate);
+      dtUdate := ConvertDate(strDefaultEndDate);
 End;
 
 (**
@@ -1261,24 +1266,27 @@ End;
            string.
 
   @param   slParams        as a TStringList as a constant
-  @param   chEndToken      as a Char as a constant
+  @param   chEndToken      as a TSearchCharSet as a constant
   @param   strExceptionMsg as a String as a constant
   @param   iIndex          as an Integer as a reference
   @param   iSwitch         as an Integer as a reference
   @param   strValue        as a String as a reference
+  @return  a Char
 
 **)
-Procedure GetRangeString(Const slParams: TStringList; Const chEndToken: Char;
-  Const strExceptionMsg: String; Var iIndex, iSwitch: Integer; Var strValue: String);
+Function GetRangeString(Const slParams: TStringList; Const chEndToken: TSearchCharSet;
+  Const strExceptionMsg: String; Var iIndex, iSwitch: Integer; Var strValue: String) : Char;
 
 Begin
+  Result := #0;
   strValue := '';
-  While (Length(slParams[iSwitch]) >= iIndex) And
-    (slParams[iSwitch][iIndex] <> chEndToken) Do
+  While (Length(slParams[iSwitch]) >= iIndex) And (Not CharInSet(slParams[iSwitch][iIndex], chEndToken)) Do
     Begin
       IncrementSwitchPosition(slParams, iIndex, iSwitch, strExceptionMsg);
-      If slParams[iSwitch][iIndex] <> chEndToken Then
-        strValue := strValue + slParams[iSwitch][iIndex];
+      If Not CharInSet(slParams[iSwitch][iIndex], chEndToken) Then
+        strValue := strValue + slParams[iSwitch][iIndex]
+      Else
+        Result := slParams[iSwitch][iIndex];
     End;
 End;
 
@@ -1431,9 +1439,9 @@ Begin
   IncrementSwitchPosition(slParams, iIndex, iSwitch, strOpenSquareExpectedInSize);
   If slParams[iSwitch][iIndex] <> '[' Then
     Raise ESearchException.Create(strOpenSquareExpectedInSize);
-  GetRangeString(slParams, '-', strMissingSizeRangeSeparater, iIndex, iSwitch, strSize);
+  GetRangeString(slParams, ['-'], strMissingSizeRangeSeparater, iIndex, iSwitch, strSize);
   GetSize(iLSize, strInvalidLowerSizeRange, 0);
-  GetRangeString(slParams, ']', strCloseSquareExpectedInSize, iIndex, iSwitch, strSize);
+  GetRangeString(slParams, [']'], strCloseSquareExpectedInSize, iIndex, iSwitch, strSize);
   GetSize(iUSize, strInvalidUpperSizeRange, iUpperLimit);
 End;
 

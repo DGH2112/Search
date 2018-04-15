@@ -100,6 +100,9 @@ Type
       Const setAttrs : TSearchFileAttrs; Const strOwner, strName : String);
   End;
 
+  (** A set of characters - for delimiting text. **)
+  TSearchCharSet = Set Of AnsiChar;
+
 Implementation
 
 (**

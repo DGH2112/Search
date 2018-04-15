@@ -6,7 +6,6 @@
   @Version 1.0
   @Date    15 Apr 2018
 
-  @todo    Add the ability to check for a single date and assume start and end of the day
   @todo    Add switch for RegEx filename matching
   @todo    Check that GREP will work with multi-line matches
   @todo    Allow a switch to change a default colour
@@ -2100,8 +2099,6 @@ Begin
     Begin
       OutputToConsoleLn(FStdHnd, GetConsoleTitle, FTitleColour);
       OutputToConsoleLn(FStdHnd);
-      If clsDisplayCriteria In CommandLineSwitches Then
-        DisplayCriteria;
     End
   Else
     Begin
@@ -2213,6 +2210,9 @@ Begin
   LoadSettings;
   PrintTitle;
   GetCommandLineSwitches;
+  If Not (clsOutputAsCSV In CommandLineSwitches) Then
+    If clsDisplayCriteria In CommandLineSwitches Then
+      DisplayCriteria;
   If Not(clsExclusions In CommandLineSwitches) Or
     ((clsExclusions In CommandLineSwitches) And FileExists(FExlFileName)) Then
     Begin

@@ -677,7 +677,7 @@ procedure TestApplicationFunctions.TestGetRangeString;
 Var
   slParams : TStringList;
   iSwitch, iIndex : Integer;
-  chEndToken : Char;
+  chEndToken : TSearchCharSet;
   strExceptionMsg : String;
   strValue : String;
 
@@ -686,19 +686,19 @@ begin
   Try
     iSwitch := 1;
     iIndex := 3;
-    chEndToken := '-';
+    chEndToken := ['-'];
     slParams.Text := 'my.exe'#13#10'/s[1000-2000]';
     GetRangeString(slParams, chEndToken, strExceptionMsg, iIndex, iSwitch, strValue);
     CheckEquals('1000', strValue, 'Test 1');
     iSwitch := 1;
     iIndex := 8;
-    chEndToken := ']';
+    chEndToken := [']'];
     slParams.Text := 'my.exe'#13#10'/s[1000-2000]';
     GetRangeString(slParams, chEndToken, strExceptionMsg, iIndex, iSwitch, strValue);
     CheckEquals('2000', strValue, 'Test 2');
     iSwitch := 1;
     iIndex := 8;
-    chEndToken := 'z';
+    chEndToken := ['z'];
     slParams.Text := 'my.exe'#13#10'/s[1000-2000]';
     Try
       GetRangeString(slParams, chEndToken, strExceptionMsg, iIndex, iSwitch, strValue);
