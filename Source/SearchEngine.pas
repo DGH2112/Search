@@ -1404,7 +1404,6 @@ Begin
       slText := TStringList.Create;
       Try
         REZip := TRegEx.Create(strZipRegExPattern, [roCompiled, roIgnoreCase, roSingleLine]);
-        //: @bug Cannot open from a ZIP file.
         strFileName := strPath + FileInfo.FileName;
         MZip := REZip.Match(strPath);
         If Not MZip.Success Then

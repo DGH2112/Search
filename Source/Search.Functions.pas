@@ -82,7 +82,7 @@ Var
   Function  BuildRootKey(Const slParams : TStringList) : String;
   Function  GetField(Const strText : String; Const Ch : Char; Const iIndex : Integer;
     Const boolIgnoreQuotes : Boolean = True): String;
-  Function  FileAttrsToAttrsSet(Const iAttributes : Integer) : TSearchFileAttrs;
+  Function  FileAttrsToAttrsSet(Const iAttributes : Cardinal) : TSearchFileAttrs;
   
 Implementation
 
@@ -731,7 +731,7 @@ End;
   @return  a TSearchFileAttrs
 
 **)
-Function  FileAttrsToAttrsSet(Const iAttributes : Integer) : TSearchFileAttrs;
+Function  FileAttrsToAttrsSet(Const iAttributes : Cardinal) : TSearchFileAttrs;
 
   (**
 

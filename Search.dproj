@@ -113,18 +113,18 @@
         <DCC_RangeChecking>true</DCC_RangeChecking>
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
         <DCC_RunTimeTypeInfo>true</DCC_RunTimeTypeInfo>
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
         <DCC_RangeChecking>true</DCC_RangeChecking>
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
         <Debugger_CWD>D:\Documents\RAD Studio\IDE Addins\Message View Helper\</Debugger_CWD>
-        <Debugger_RunParams>&quot;D:\Documents\RAD Studio\*.pas&quot; /caswd[27/Feb]!</Debugger_RunParams>
+        <Debugger_RunParams>&quot;D:\Documents\Web Page\Zips\*.pas&quot; /capsi[DGH]!</Debugger_RunParams>
         <VerInfo_Keys>CompanyName=;FileVersion=1.0.21.544;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Release>0</VerInfo_Release>
         <VerInfo_Build>0</VerInfo_Build>
-        <Icon_MainIcon>Search.ico</Icon_MainIcon>
         <DCC_Define>EUREKALOG_VER7;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <ItemGroup>
