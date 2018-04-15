@@ -10,8 +10,6 @@
   @todo    Check that GREP will work with multi-line matches
   @todo    Allow a switch to change a default colour
   
-  @bug     Fix the AV bug in asking for extra lines around GREP searches
-
 **)
 Unit SearchEngine;
 
