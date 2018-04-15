@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    08 Apr 2018
+  @Date    15 Apr 2018
   
 **)
 Unit Search.Interfaces;
@@ -24,6 +24,7 @@ Type
   ['{A9EB7CB7-F77E-4270-941E-12FD6CD5810C}']
     Function  GetDate : TDateTime;
     Function  GetSize : Int64;
+    Function  GetCompressedSize : Int64;
     Function  GetAttributes : TSearchFileAttrs;
     Function  GetOwner : String;
     Function  GetName : String;
@@ -44,6 +45,13 @@ Type
       @return  an Int64
     **)
     Property Size : Int64 Read GetSize;
+    (**
+      A property to read and write the files size.
+      @precon  None.
+      @postcon None.
+      @return  an Int64
+    **)
+    Property CompressedSize : Int64 Read GetCompressedSize;
     (**
       A property to read and write the files Attributes.
       @precon  None.
@@ -80,9 +88,11 @@ Type
     Function  GetFile(Const iIndex : Integer) : ISearchFile;
     Function  GetCount : Integer;
     Function  GetPath : String;
+    Function  GetHasCompressed : Boolean;
     Procedure SetPath(Const strPath : String);
-    Function  Add(Const dtDate : TDateTime; Const iSize : Int64; Const setAttrs : TSearchFileAttrs;
-      Const strOwner, strName, strSearchText : String) : Boolean; Overload;
+    Function  Add(Const dtDate : TDateTime; Const iSize, iCompressedSize : Int64;
+      Const setAttrs : TSearchFileAttrs; Const strOwner, strName, strSearchText : String) : Boolean;
+      Overload;
     Function  OwnerWidth : Integer;
     Procedure OrderBy(Const OrderBy : TOrderBy; Const OrderDirection : TOrderDirection);
     Function  Add(Const FileInfo : ISearchFile) : Boolean; Overload;
@@ -108,6 +118,13 @@ Type
       @return  a String
     **)
     Property Path : String Read GetPath Write SetPath;
+    (**
+      This propperty gets whether the file collection has any compressed files in it.
+      @precon  None.
+      @postcon Returns whether the collection has an compressed files.
+      @return  a Boolean
+    **)
+    Property HasCompressed : Boolean Read GetHasCompressed;
   End;
 
   (** An interface for the main search engine. **)

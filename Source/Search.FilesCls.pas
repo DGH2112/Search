@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    08 Apr 2018
+  @Date    15 Apr 2018
 
 **)
 Unit Search.FilesCls;
@@ -32,17 +32,22 @@ Type
     FPath             : String;
     FRegEx            : TRegEx;
     FRegExSearch      : Boolean;
+    FHasCompressed    : Boolean;
   Protected
     // ISearchFiles
     Function  GetCount : Integer;
     Function  GetFile(Const iIndex: Integer): ISearchFile;
     Function  GetPath: String;
+    Function  GetHasCompressed : Boolean;
     Procedure SetPath(Const strPath: String);
-    Function  Add(Const dtDate: TDateTime; Const iSize: Int64; Const setAttrs : TSearchFileAttrs;
-      Const strOwner, strName, strSearchText: String): Boolean; Overload;
+    Function  Add(Const dtDate: TDateTime; Const iSize, iCompressedSize: Int64;
+      Const setAttrs : TSearchFileAttrs; Const strOwner, strName, strSearchText: String): Boolean;
+      Overload;
     Procedure OrderBy(Const OrderBy: TOrderBy; Const OrderDirection: TOrderDirection);
     Function  OwnerWidth: Integer;
     Function  Add(Const FileInfo : ISearchFile) : Boolean; Overload;
+    // General Methods
+    Function GrepFile(Const SearchFile : ISearchFile; Const strName, strSearchText : String) : Integer;
   Public
     Constructor Create(Const ExceptionHandler : TFilesExceptionHandler;
       Const strRegExSearchText : String);
@@ -81,50 +86,34 @@ end;
   @precon  None.
   @postcon Added a file and its attributes to the collection.
 
-  @param   dtDate        as a TDateTime as a constant
-  @param   iSize         as an Int64 as a constant
-  @param   setAttrs      as a TSearchFileAttrs as a constant
-  @param   strOwner      as a String as a constant
-  @param   strName       as a String as a constant
-  @param   strSearchText as a String as a constant
+  @param   dtDate          as a TDateTime as a constant
+  @param   iSize           as an Int64 as a constant
+  @param   iCompressedSize as an Int64 as a constant
+  @param   setAttrs        as a TSearchFileAttrs as a constant
+  @param   strOwner        as a String as a constant
+  @param   strName         as a String as a constant
+  @param   strSearchText   as a String as a constant
   @return  a Boolean
 
 **)
-Function TSearchFiles.Add(Const dtDate : TDateTime; Const iSize : Int64;
+Function TSearchFiles.Add(Const dtDate : TDateTime; Const iSize, iCompressedSize : Int64;
   Const setAttrs : TSearchFileAttrs; Const strOwner, strName, strSearchText : String) : Boolean;
 
 Var
   FFile : ISearchFile;
-  iLine: Integer;
-  slFile : TStringList;
-  M: TMatchCollection;
+  iMatchCount: Integer;
 
 Begin
   Result := True;
-  FFile := TSearchFile.Create(dtDate, iSize, setAttrs, strOwner, strName);
+  FFile := TSearchFile.Create(dtDate, iSize, iCompressedSize, setAttrs, strOwner, strName);
+  If Not FHasCompressed And ([sfaFile, sfaCompressed] <= setAttrs) Then
+    FHasCompressed := True;
   If FRegExSearch Then
     Begin
-      If sfaDirectory In setAttrs Then
+      If Not (sfaDirectory In setAttrs) Then
         Begin
-          slFile := TStringList.Create;
-          Try
-            slFile.Text := strSearchText;
-            Try
-              For iLine := 0 To slFile.Count - 1 Do
-                Begin
-                  M := FRegEx.Matches(slFile[iLine]);
-                  If M.Count > 0 Then
-                    FFile.AddRegExLine(iLine + 1, M);
-                End;
-            Except
-              On E : ERegularExpressionError Do
-                If Assigned(FExceptionHandler) Then
-                  FExceptionHandler(Format('%s (%s)', [E.Message, strName]));
-            End;
-          Finally
-            slFile.Free;
-          End;
-          If FFile.RegExMatches.Count > 0 Then
+          iMatchCount := GrepFile(FFile, strName, strSearchText);
+          If iMatchCount > 0 Then
             FFiles.Add(FFile)
           Else
             Result := False;
@@ -157,6 +146,7 @@ Begin
   FFiles := TInterfaceList.Create;
   FExceptionHandler := ExceptionHandler;
   FRegExSearch := False;
+  FHasCompressed := False;
   Try
     If strRegExSearchText <> '' Then
       Begin
@@ -222,6 +212,22 @@ End;
 
 (**
 
+  This is a getter method for the HasCompressed property.
+
+  @precon  None.
+  @postcon Returns whether the collection contains any compressed files.
+
+  @return  a Boolean
+
+**)
+Function TSearchFiles.GetHasCompressed: Boolean;
+
+Begin
+  Result := FHasCompressed;
+End;
+
+(**
+
   This is a getter method for the Path property.
 
   @precon  None.
@@ -234,6 +240,50 @@ Function TSearchFiles.GetPath: String;
 
 Begin
   Result := FPath;
+End;
+
+(**
+
+  This method searches the given text for match regular expressions.
+
+  @precon  None.
+  @postcon This method searches the given file for regular expression matches and retuns the number of
+           matches found.
+
+  @param   SearchFile    as an ISearchFile as a constant
+  @param   strName       as a String as a constant
+  @param   strSearchText as a String as a constant
+  @return  an Integer
+
+**)
+Function TSearchFiles.GrepFile(Const SearchFile : ISearchFile; Const strName,
+  strSearchText : String) : Integer;
+
+Var
+  iLine: Integer;
+  slFile : TStringList;
+  M: TMatchCollection;
+
+Begin
+  slFile := TStringList.Create;
+  Try
+    slFile.Text := strSearchText;
+    Try
+      For iLine := 0 To slFile.Count - 1 Do
+        Begin
+          M := FRegEx.Matches(slFile[iLine]);
+          If M.Count > 0 Then
+            SearchFile.AddRegExLine(iLine + 1, M);
+        End;
+    Except
+      On E : ERegularExpressionError Do
+        If Assigned(FExceptionHandler) Then
+          FExceptionHandler(Format('%s (%s)', [E.Message, strName]));
+    End;
+  Finally
+    slFile.Free;
+  End;
+  Result := SearchFile.RegExMatches.Count;
 End;
 
 (**

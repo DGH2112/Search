@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    08 Apr 2018
+  @Date    15 Apr 2018
 
 **)
 Unit Search.Functions;
@@ -55,7 +55,7 @@ Var
   Procedure GetOwnerSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var OwnerSearch: TOwnerSearch; Var OwnerSearchPos: TOwnerSearchPos;
     Var strOwnerSearch: String);
-  Function OutputAttributes(Const setAttributes: TSearchFileAttrs): String;
+  Function  OutputAttributes(Const setAttributes: TSearchFileAttrs): String;
   Procedure CheckDateRange(Const iDateTime: Integer; Const dtLDate, dtUdate: Double;
     Var boolFound: Boolean; Const strFileName : String; Const LogErrorProc : TLogErrorProc);
   Procedure CheckSizeRange(Const iSize, iLSize, iUSize: Int64; Var boolFound: Boolean);
@@ -67,11 +67,11 @@ Var
     Const OwnerSearch: TOwnerSearch; Var boolFound: Boolean);
   Procedure GetSizeFormat(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var SizeFormat: TSizeFormat);
-  Function SafeFileDateToDateTime(Const iFileDate: Integer; Const strFilename: String;
+  Function  SafeFileDateToDateTime(Const iFileDate: Integer; Const strFilename: String;
     Const LogErrorProc: TLogErrorProc): TDateTime;
-  Function PosOfNthChar(Const strText : String; Const Ch : Char; Const iIndex : Integer;
+  Function  PosOfNthChar(Const strText : String; Const Ch : Char; Const iIndex : Integer;
     Const boolIgnoreQuotes : Boolean = True): Integer;
-  Function CheckConsoleMode(Const hndConsole : THandle) : Boolean;
+  Function  CheckConsoleMode(Const hndConsole : THandle) : Boolean;
   Procedure OutputToConsoleLn(Const hndConsole : THandle; Const strText : String = '';
     Const iTextColour : TColor = clNone; Const iBackColour : TColor = clNone;
     Const boolUpdateCursor : Boolean = True);
@@ -79,11 +79,11 @@ Var
     Const iTextColour : TColor = clNone; Const iBackColour : TColor = clNone;
     Const boolUpdateCursor : Boolean = True);
   Function GetConsoleTitle : String;
-  Function Like(Const strPattern, strText : String) : Boolean;
-  Function CharCount(Const cChar : Char; Const strText : String;
+  Function  Like(Const strPattern, strText : String) : Boolean;
+  Function  CharCount(Const cChar : Char; Const strText : String;
     Const boolIgnoreQuotes : Boolean = True) : Integer;
-  Function BuildRootKey(Const slParams : TStringList) : String;
-  Function GetField(Const strText : String; Const Ch : Char; Const iIndex : Integer;
+  Function  BuildRootKey(Const slParams : TStringList) : String;
+  Function  GetField(Const strText : String; Const Ch : Char; Const iIndex : Integer;
     Const boolIgnoreQuotes : Boolean = True): String;
   Function  FileAttrsToAttrsSet(Const iAttributes : Integer) : TSearchFileAttrs;
   

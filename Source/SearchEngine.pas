@@ -6,12 +6,13 @@
   @Version 1.0
   @Date    15 Apr 2018
 
-  @todo    Add number of GREP matches to output (only IF GREP enabled).
-  @todo    Add switch for RegEx filename matching.
-  @todo    Check that GREP will work with multi-line matches.
-  @todo    Allow a switch to change a default colour.
+  @todo    Amend order by to order and group directories first and then files
+  @todo    Add number of GREP matches to output (only IF GREP enabled)
+  @todo    Add switch for RegEx filename matching
+  @todo    Check that GREP will work with multi-line matches
+  @todo    Allow a switch to change a default colour
   
-  @bug     Fix the AV bug in asking for extra lines around GREP searches.
+  @bug     Fix the AV bug in asking for extra lines around GREP searches
 
 **)
 Unit SearchEngine;
@@ -28,7 +29,7 @@ Uses
   Search.Types,
   Search.Interfaces;
 
-Type
+Type 
   (** This class defines the working that searches the directories and files
    for the information that matches the criteria. **)
   TSearch = Class(TInterfacedObject, ISearchEngine)
@@ -109,8 +110,9 @@ Type
     FErrorLog : TStringList;
     FUNCPath : Boolean;
   Strict Protected
-    Procedure OutputDateTimeAndSize(Const FilesCollection: ISearchFiles; Var strOutput: String;
-      Const i: Integer);
+    Procedure OutputDateTime(Const SearchFile: ISearchFile; Var strOutput: String);
+    Procedure OutputSize(Const SearchFile: ISearchFile; Const boolHasCompressed : Boolean;
+      Var strOutput: String);
     Procedure OutputFileAttributes(Const i: Integer; Const FilesCollection: ISearchFiles;
       Var strOutput: String);
     Procedure OutputFileOwner(Const FilesCollection: ISearchFiles; Var strOutput: String;
@@ -399,6 +401,9 @@ Var
   iTime: Integer;
   boolAdded: Boolean;
   dtFileDate: TDateTime;
+  iCompressedSize: Int64;
+  iFileSizeHigh: DWORD;
+  iFileSizeLow: DWORD;
 
 Begin
   Result := 0;
@@ -415,7 +420,14 @@ Begin
       If Not FileTimeToDosDateTime(dtDateLocal, LongRec(iTime).Hi, LongRec(iTime).Lo) Then
         iTime := 0;
       dtFileDate := SafeFileDateToDateTime(iTime, strPath + recSearch.Name, AddErrorToLog);
-      boolAdded := FilesCollection.Add(dtFileDate, recSearch.Size, setAttrs,
+      iCompressedSize := 0;
+      If [sfaFile, sfaCompressed] <= setAttrs Then
+        Begin
+          iFileSizeLow := GetCompressedFileSize(PChar(strPath + recSearch.Name), @iFileSizeHigh);
+          iCompressedSize := Int64(iFileSizeHigh) * Int64(MAXDWORD);
+          iCompressedSize := iCompressedSize + iFileSizeLow;
+        End;
+      boolAdded := FilesCollection.Add(dtFileDate, recSearch.Size, iCompressedSize, setAttrs,
         strOwner, recSearch.Name, GetFileText);
     End
   Else
@@ -478,7 +490,7 @@ Begin
       LongRec(iTime).Lo := ZFAI.LastModFileTime;
       LongRec(iTime).Hi := ZFAI.LastModFileDate;
       boolAdded := FilesCollection.Add(FileDateToDateTime(iTime), ZFAI.UncompressedSize,
-        FileAttrsToAttrsSet(ZFAI.ExternalFileAttributes), strOwner,
+        ZFAI.CompressedSize, FileAttrsToAttrsSet(ZFAI.ExternalFileAttributes), strOwner,
         ZFAI.StoredPath + ZFAI.FileName, GetZipFileText);
     End
   Else
@@ -872,6 +884,7 @@ Procedure TSearch.GetCommandLineSwitches;
 
 ResourceString
   strInvalidCommandLineSwitch = 'Invalid command line switch "%s" in parameter "%s."';
+  strNoSearchPattern = 'No search pattern provided! Searching for all files...';
 
 Const
   iSwitchLetterStart = 2;
@@ -935,7 +948,7 @@ Begin
       Include(CommandLineSwitches, clsShowHelp)
     Else
       Begin
-        OutputToConsoleLn(FStdHnd, 'No search pattern provided! Searching for all files...',
+        OutputToConsoleLn(FStdHnd, strNoSearchPattern,
           FWarningColour);
         OutputToConsoleLn(FStdHnd);
         FSearchParams.AddPair(GetCurrentDir, '*.*');
@@ -1171,36 +1184,26 @@ End;
   @precon  FilesCollection must be a valid instance.
   @postcon Outputs the file date and time and its size to the passed output string.
 
-  @param   FilesCollection as an ISearchFiles as a constant
-  @param   strOutput       as a String as a reference
-  @param   i               as an Integer as a constant
+  @param   SearchFile as an ISearchFile as a constant
+  @param   strOutput  as a String as a reference
 
 **)
-Procedure TSearch.OutputDateTimeAndSize(Const FilesCollection: ISearchFiles; Var strOutput: String;
-  Const i: Integer);
-
-Const
-  strDIR = '<DIR>';
+Procedure TSearch.OutputDateTime(Const SearchFile: ISearchFile; Var strOutput: String);
 
 Begin
   If Not(clsOutputAsCSV In CommandLineSwitches) Then
     Begin
-      If Not (sfaDirectory In FilesCollection.FileInfo[i].Attributes) Then
-        strOutput := Format('  %s  %s  ', [FormatDateTime(strOutputDateFmt,
-            FilesCollection.FileInfo[i].Date),
-          FormatSize(FilesCollection.FileInfo[i].Size)])
+      If Not (sfaDirectory In SearchFile.Attributes) Then
+        strOutput := strOutput + Format('  %s', [FormatDateTime(strOutputDateFmt, SearchFile.Date)])
       Else
-        strOutput := Format('  %s  %15s  ', [FormatDateTime(strOutputDateFmt,
-            FilesCollection.FileInfo[i].Date), strDIR]);
+        strOutput := strOutput + Format('  %s', [FormatDateTime(strOutputDateFmt, SearchFile.Date)]);
     End
   Else
     Begin
-      If Not (sfaDirectory In FilesCollection.FileInfo[i].Attributes) Then
-        strOutput := Format('%s,%d,', [FormatDateTime(strOutputDateFmt,
-            FilesCollection.FileInfo[i].Date), FilesCollection.FileInfo[i].Size])
+      If Not (sfaDirectory In SearchFile.Attributes) Then
+        strOutput := strOutput + Format('%s,', [FormatDateTime(strOutputDateFmt, SearchFile.Date)])
       Else
-        strOutput := Format('%s,%d,', [FormatDateTime(strOutputDateFmt,
-            FilesCollection.FileInfo[i].Date), 0]);
+        strOutput := strOutput + Format('%s,', [FormatDateTime(strOutputDateFmt, SearchFile.Date)]);
     End;
 End;
 
@@ -1323,7 +1326,9 @@ Var
 Begin
   For iFile := 0 To FilesCollection.Count - 1 Do
     Begin
-      OutputDateTimeAndSize(FilesCollection, strOutput, iFile);
+      strOutput := '';
+      OutputDateTime(FilesCollection.FileInfo[iFile], strOutput);
+      OutputSize(FilesCollection.FileInfo[iFile], FilesCollection.HasCompressed, strOutput);
       OutputFileAttributes(iFile, FilesCollection, strOutput);
       OutputFileOwner(FilesCollection, strOutput, iFile);
       If Not(clsOutputAsCSV In CommandLineSwitches) Then
@@ -1468,6 +1473,62 @@ Begin
       Finally
         slText.Free;
       End;
+    End;
+End;
+
+(**
+
+  This method outputs the size and optionally the cmopressed size of the files to the given output
+  string.
+
+  @precon  SearchFile must be a valid instance.
+  @postcon The size and compressed size of the file is output to the geivne output string.
+
+  @param   SearchFile        as an ISearchFile as a constant
+  @param   boolHasCompressed as a Boolean as a constant
+  @param   strOutput         as a String as a reference
+
+**)
+Procedure TSearch.OutputSize(Const SearchFile: ISearchFile; Const boolHasCompressed : Boolean;
+  Var strOutput: String);
+
+Const
+  strDIR = '<DIR>';
+  iWidthOfCompressed = 17;
+
+Begin
+  If Not(clsOutputAsCSV In CommandLineSwitches) Then
+    Begin
+      If Not (sfaDirectory In SearchFile.Attributes) Then
+        Begin
+          strOutput := strOutput + Format('  %s  ', [FormatSize(SearchFile.Size)]);
+          If boolHasCompressed Then
+            If sfaCompressed In SearchFile.Attributes Then
+              strOutput := strOutput + Format('[%s]  ', [FormatSize(SearchFile.CompressedSize)])
+            Else
+              strOutput := strOutput + Format('%s  ', [StringOfChar(#32, iWidthOfCompressed)]);
+        End Else
+        Begin
+          strOutput := strOutput + Format('  %15s  ', [strDIR]);
+          If boolHasCompressed Then
+            strOutput := strOutput + Format('%s  ', [StringOfChar(#32, iWidthOfCompressed)]);
+        End;
+    End
+  Else
+    Begin
+      If Not (sfaDirectory In SearchFile.Attributes) Then
+        Begin
+          strOutput := strOutput + Format('%d,', [SearchFile.Size]);
+          If sfaCompressed In SearchFile.Attributes Then
+            strOutput := strOutput + Format('%d,', [SearchFile.CompressedSize])
+            Else
+              strOutput := strOutput + ',';
+        End Else
+        Begin
+          strOutput := strOutput + Format('%d,', [0]);
+          If boolHasCompressed Then
+            strOutput := strOutput + ',';
+        End;
     End;
 End;
 
