@@ -110,8 +110,7 @@ Type
       Var strOutput: String);
     Procedure OutputFileAttributes(Const i: Integer; Const FilesCollection: ISearchFiles;
       Var strOutput: String);
-    Procedure OutputFileOwner(Const FilesCollection: ISearchFiles; Var strOutput: String;
-      Const i: Integer);
+    Procedure OutputFileOwner(Const FilesCollection: ISearchFiles; Var strOutput: String; Const i: Integer); //: @refactor Refactor for ISearchFile
     Procedure OutputRegExInformation(Const strPath : String; Const boolRegEx: Boolean;
       Const FileInfo: ISearchFile);
     Procedure OutputDirectoryOrZIPFile(Var boolDirPrinted: Boolean; Const strPath: String);
@@ -136,7 +135,7 @@ Type
       Const FilesCollection: ISearchFiles);
     Function  RecurseDirectories(Const strPath: String; Var iLevel: Integer;
       Const slPatterns: TStringList): Int64;
-    Function  SearchForPatterns(Const slPatterns: TStringList; Const iDirFiles: Integer;
+    Function  SearchForPatterns(Const slPatterns: TStringList; Var iDirFiles: Integer;
       Const strPath: String; Const FilesCollection: ISearchFiles): Int64;
     Function  SearchForPatternsInZip(Const strFileName: String; Const slPatterns: TStringList;
       Const iDirFiles: Integer; Const strPath: String; Const FilesCollection: ISearchFiles): Int64;
@@ -197,11 +196,14 @@ Type
 Implementation
 
 Uses
-  Contnrs,
-  ACCCTRL,
-  ActiveX,
-  IniFiles,
-  Math,
+  {$IFDEF DEBUG}
+  CodeSiteLogging,
+  {$ENDIF}
+  System.Contnrs,
+  WinApi.ACCCTRL,
+  WinApi.ActiveX,
+  System.IniFiles,
+  System.Math,
   System.RegularExpressions,
   Search.RegExMatches,
   Search.FilesCls;
@@ -2166,8 +2168,7 @@ Begin
     Begin
       If recSearch.Attr And faDirectory > 0 Then
         If (recSearch.Name <> '.') And (recSearch.Name <> '..') Then
-          Inc(Result, SearchDirectory(strPath + recSearch.Name + '\', slPatterns,
-              iLevel));
+          Inc(Result, SearchDirectory(strPath + recSearch.Name + '\', slPatterns, iLevel));
       If clsSearchZip In CommandLineSwitches Then
         If Like(strZipExt, recSearch.Name) Then
           Inc(Result, SearchZip(strPath + recSearch.Name, slPatterns, iLevel));
@@ -2369,13 +2370,13 @@ End;
   @postcon Search the current directory for files which match all the specified search patterns.
 
   @param   slPatterns      as a TStringList as a constant
-  @param   iDirFiles       as an Integer as a constant
+  @param   iDirFiles       as an Integer as a reference
   @param   strPath         as a String as a constant
   @param   FilesCollection as an ISearchFiles as a constant
   @return  an Int64
 
 **)
-Function TSearch.SearchForPatterns(Const slPatterns: TStringList; Const iDirFiles: Integer;
+Function TSearch.SearchForPatterns(Const slPatterns: TStringList; Var iDirFiles: Integer;
   Const strPath: String; Const FilesCollection: ISearchFiles): Int64;
 
 Var
@@ -2386,7 +2387,6 @@ Var
   boolFound: Boolean;
   ST: TSystemTime;
   dtDate: TDateTime;
-  iLDirFiles: Integer;
   setAttributes : TSearchFileAttrs;
 
 Begin
@@ -2426,9 +2426,8 @@ Begin
                 CheckOwner(strOwner, FOwnerSearch, FOwnerSearchPos, FOwnerSearchOps,
                   boolFound);
               End;
-            iLDirFiles := iDirFiles; //: @bug Is this a bug which does not capture increments?
             If boolFound Then
-              Inc(Result, CheckFiles(recSearch, setAttributes, iLDirFiles, strPath,
+              Inc(Result, CheckFiles(recSearch, setAttributes, iDirFiles, strPath,
                 strOwner, FilesCollection));
             iResult := FindNext(recSearch);
             boolFound := True;
