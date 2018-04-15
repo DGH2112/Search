@@ -6,7 +6,6 @@
   @Version 1.0
   @Date    15 Apr 2018
 
-  @todo    Amend order by to order and group directories first and then files
   @todo    Add number of GREP matches to output (only IF GREP enabled)
   @todo    Add switch for RegEx filename matching
   @todo    Check that GREP will work with multi-line matches
@@ -427,8 +426,8 @@ Begin
           iCompressedSize := Int64(iFileSizeHigh) * Int64(MAXDWORD);
           iCompressedSize := iCompressedSize + iFileSizeLow;
         End;
-      boolAdded := FilesCollection.Add(dtFileDate, recSearch.Size, iCompressedSize, setAttrs,
-        strOwner, recSearch.Name, GetFileText);
+      boolAdded := FilesCollection.Add(TSearchFileRec.Create(dtFileDate, recSearch.Size, iCompressedSize,
+        setAttrs, strOwner, recSearch.Name), GetFileText);
     End
   Else
     boolAdded := True;
@@ -489,9 +488,9 @@ Begin
       Inc(iDirFiles);
       LongRec(iTime).Lo := ZFAI.LastModFileTime;
       LongRec(iTime).Hi := ZFAI.LastModFileDate;
-      boolAdded := FilesCollection.Add(FileDateToDateTime(iTime), ZFAI.UncompressedSize,
-        ZFAI.CompressedSize, FileAttrsToAttrsSet(ZFAI.ExternalFileAttributes), strOwner,
-        ZFAI.StoredPath + ZFAI.FileName, GetZipFileText);
+      boolAdded := FilesCollection.Add(TSearchFileRec.Create(FileDateToDateTime(iTime),
+        ZFAI.UncompressedSize, ZFAI.CompressedSize, FileAttrsToAttrsSet(ZFAI.ExternalFileAttributes),
+        strOwner, ZFAI.StoredPath + ZFAI.FileName), GetZipFileText);
     End
   Else
     boolAdded := True;
@@ -2336,7 +2335,7 @@ Begin
   FilesCollection := TSearchFiles.Create(FilesExceptionHandler, FRegExSearch);
   Try
     Inc(Result, SearchForPatterns(slPatterns, iDirFiles, strPath, FilesCollection));
-    If FOrderFilesBy <> obNone Then
+    //: @debug If FOrderFilesBy <> obNone Then
       FilesCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
     OutputFilesToConsole(strPath, boolDirPrinted, FilesCollection);
   Finally
@@ -2590,7 +2589,7 @@ Begin
       For iPath := 0 To PathCollections.Count - 1 Do
         Begin
           PathCollection := PathCollections[iPath] As ISearchFiles;
-          If FOrderFilesBy <> obNone Then
+          //: @debug If FOrderFilesBy <> obNone Then
             PathCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
           OutputFilesToConsole(strFileName + '\' + PathCollection.Path, boolDirPrinted, PathCollection);
         End;

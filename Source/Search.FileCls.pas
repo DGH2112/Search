@@ -42,8 +42,7 @@ Type
     Function  GetSize: Int64;
     Function  GetCompressedSize: Int64;
   Public
-    Constructor Create(Const dtDate : TDateTime; Const iSize, iCompressedSize : Int64;
-      Const setAttrs : TSearchFileAttrs; Const strOwner, strName : String);
+    Constructor Create(Const SearchFileRec : TSearchFileRec);
     Destructor Destroy; Override;
   End;
 
@@ -84,8 +83,8 @@ Var
   R: TRegExMatches;
 
 Begin
-  Result := TSearchFile.Create(FDate, FSize, FCompressedSize, FAttributes, FOwner,
-    ExtractFileName(FName));
+  Result := TSearchFile.Create(TSearchFileRec.Create(FDate, FSize, FCompressedSize, FAttributes, FOwner,
+    ExtractFileName(FName)));
   For R In FRegExMatches Do
     Result.RegExMatches.Add(R);
 End;
@@ -97,26 +96,20 @@ End;
   @precon  None.
   @postcon Constructs a TFile class.
 
-  @param   dtDate          as a TDateTime as a constant
-  @param   iSize           as an Int64 as a constant
-  @param   iCompressedSize as an Int64 as a constant
-  @param   setAttrs        as a TSearchFileAttrs as a constant
-  @param   strOwner        as a String as a constant
-  @param   strName         as a String as a constant
+  @param   SearchFileRec as a TSearchFileRec as a constant
 
 **)
-Constructor TSearchFile.Create(Const dtDate: TDateTime; Const iSize, iCompressedSize: Int64;
-  Const setAttrs : TSearchFileAttrs; Const strOwner, strName: String);
+Constructor TSearchFile.Create(Const SearchFileRec : TSearchFileRec);
 
 Begin
   Inherited Create;
   FRegExMatches := TList<TRegExMatches>.Create;
-  FDate := dtDate;
-  FSize := iSize;
-  FCompressedSize := iCompressedSize;
-  FAttributes := setAttrs;
-  FOwner := strOwner;
-  FName := strName;
+  FDate := SearchFileRec.FDate;
+  FSize := SearchFileRec.FSize;
+  FCompressedSize := SearchFileRec.FCompressedSize;
+  FAttributes := SearchFileRec.FAttrs;
+  FOwner := SearchFileRec.FOwner;
+  FName := SearchFileRec.FName;
 End;
 
 (**

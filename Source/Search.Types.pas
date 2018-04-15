@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    08 Apr 2018
+  @Date    15 Apr 2018
   
 **)
 Unit Search.Types;
@@ -90,6 +90,43 @@ Type
   (** A set of file attributes. **)
   TSearchFileAttrs = Set Of TSearchFileAttr;
 
+  (** A record of file data for passing to the files collection. **)
+  TSearchFileRec = Record
+    FDate : TDateTime;
+    FSize, FCompressedSize : Int64;
+    FAttrs : TSearchFileAttrs;
+    FOwner, FName : String;
+    Constructor Create(Const dtDate : TDateTime; Const iSize, iCompressedSize : Int64;
+      Const setAttrs : TSearchFileAttrs; Const strOwner, strName : String);
+  End;
+
 Implementation
+
+(**
+
+  A constructor for the TSearchFileRecord Record.
+
+  @precon  None.
+  @postcon Initialises the record.
+
+  @param   dtDate          as a TDateTime as a constant
+  @param   iSize           as an Int64 as a constant
+  @param   iCompressedSize as an Int64 as a constant
+  @param   setAttrs        as a TSearchFileAttrs as a constant
+  @param   strOwner        as a String as a constant
+  @param   strName         as a String as a constant
+
+**)
+Constructor TSearchFileRec.Create(Const dtDate: TDateTime; Const iSize, iCompressedSize: Int64;
+  Const setAttrs: TSearchFileAttrs; Const strOwner, strName : String);
+
+Begin
+  FDate := dtDate;
+  FSize := iSize;
+  FCompressedSize := iCompressedSize;
+  FAttrs := setAttrs;
+  FOwner := strOwner;
+  FName := strName;
+End;
 
 End.

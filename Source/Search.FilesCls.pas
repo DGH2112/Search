@@ -27,6 +27,7 @@ Type
   (** A class to hold a collection of files. **)
   TSearchFiles = Class(TInterfacedObject, ISearchFiles)
   Private
+    FDirectories      : TInterfaceList;
     FFiles            : TInterfaceList;
     FExceptionHandler : TFilesExceptionHandler;
     FPath             : String;
@@ -40,9 +41,7 @@ Type
     Function  GetPath: String;
     Function  GetHasCompressed : Boolean;
     Procedure SetPath(Const strPath: String);
-    Function  Add(Const dtDate: TDateTime; Const iSize, iCompressedSize: Int64;
-      Const setAttrs : TSearchFileAttrs; Const strOwner, strName, strSearchText: String): Boolean;
-      Overload;
+    Function  Add(Const SearchFileRec : TSearchFileRec; Const strSearchText: String): Boolean; Overload;
     Procedure OrderBy(Const OrderBy: TOrderBy; Const OrderDirection: TOrderDirection);
     Function  OwnerWidth: Integer;
     Function  Add(Const FileInfo : ISearchFile) : Boolean; Overload;
@@ -74,9 +73,15 @@ Uses
 **)
 function TSearchFiles.Add(Const FileInfo: ISearchFile): Boolean;
 
+Var
+  Collection: TInterfaceList;
+
 begin
   Result := True;
-  FFiles.Add(FileInfo);
+  Collection := FFiles;
+  If sfaDirectory In FileInfo.Attributes Then
+    Collection := FDirectories;
+  Collection.Add(FileInfo);
 end;
 
 (**
@@ -86,35 +91,33 @@ end;
   @precon  None.
   @postcon Added a file and its attributes to the collection.
 
-  @param   dtDate          as a TDateTime as a constant
-  @param   iSize           as an Int64 as a constant
-  @param   iCompressedSize as an Int64 as a constant
-  @param   setAttrs        as a TSearchFileAttrs as a constant
-  @param   strOwner        as a String as a constant
-  @param   strName         as a String as a constant
-  @param   strSearchText   as a String as a constant
+  @param   SearchFileRec as a TSearchFileRec as a constant
+  @param   strSearchText as a String as a constant
   @return  a Boolean
 
 **)
-Function TSearchFiles.Add(Const dtDate : TDateTime; Const iSize, iCompressedSize : Int64;
-  Const setAttrs : TSearchFileAttrs; Const strOwner, strName, strSearchText : String) : Boolean;
-
+Function TSearchFiles.Add(Const SearchFileRec : TSearchFileRec; Const strSearchText : String) : Boolean;
+  
 Var
   FFile : ISearchFile;
   iMatchCount: Integer;
+  Collection : TInterfaceList;
 
 Begin
   Result := True;
-  FFile := TSearchFile.Create(dtDate, iSize, iCompressedSize, setAttrs, strOwner, strName);
-  If Not FHasCompressed And ([sfaFile, sfaCompressed] <= setAttrs) Then
+  FFile := TSearchFile.Create(SearchFileRec);
+  If Not FHasCompressed And ([sfaFile, sfaCompressed] <= SearchFileRec.FAttrs) Then
     FHasCompressed := True;
+  Collection := FFiles;
+  If sfaDirectory In SearchFileRec.FAttrs Then
+    Collection := FDirectories;
   If FRegExSearch Then
     Begin
-      If Not (sfaDirectory In setAttrs) Then
+      If Not (sfaDirectory In SearchFileRec.FAttrs) Then
         Begin
-          iMatchCount := GrepFile(FFile, strName, strSearchText);
+          iMatchCount := GrepFile(FFile, SearchFileRec.FName, strSearchText);
           If iMatchCount > 0 Then
-            FFiles.Add(FFile)
+            Collection.Add(FFile)
           Else
             Result := False;
         End Else
@@ -122,7 +125,7 @@ Begin
       If Not Result Then
         FFile := Nil;
     End Else
-      FFiles.Add(FFile);
+      Collection.Add(FFile);
 End;
 
 (**
@@ -143,6 +146,7 @@ Const
   strRegExError = 'Reg Ex Error: %s ("%s")';
 
 Begin
+  FDirectories := TInterfaceList.Create;
   FFiles := TInterfaceList.Create;
   FExceptionHandler := ExceptionHandler;
   FRegExSearch := False;
@@ -174,6 +178,7 @@ Destructor TSearchFiles.Destroy;
 
 Begin
   FFiles.Free;
+  FDirectories.Free;
   Inherited Destroy;
 End;
 
@@ -190,7 +195,7 @@ End;
 Function TSearchFiles.GetCount : Integer;
 
 Begin
-  Result := FFiles.Count;
+  Result := FDirectories.Count + FFiles.Count;
 End;
 
 (**
@@ -207,7 +212,10 @@ End;
 Function TSearchFiles.GetFile(Const iIndex : Integer) : ISearchFile;
 
 Begin
-  Result :=  FFiles.Items[iIndex] As TSearchFile;
+  If iIndex < FDirectories.Count Then
+    Result := FDirectories.Items[iIndex] As ISearchFile
+  Else
+    Result := FFiles.Items[iIndex - FDirectories.Count] As ISearchFile;
 End;
 
 (**
@@ -299,39 +307,77 @@ End;
 **)
 Procedure TSearchFiles.OrderBy(Const OrderBy : TOrderBy; Const OrderDirection : TOrderDirection);
 
-Var
-  i, j : Integer;
-  iMin : Integer;
-  iFirst, iSecond : Integer;
-  iCount: Integer;
-  FFI: ISearchFile;
-  SFI: ISearchFile;
+  (**
+
+    This method order the given collection by the OrderBy parameter.
+
+    @precon  Collection must be a valid instance.
+    @postcon The list is ordered.
+
+    @param   Collection as a TInterfaceList as a constant
+
+  **)
+  Procedure OrderCollection(Const Collection : TInterfaceList);
+
+    (**
+
+      This method attempts to find the minimum value for the select sort.
+
+      @precon  None.
+      @postcon Returns the minium index value if found else return -1.
+
+      @param   iOuter as an Integer as a constant
+      @param   iInner as an Integer as a constant
+      @return  an Integer
+
+    **)
+    Function FindMin(Const iOuter, iInner : Integer) : Integer;
+
+    Var
+      iFirst, iSecond : Integer;
+      FFI: ISearchFile;
+      SFI: ISearchFile;
+      
+    Begin
+      Result := -1;
+      If OrderDirection = odAscending Then
+        Begin
+          iFirst := iOuter;
+          iSecond := iInner;
+        End Else
+        Begin
+          iFirst := iInner;
+          iSecond := iOuter;
+        End;
+      FFI := Collection.Items[iFirst] As ISearchFile;
+      SFI := Collection.Items[iSecond] As ISearchFile;
+      Case OrderBy Of
+        obName:  If CompareText(SFI.FileName, FFI.FileName) < 0 Then Result := iInner;
+        obDate:  If SFI.Date < FFI.Date                         Then Result := iInner;
+        obSize:  If SFI.Size < FFI.Size                         Then Result := iInner;
+        obOwner: If CompareText(SFI.Owner, FFI.Owner) < 0       Then Result := iInner;
+      End;
+    End;
+
+  Var
+    iOuter, iInner : Integer;
+    iMin : Integer;
+    iCount: Integer;
+
+  Begin
+    iCount := Collection.Count;
+    For iOuter := 0 To iCount - 1 Do
+      For iInner := iOuter + 1 To iCount - 1 Do
+        Begin
+          iMin := FindMin(iOUter, iInner);
+          If iMin > -1 Then
+            Collection.Exchange(iOuter, iMin);
+        End;
+  End;
 
 Begin
-  iCount := GetCount;
-  For i := 0 To iCount - 1 Do
-    For j := i + 1 To iCount - 1 Do
-      Begin
-        iMin := -1;
-        If OrderDirection = odAscending Then
-          Begin
-            iFirst := i;
-            iSecond := j;
-          End Else
-          Begin
-            iFirst := j;
-            iSecond := i;
-          End;
-        FFI := GetFile(iFirst);
-        SFI := GetFile(iSecond);
-        Case OrderBy Of
-          obName:      If CompareText(SFI.FileName, FFI.FileName) < 0 Then iMin := j;
-          obDate:      If SFI.Date < FFI.Date                         Then iMin := j;
-          obSize:      If SFI.Size < FFI.Size                         Then iMin := j;
-          obOwner:     If CompareText(SFI.Owner, FFI.Owner) < 0       Then iMin := j;
-        End;
-        If iMin > -1 Then FFiles.Exchange(i, iMin);
-      End;
+  OrderCollection(FDirectories);
+  OrderCollection(FFiles);
 End;
 
 (**
