@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    15 Apr 2018
+  @Date    16 Apr 2018
 
   @todo    Add switch for RegEx filename matching
   @todo    Check that GREP will work with multi-line matches
@@ -207,7 +207,8 @@ Uses
   System.Math,
   System.RegularExpressions,
   Search.RegExMatches,
-  Search.FilesCls;
+  Search.FilesCls,
+  System.TypInfo;
 
 Const
   (** An ini section for the console colours. **)
@@ -2126,8 +2127,20 @@ Procedure TSearch.ProcessZipFileFailure(Sender: TObject; FileName: String;
   Operation: TZFProcessOperation; NativeError, ErrorCode: Integer;
   ErrorMessage: String; Var Action: TZFAction);
 
+ResourceString
+  strExceptionMsg =
+    '%s (Native Error: %d, Error Code: %d, Operation: %s)';
+
 Begin
-  AddErrorToLog(ErrorMessage, (Sender As TZipForge).FileName + '\' + FileName);
+  AddErrorToLog(
+    Format(strExceptionMsg, [
+      ErrorMessage,
+      NativeError,
+      ErrorCode,
+      GetEnumName(TypeInfo(TZFProcessOperation), Ord(Operation))
+    ]),
+    (Sender As TZipForge).FileName + '\' + FileName
+  );
 End;
 
 (**
@@ -2466,49 +2479,44 @@ Begin
     Z.FileName := strFileName;
     Z.OnProcessFileFailure := ProcessZipFileFailure;
     Z.OnDiskFull := ZipDiskFull;
-    Try
-      If Z.IsValidArchiveFile Then
-        Begin
-          Z.OpenArchive;
-          Try
-            For iPattern := 0 To slPatterns.Count - 1 Do
-              Begin
-                boolResult := Z.FindFirst(slPatterns[iPattern], ZFAI);
-                While boolResult And Not ZFAI.Encrypted Do
-                  Begin
-                    OutputCurrentSearchPath(strFileName + '\' + ZFAI.StoredPath);
-                    boolFound := True;
-                    iSize := ZFAI.UncompressedSize;
-                    CheckFileAttributes(FileAttrsToAttrsSet(ZFAI.ExternalFileAttributes), FFileAttrs,
-                      boolFound);
-                    CheckSizeRange(iSize, FLSize, FUSize, boolFound);
-                    // Zip files only contain the last write date of a file.
-                    LongRec(iDateTime).Lo := ZFAI.LastModFileTime;
-                    LongRec(iDateTime).Hi := ZFAI.LastModFileDate;
-                    CheckDateRange(FileDateToDateTime(iDateTime), FLDate, FUDate, boolFound);
-                    CheckExclusions(strPath, ZFAI.StoredPath + ZFAI.FileName, boolFound,
-                      FExclusions);
-                    If clsOwner In CommandLineSwitches Then
-                      Begin
-                        strOwner := OutputOwner(strFileName);
-                        CheckOwner(strOwner, FOwnerSearch, FOwnerSearchPos,
-                          FOwnerSearchOps, boolFound);
-                      End;
-                    iLDirFiles := iDirFiles;
-                    If boolFound Then
-                      Inc(Result, CheckZipFiles(Z, ZFAI, iLDirFiles, strOwner, FilesCollection));
-                    boolResult := Z.FindNext(ZFAI);
-                    boolFound := True;
-                  End;
-              End;
-          Finally
-            Z.CloseArchive;
-          End;
+    If Z.IsValidArchiveFile Then
+      Begin
+        Z.OpenArchive;
+        Try
+          For iPattern := 0 To slPatterns.Count - 1 Do
+            Begin
+              boolResult := Z.FindFirst(slPatterns[iPattern], ZFAI);
+              While boolResult And Not ZFAI.Encrypted Do
+                Begin
+                  OutputCurrentSearchPath(strFileName + '\' + ZFAI.StoredPath);
+                  boolFound := True;
+                  iSize := ZFAI.UncompressedSize;
+                  CheckFileAttributes(FileAttrsToAttrsSet(ZFAI.ExternalFileAttributes), FFileAttrs,
+                    boolFound);
+                  CheckSizeRange(iSize, FLSize, FUSize, boolFound);
+                  // Zip files only contain the last write date of a file.
+                  LongRec(iDateTime).Lo := ZFAI.LastModFileTime;
+                  LongRec(iDateTime).Hi := ZFAI.LastModFileDate;
+                  CheckDateRange(FileDateToDateTime(iDateTime), FLDate, FUDate, boolFound);
+                  CheckExclusions(strPath, ZFAI.StoredPath + ZFAI.FileName, boolFound,
+                    FExclusions);
+                  If clsOwner In CommandLineSwitches Then
+                    Begin
+                      strOwner := OutputOwner(strFileName);
+                      CheckOwner(strOwner, FOwnerSearch, FOwnerSearchPos,
+                        FOwnerSearchOps, boolFound);
+                    End;
+                  iLDirFiles := iDirFiles;
+                  If boolFound Then
+                    Inc(Result, CheckZipFiles(Z, ZFAI, iLDirFiles, strOwner, FilesCollection));
+                  boolResult := Z.FindNext(ZFAI);
+                  boolFound := True;
+                End;
+            End;
+        Finally
+          Z.CloseArchive;
         End;
-    Except
-      On E : Exception Do //: @todo Add event handler to negate this!
-        AddErrorToLog(E.Message, strFileName);
-    End;
+      End;
   Finally
     Z.Free;
   End;
