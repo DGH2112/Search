@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    16 Apr 2018
+  @Date    19 Apr 2018
 
   @todo    Add switch for RegEx filename matching
   @todo    Check that GREP will work with multi-line matches
@@ -1625,24 +1625,24 @@ Procedure TSearch.PrintHelp;
 
 Begin
   PrintHelpSyntax;
-  PrintHelpHelp;
-  PrintHelpShowAttributes;
-  PrintHelpRecurseSubdirectories;
-  PrintHelpSummarise;
-  PrintHelpHideEmptySummarise;
-  PrintHelpFilterByAttributes;
-  PrintHelpFilterByDate;
-  PrintHelpFilterBySize;
-  PrintHelpQuietMode;
-  PrintHelpShowOwner;
-  PrintHelpOrderBy;
-  PrintHelpDateType;
-  PrintHelpGrepSearch;
-  PrintHelpDisplayCriteria;
-  PrintHelpExclusions;
-  PrintHelpSearchWithinZips;
-  PrintHelpFileOutputSize;
-  PrintHelpOutputInCSV;
+  PrintHelpHelp;                    //?
+  PrintHelpSummarise;               //1-9
+  PrintHelpHideEmptySummarise;      //0
+  PrintHelpShowAttributes;          //A
+  PrintHelpDisplayCriteria;         //C
+  PrintHelpFilterByDate;            //D
+  PrintHelpDateType;                //E
+  PrintHelpFileOutputSize;          //F
+  PrintHelpGrepSearch;              //I
+  PrintHelpOrderBy;                 //O
+  PrintHelpSearchWithinZips;        //P
+  PrintHelpQuietMode;               //Q
+  PrintHelpRecurseSubdirectories;   //S
+  PrintHelpFilterByAttributes;      //T
+  PrintHelpOutputInCSV;             //V
+  PrintHelpShowOwner;               //W
+  PrintHelpExclusions;              //X
+  PrintHelpFilterBySize;            //Z
   PrintHelpFooter;
 End;
 
@@ -1737,7 +1737,7 @@ End;
 Procedure TSearch.PrintHelpFilterByAttributes;
 
 ResourceString
-  strSwitch = '/T[RASHFDV]';
+  strSwitch = '/T[RASH...]';
   strDescription = 'Show only files with certain attributes';
   strOptions1 = 'R = Read Only, A = Archive,    S = System,    H = Hidden,';
   strOptions2 = 'F = File,      D = Directory,  V = Volume ID,';
@@ -1813,6 +1813,7 @@ ResourceString
   strFooterText = 'NOTE: The date time input format is dependent on your local settings';
 
 Begin
+  OutputToConsoleLn(FStdHnd);
   OutputToConsoleLn(FStdHnd, strFooterText, FHelpFootNoteColour);
   OutputToConsoleLn(FStdHnd);
 End;
@@ -1912,7 +1913,6 @@ ResourceString
 Begin
   OutputToConsole(FStdHnd, Indent(strSwitch, iMainIndent, iWidth), FHelpSwitchColour);
   OutputToConsoleLn(FStdHnd, strDescription, FHelpTextColour);
-  OutputToConsoleLn(FStdHnd);
 End;
 
 (**
@@ -2046,7 +2046,7 @@ ResourceString
   strHelp0020 = 'Search searchparam1 {searchparam2}... {/A} {/S} {/Q} {/W}';
   strHelp0030 = '{/T[RASHFDV]} {/D:[{DD{/MM{/YY {HH:MM{:SS}}}}}-{DD{/MM{/YY {HH:MM{:SS}}}}}]';
   strHelp0040 = '{/Z[{LowerByteSize}-{UpperByteSize}]} {/O:NDAOS} {/E:CAW} {/I[text]}';
-  strHelp0050 = '{/X[filename]} {/@[Drive:\Path\FileName.INI]}';
+  strHelp0050 = '{/X[filename]}';
   strHelp0060 = 'searchparam# = {drive:\path\}filter1{;filter2{;filter3{;.' + '..}}}';
   strHelp0070 = 'filter#';
   strHelp0075 = 'can contain wildcards * and ? within the filename. ';
