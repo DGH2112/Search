@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    15 Apr 2018
+  @Date    19 Apr 2018
   
 **)
 Unit Search.Types;
@@ -102,6 +102,30 @@ Type
 
   (** A set of characters - for delimiting text. **)
   TSearchCharSet = Set Of AnsiChar;
+
+  (** An enumerate to describe each console output colour. **)
+  TSearchColour = (
+    scTitle,
+    scHeader,
+    scFooter,
+    scSearchPath,
+    scFoundSearchPath,
+    scFileInfo,
+    scRegExLineNumbers,
+    scRegExLineOutput,
+    scRegExFindOutputFG,
+    scRegExFindOutputBG,
+    scSummaryOutput,
+    scZipFile,
+    scWarning,
+    scException,
+    scHelpHeader,
+    scHelpInfo,
+    scHelpText,
+    scHelpSwitch,
+    scHelpFootNote
+  );    
+
 
 Implementation
 
