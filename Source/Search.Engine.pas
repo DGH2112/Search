@@ -105,8 +105,7 @@ Type
     Function  LookupAccountBySID(Const SID: PSID): String;
     Function  OutputOwner(Const strFileName: String): String;
     Function  CheckFiles(Const recSearch: TSearchRec; Const setAttrs : TSearchFileAttrs;
-      Var iDirFiles: Integer; Const strPath, strOwner: String;
-      Const FilesCollection: ISearchFiles): Int64;
+      Const strPath, strOwner: String; Const FilesCollection: ISearchFiles): Int64;
     Function  CheckZipFiles(Const ZipArchive: TZipForge; Const ZFAI: TZFArchiveItem;
       Var iDirFiles: Integer; Const strOwner: String;
       Const FilesCollection: ISearchFiles): Int64;
@@ -114,8 +113,8 @@ Type
       Const FilesCollection: ISearchFiles);
     Function  RecurseDirectories(Const strPath: String; Var iLevel: Integer;
       Const slPatterns: TStringList): Int64;
-    Function  SearchForPatterns(Const slPatterns: TStringList; Var iDirFiles: Integer;
-      Const strPath: String; Const FilesCollection: ISearchFiles): Int64;
+    Function  SearchForPatterns(Const slPatterns: TStringList; Const strPath: String;
+      Const FilesCollection: ISearchFiles): Int64;
     Function  SearchForPatternsInZip(Const strFileName: String; Const slPatterns: TStringList;
       Const iDirFiles: Integer; Const strPath: String; Const FilesCollection: ISearchFiles): Int64;
     Function  SearchDirectory(Const strPath: String; Const slPatterns: TStringList;
@@ -310,7 +309,6 @@ End;
 
   @param   recSearch       as a TSearchRec as a constant
   @param   setAttrs        as a TSearchFileAttrs as a constant
-  @param   iDirFiles       as an Integer as a reference
   @param   strPath         as a String as a constant
   @param   strOwner        as a String as a constant
   @param   FilesCollection as an ISearchFiles as a constant
@@ -318,7 +316,7 @@ End;
 
 **)
 Function TSearch.CheckFiles(Const recSearch: TSearchRec; Const setAttrs : TSearchFileAttrs;
-  Var iDirFiles: Integer; Const strPath, strOwner: String; Const FilesCollection: ISearchFiles): Int64;
+  Const strPath, strOwner: String; Const FilesCollection: ISearchFiles): Int64;
 
   (**
 
@@ -363,7 +361,6 @@ Begin
   Result := 0;
   If Not (clsSummaryLevel In CommandLineSwitches) Then
     Begin
-      //: @debug Inc(iDirFiles);
       Case FDateType Of
         dtCreation:   dtDate := recSearch.FindData.ftCreationTime;
         dtLastAccess: dtDate := recSearch.FindData.ftLastAccessTime;
@@ -2443,7 +2440,6 @@ Const
 
 Var
   boolDirPrinted: Boolean;
-  iDirFiles: Integer;
   strOutput: String;
   FilesCollection: ISearchFiles;
 
@@ -2451,21 +2447,17 @@ Begin
   OutputCurrentSearchPath(strPath);
   Inc(iLevel);
   Result := 0;
-  iDirFiles := 0;
   Inc(FDirectories);
   boolDirPrinted := False;
   (* Find Files *)
   FilesCollection := TSearchFiles.Create(FilesExceptionHandler, FRegExSearch);
   Try
-    Inc(Result, SearchForPatterns(slPatterns, iDirFiles, strPath, FilesCollection));
+    Inc(Result, SearchForPatterns(slPatterns, strPath, FilesCollection));
     FilesCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
     OutputFilesToConsole(strPath, boolDirPrinted, FilesCollection);
   Finally
     FilesCollection := Nil;
   End;
-  If Not(clsSummaryLevel In CommandLineSwitches) Then
-    If iDirFiles > 0 Then
-      OutputToConsoleLn(FStdHnd);
   (* Search sub directories *)
   If clsSubDirectories In CommandLineSwitches Then
     Inc(Result, RecurseDirectories(strPath, iLevel, slPatterns));
@@ -2492,14 +2484,13 @@ End;
   @postcon Search the current directory for files which match all the specified search patterns.
 
   @param   slPatterns      as a TStringList as a constant
-  @param   iDirFiles       as an Integer as a reference
   @param   strPath         as a String as a constant
   @param   FilesCollection as an ISearchFiles as a constant
   @return  an Int64
 
 **)
-Function TSearch.SearchForPatterns(Const slPatterns: TStringList; Var iDirFiles: Integer;
-  Const strPath: String; Const FilesCollection: ISearchFiles): Int64;
+Function TSearch.SearchForPatterns(Const slPatterns: TStringList; Const strPath: String;
+  Const FilesCollection: ISearchFiles): Int64;
 
 Var
   iPattern: Integer;
@@ -2549,8 +2540,7 @@ Begin
                   boolFound);
               End;
             If boolFound Then
-              Inc(Result, CheckFiles(recSearch, setAttributes, iDirFiles, strPath,
-                strOwner, FilesCollection));
+              Inc(Result, CheckFiles(recSearch, setAttributes, strPath, strOwner, FilesCollection));
             iResult := FindNext(recSearch);
             boolFound := True;
           End;

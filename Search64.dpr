@@ -46,7 +46,7 @@ ResourceString
   (** A resource string to define the Exception output format. **)
   strException = 'ESearchException: %s';
   (** A resource string for formatting information. **)
-  strPressEnterToFinish = 'Press <Enter> to finish.';
+  strPressEnterToFinish = 'Debug Mode: Press <Enter> to finish.';
 
 Var
   (** A variable to hold whether an exception has occurred. **)
