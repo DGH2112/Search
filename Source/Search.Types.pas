@@ -48,12 +48,6 @@ Type
   (** An enumerate to define the type of date to display and search on. **)
   TDateType = (dtCreation, dtLastAccess, dtLastWrite);
 
-  (** This is an enumerate to defines whether the owner should be searched. **)
-  TOwnerSearch = (osEquals, osNotEquals);
-
-  (** This is an enumerate to defines where the owner should be searched. **)
-  TOwnerSearchPos = (ospNone, ospExact, ospStart, ospMiddle, ospEnd);
-
   (** This is an enumerate to defines the output size formats. **)
   TSizeFormat = (sfNone, sfKilobytes, sfMegaBytes, sfGigaBytes, sfTeraBytes);
 

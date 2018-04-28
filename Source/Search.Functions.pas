@@ -18,7 +18,8 @@ Uses
   WinAPI.Windows,
   VCL.Graphics,
   Search.FilesCls, 
-  Search.Types;
+  Search.Types, 
+  System.RegularExpressions;
 
 Const
   (** A constant to define that only files should be listed. **)
@@ -52,9 +53,8 @@ Var
     Var DateType: TDateType);
   Procedure GetExclusions(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var strExlFileName: String);
-  Procedure GetOwnerSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
-    Var OwnerSearch: TOwnerSearch; Var OwnerSearchPos: TOwnerSearchPos;
-    Var strOwnerSearch: String);
+  Function GetOwnerSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
+    Var strOwnerRegEx : String) : Boolean;
   Function  OutputAttributes(Const setAttributes: TSearchFileAttrs): String;
   Procedure CheckDateRange(Const dtFileDateTime, dtLDate, dtUdate: TDateTime; Var boolFound: Boolean);
   Procedure CheckSizeRange(Const iSize, iLSize, iUSize: Int64; Var boolFound: Boolean);
@@ -62,8 +62,7 @@ Var
     Var boolFound: Boolean);
   Procedure CheckExclusions(Const strPath, strFilename: String; Var boolFound: Boolean;
     Const slExclusions: TStringList);
-  Procedure CheckOwner(Const strOwner, strOwnerSearch: String; Const OwnerSearchPos: TOwnerSearchPos;
-    Const OwnerSearch: TOwnerSearch; Var boolFound: Boolean);
+  Function  CheckOwner(Const OwnerRegEx : TRegEx; Const strOwner : String) : Boolean;
   Procedure GetSizeFormat(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var SizeFormat: TSizeFormat);
   Function  CheckConsoleMode(Const hndConsole : THandle) : Boolean;
@@ -83,9 +82,9 @@ Implementation
 
 Uses
   WinAPI.ShlObj,
-  RegularExpressions, 
   Search.StrUtils, 
-  Search.ConvertDate;
+  Search.ConvertDate, 
+  System.RegularExpressionsCore;
 
 Type
   (** An enumerate to define the current console output mode **)
@@ -136,8 +135,6 @@ ResourceString
   strCloseSquareExpectedInOwnerSearchDef = '"]" Expected in Owner Search Definition';
   (** An exception message for a missing [ in an Search definition. **)
   strOpenSquareExpectedInOwnerSearchDef = '"[" Expected in Owner Search Definition.';
-  (** An exception message for the Owner Search Criteria being empty. **)
-  strOwnerSearchIsEmpty = 'You must specify a valid Owner Search Criteria.';
   (** An execption messages for a missing colon on the size format definition. **)
   strColonExpectedInSizeFormat = 'Colon expected in size format definition.';
   (** An execption messages for a missing size format character in the definition. **)
@@ -340,39 +337,20 @@ End;
 
 (**
 
-  This method check the owner of the file against the owner search criteria.
+  This method check the owner of the file against the owner regex search criteria.
 
   @precon  None.
   @postcon Check the owner of the file against the owner search criteria.
 
-  @param   strOwner       as a String as a constant
-  @param   strOwnerSearch as a String as a constant
-  @param   OwnerSearchPos as a TOwnerSearchPos as a constant
-  @param   OwnerSearch    as a TOwnerSearch as a constant
-  @param   boolFound      as a Boolean as a reference
+  @param   OwnerRegEx as a TRegEx as a constant
+  @param   strOwner   as a String as a constant
+  @return  a Boolean
 
 **)
-Procedure CheckOwner(Const strOwner, strOwnerSearch: String; Const OwnerSearchPos: TOwnerSearchPos;
-  Const OwnerSearch: TOwnerSearch; Var boolFound: Boolean);
-
-Var
-  i   : Integer;
-  bool: Boolean;
+Function CheckOwner(Const OwnerRegEx : TRegEx; Const strOwner : String) : Boolean;
 
 Begin
-  i := Length(strOwnerSearch);
-  Case OwnerSearchPos Of
-    ospExact:  bool := AnsiCompareText(strOwner, strOwnerSearch) = 0;
-    ospStart:  bool := AnsiCompareText(strOwnerSearch, Copy(strOwner, 1, i)) = 0;
-    ospMiddle: bool := Pos(LowerCase(strOwnerSearch), LowerCase(strOwner)) > 0;
-    ospEnd:    bool := AnsiCompareText(strOwnerSearch,
-        Copy(strOwner, Length(strOwner) - i + 1, i)) = 0;
-  Else
-    bool := True;
-  End;
-  If OwnerSearch = osNotEquals Then
-    bool    := Not bool;
-  boolFound := boolFound And bool
+  Result := OwnerRegEx.IsMatch(strOwner);
 End;
 
 (**
@@ -948,17 +926,15 @@ End;
   @precon  None.
   @postcon Obtains the owner search information from the command line.
 
-  @param   slParams       as a TStringList as a constant
-  @param   iSwitch        as an Integer as a reference
-  @param   iIndex         as an Integer as a reference
-  @param   OwnerSearch    as a TOwnerSearch as a reference
-  @param   OwnerSearchPos as a TOwnerSearchPos as a reference
-  @param   strOwnerSearch as a String as a reference
+  @param   slParams      as a TStringList as a constant
+  @param   iSwitch       as an Integer as a reference
+  @param   iIndex        as an Integer as a reference
+  @param   strOwnerRegEx as a String as a reference
+  @return  a Boolean
 
 **)
-Procedure GetOwnerSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
-  Var OwnerSearch: TOwnerSearch; Var OwnerSearchPos: TOwnerSearchPos;
-  Var strOwnerSearch: String);
+Function GetOwnerSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
+  Var strOwnerRegEx : String) : Boolean;
 
   (**
 
@@ -967,72 +943,34 @@ Procedure GetOwnerSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integ
     @precon  None.
     @postcon The strOwnerSearch string is populated with the information from the command line switch.
 
+    @return  a String
+
   **)
-  Procedure ExtractOwnerSearch;
+  Function ExtractOwnerSearch : String;
 
   Begin
+    Result := '';
     While (iIndex <= Length(slParams[iSwitch])) And (slParams[iSwitch][iIndex] <> ']') Do
       Begin
-        strOwnerSearch := strOwnerSearch + slParams[iSwitch][iIndex];
+        Result := Result + slParams[iSwitch][iIndex];
         IncrementSwitchPosition(slParams, iIndex, iSwitch, strCloseSquareExpectedInOwnerSearchDef);
       End;
   End;
 
-  (**
-
-    This method processes the owner search string an extracts the pattern matching options.
-
-    @precon  None.
-    @postcon The pattern matching options are extracted from the owner search.
-
-  **)
-  Procedure ProcessOwnerFilter;
-
-  Begin
-    If Length(strOwnerSearch) > 0 Then
-      Begin
-        If strOwnerSearch[1] = '!' Then
-          Begin
-            OwnerSearch := osNotEquals;
-            Delete(strOwnerSearch, 1, 1);
-          End;
-        If strOwnerSearch[1] = '*' Then
-          Begin
-            OwnerSearchPos := ospEnd;
-            Delete(strOwnerSearch, 1, 1);
-          End;
-        If strOwnerSearch[Length(strOwnerSearch)] = '*' Then
-          Begin
-            If OwnerSearchPos = ospEnd Then
-              OwnerSearchPos := ospMiddle
-            Else
-              OwnerSearchPos := ospStart;
-            Delete(strOwnerSearch, Length(strOwnerSearch), 1);
-          End;
-      End;
-  End;
-
 Begin
+  Result := False;
   Include(CommandLineSwitches, clsOwner);
-  OwnerSearch    := osEquals;
-  OwnerSearchPos := ospNone;
   If Length(slParams[iSwitch]) = iIndex Then
     Exit;
   IncrementSwitchPosition(slParams, iIndex, iSwitch,
     strOpenSquareExpectedInOwnerSearchDef);
   If slParams[iSwitch][iIndex] = '[' Then
     Begin
-      OwnerSearchPos := ospExact;
-      strOwnerSearch := '';
+      Result := True;
       IncrementSwitchPosition(slParams, iIndex, iSwitch, strMissingSearchText);
-      ExtractOwnerSearch;
-      OwnerSearch := osEquals;
-      ProcessOwnerFilter;
-      If Length(strOwnerSearch) = 0 Then
-        Raise ESearchException.Create(strOwnerSearchIsEmpty);
-    End
-  Else
-    Dec(iIndex);
+      strOwnerRegEx := ExtractOwnerSearch;
+    End Else
+      Dec(iIndex);
 End;
 
 (**

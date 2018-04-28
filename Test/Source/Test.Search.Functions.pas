@@ -63,7 +63,8 @@ implementation
 
 Uses
   Search.Functions,
-  Search.FilesCls;
+  Search.FilesCls, 
+  System.RegularExpressions;
 
 procedure TDGHTestCase.CheckTolerance(dblExpected, dblActual, dblTolerance: Double; strMsg: String = '');
 begin
@@ -185,24 +186,19 @@ end;
 procedure TTestSearchFunctions.TestCheckOwner;
 
 Var
-  bool : Boolean;
+  RE : TRegEx;  
 
 begin
-  bool := True;
-  CheckOwner('Rail\HoylD', 'Rail\HoylD', ospExact, osEquals, bool);
-  Check(bool, 'Test 1');
-  bool := True;
-  CheckOwner('Rail\HoylD', 'Rail\Hoyle', ospExact, osNotEquals, bool);
-  Check(bool, 'Test 2');
-  bool := True;
-  CheckOwner('Rail\HoylD', 'HoylD', ospEnd, osEquals, bool);
-  Check(bool, 'Test 3');
-  bool := True;
-  CheckOwner('Rail\HoylD', 'Rail\Hoyl', ospStart, osEquals, bool);
-  Check(bool, 'Test 4');
-  bool := True;
-  CheckOwner('Rail\HoylD', 'Hoyl', ospMiddle, osEquals, bool);
-  Check(bool, 'Test 5');
+  RE.Create('Rail\\HoylD', [roIgnoreCase, roSingleLine]);
+  Check(CheckOwner(RE, 'Rail\HoylD'), 'Test 1');
+  RE.Create('HoylD', [roIgnoreCase, roSingleLine]);
+  Check(CheckOwner(RE, 'Rail\HoylD'), 'Test 2');
+  RE.Create('Rail', [roIgnoreCase, roSingleLine]);
+  Check(CheckOwner(RE, 'Rail\HoylD'), 'Test 2');
+  RE.Create('HoylD$', [roIgnoreCase, roSingleLine]);
+  Check(CheckOwner(RE, 'Rail\HoylD'), 'Test 3');
+  RE.Create('^Rail', [roIgnoreCase, roSingleLine]);
+  Check(CheckOwner(RE, 'Rail\HoylD'), 'Test 4');
 end;
 
 procedure TTestSearchFunctions.TestCheckSizeRange;
@@ -619,9 +615,8 @@ procedure TTestSearchFunctions.TestGetOwnerSwitch;
 Var
   slParams : TStringList;
   iSwitch, iIndex : Integer;
-  OwnerSearch : TOwnerSearch;
-  OwnerSearchPos : TOwnerSearchPos;
-  strOwnerSearch : String;
+  RE: TRegEx;
+  strSearchRegEx: String;
 
 begin
   slParams := TStringList.Create;
@@ -629,15 +624,12 @@ begin
     iSwitch := 1;
     iIndex := 2;
     slParams.Text := 'my.exe'#13#10'/w';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osEquals, 'Test 1.1');
-    Check(OwnerSearchPos = ospNone, 'Test 1.2');
-    CheckEquals('', strOwnerSearch, 'Test 1.3');
+    CheckEquals(False, GetOwnerSwitch(slParams, iSwitch, iIndex, strSearchRegEx), 'Test 1.1');
     iSwitch := 1;
     iIndex := 2;
     slParams.Text := 'my.exe'#13#10'/w[';
     Try
-      GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
+      GetOwnerSwitch(slParams, iSwitch, iIndex, strSearchRegEx);
     Except
       On E: Exception Do
         Check(True);
@@ -646,7 +638,7 @@ begin
     End;
     slParams.Text := 'my.exe'#13#10'/w[HoylD';
     Try
-      GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
+      GetOwnerSwitch(slParams, iSwitch, iIndex, strSearchRegEx);
     Except
       On E: Exception Do
         Check(True);
@@ -655,60 +647,28 @@ begin
     End;
     iSwitch := 1;
     iIndex := 2;
+    slParams.Text := 'my.exe'#13#10'/w[^rail\\hoyld$]';
+    CheckEquals(True, GetOwnerSwitch(slParams, iSwitch, iIndex, strSearchRegEx), 'Test 2.1');
+    RE.Create(strSearchRegEx, [roIgnoreCase, roSingleLine]);
+    CheckEquals(True, RE.IsMatch('Rail\HoylD'), 'Test 2.2');
+    iSwitch := 1;
+    iIndex := 2;
+    slParams.Text := 'my.exe'#13#10'/w[hoyld$]';
+    CheckEquals(True, GetOwnerSwitch(slParams, iSwitch, iIndex, strSearchRegEx), 'Test 3.1');
+    RE.Create(strSearchRegEx, [roIgnoreCase, roSingleLine]);
+    CheckEquals(True, RE.IsMatch('Rail\HoylD'), 'Test 3.2');
+    iSwitch := 1;
+    iIndex := 2;
+    slParams.Text := 'my.exe'#13#10'/w[^rail]';
+    CheckEquals(True, GetOwnerSwitch(slParams, iSwitch, iIndex, strSearchRegEx), 'Test 4.1');
+    RE.Create(strSearchRegEx, [roIgnoreCase, roSingleLine]);
+    CheckEquals(True, RE.IsMatch('Rail\HoylD'), 'Test 4.2');
+    iSwitch := 1;
+    iIndex := 2;
     slParams.Text := 'my.exe'#13#10'/w[hoyld]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osEquals, 'Test 2.1');
-    Check(OwnerSearchPos = ospExact, 'Test 2.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 2.3');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/w[!hoyld]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osNotEquals, 'Test 3.1');
-    Check(OwnerSearchPos = ospExact, 'Test 3.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 3.3');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/w[*hoyld]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osEquals, 'Test 4.1');
-    Check(OwnerSearchPos = ospEnd, 'Test 4.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 4.3');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/w[!*hoyld]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osNotEquals, 'Test 5.1');
-    Check(OwnerSearchPos = ospEnd, 'Test 5.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 5.3');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/w[hoyld*]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osEquals, 'Test 6.1');
-    Check(OwnerSearchPos = ospStart, 'Test 6.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 6.3');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/w[!hoyld*]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osNotEquals, 'Test 7.1');
-    Check(OwnerSearchPos = ospStart, 'Test 7.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 7.3');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/w[*hoyld*]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osEquals, 'Test 8.1');
-    Check(OwnerSearchPos = ospMiddle, 'Test 8.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 8.3');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/w[!*hoyld*]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osNotEquals, 'Test 9.1');
-    Check(OwnerSearchPos = ospMiddle, 'Test 9.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 9.3');
+    CheckEquals(True, GetOwnerSwitch(slParams, iSwitch, iIndex, strSearchRegEx), 'Test 5.1');
+    RE.Create(strSearchRegEx, [roIgnoreCase, roSingleLine]);
+    CheckEquals(True, RE.IsMatch('Rail\HoylD'), 'Test 5.2');
   Finally
     slParams.Free;
   End;

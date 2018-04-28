@@ -9,7 +9,6 @@
 
   @todo    Add switch for RegEx filename matching
   @todo    Check that GREP will work with multi-line matches
-  @todo    Replaced Owner search with regular expressions.
 
 **)
 Program Search;

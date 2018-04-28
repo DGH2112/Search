@@ -19,7 +19,8 @@ Uses
   Graphics,
   Search.Functions,
   Search.Types,
-  Search.Interfaces;
+  Search.Interfaces, 
+  System.RegularExpressions;
 
 Type 
   (** This class defines the working that searches the directories and files
@@ -63,12 +64,10 @@ Type
     FExlFileName: String;
     (** A string list of exclusions to be applied to the searches. **)
     FExclusions: TStringList;
-    (** A string to hold the owner search criteria. **)
-    FOwnerSearch: String;
-    (** An enumerate to determine if the search is positive or negated **)
-    FOwnerSearchOps: TOwnerSearch;
-    (** An enumerate to determine the position of the search **)
-    FOwnerSearchPos: TOwnerSearchPos;
+    (** A regular expression record to matchnig owner names. **)
+    FOwnerRegEx : TRegEx;
+    FOwnerSearch : Boolean;
+    FOwnerRegExSearch : String;
     (** A handle to the standard console output. **)
     FStdHnd: THandle;
     (** A handle to the error console output. **)
@@ -181,12 +180,12 @@ Uses
   WinApi.ActiveX,
   System.IniFiles,
   System.Math,
-  System.RegularExpressions,
   Search.RegExMatches,
   Search.FilesCls,
   System.TypInfo, 
   Search.Constants, 
-  Search.StrUtils;
+  Search.StrUtils, 
+  System.RegularExpressionsCore;
 
 Const
   (** An ini section for the console colours. **)
@@ -728,13 +727,8 @@ ResourceString
   strDisplayingFileCreationDates = 'Displaying file Creation Dates.';
   strDisplayingFileLastAccessDates = 'Displaying file Last Access Dates.';
   strDisplayingFileLastWriteDates = 'Displaying file Last Write Dates.';
-  strOwnerSearchingFor = ' Searching for Owners ';
-  strOwnerNOT = 'NOT ';
+  strOwnerSearchingFor = '. Searching for Owners ';
   strOwnerMatching = 'matching "%s"';
-  strOwnerExact = ' exactly';
-  strOwnerAtTheStart = ' at the start';
-  strOwnerInTheMiddle = ' in the middle';
-  strOwnerAtTheEnd = ' at the end';
   strSearchInZips = 'Search within ZIP files.';
   strApplyingExclusions = 'Applying exclusions from the file "%s".';
   strSearchForText = 'Search for the text "%s" within the files.';
@@ -758,19 +752,10 @@ Begin
   DisplayText(clsQuiet, 'q', strQuietMode);
   If DisplayText(clsOwner, 'w', strDisplayTheOwners, False) Then
     Begin
-      If FOwnerSearchPos In [ospExact .. ospEnd] Then
+      If FOwnerSearch Then
         Begin
           OutputToConsole(FStdHnd, strOwnerSearchingFor, FColours[scHelpText]);
-          If FOwnerSearchOps In [osNotEquals] Then
-            OutputToConsole(FStdHnd, strOwnerNOT, FColours[scHelpSwitch]);
-          OutputToConsole(FStdHnd, Format(strOwnerMatching, [FOwnerSearch]),
-            FColours[scHelpText]);
-          Case FOwnerSearchPos Of
-            ospExact:  OutputToConsole(FStdHnd, strOwnerExact, FColours[scHelpText]);
-            ospStart:  OutputToConsole(FStdHnd, strOwnerAtTheStart, FColours[scHelpText]);
-            ospMiddle: OutputToConsole(FStdHnd, strOwnerInTheMiddle, FColours[scHelpText]);
-            ospEnd:    OutputToConsole(FStdHnd, strOwnerAtTheEnd, FColours[scHelpText]);
-          End;
+          OutputToConsole(FStdHnd, Format(strOwnerMatching, [FOwnerRegExSearch]), FColours[scHelpText]);
         End;
       OutputToConsoleLn(FStdHnd, '.', FColours[scHelpText]);
     End;
@@ -928,8 +913,7 @@ Begin
                 'z', 'Z': GetSizeRange(FParams, iSwitch, iIndex, FLSize, FUSize);
                 't', 'T': GetAttributes(FParams, iSwitch, iIndex, FFileAttrs);
                 'q', 'Q': Include(CommandLineSwitches, clsQuiet);
-                'w', 'W': GetOwnerSwitch(FParams, iSwitch, iIndex, FOwnerSearchOps,
-                    FOwnerSearchPos, FOwnerSearch);
+                'w', 'W': FOwnerSearch := GetOwnerSwitch(FParams, iSwitch, iIndex, FOwnerRegExSearch);
                 'o', 'O': GetOrderBy(FParams, iSwitch, iIndex, FOrderFilesDirection, FOrderFilesBy);
                 'i', 'I': GetSearchInInfo(FParams, iSwitch, iIndex, FRegExSearch,
                   FRegExSurroundingLines);
@@ -2310,6 +2294,13 @@ Begin
         End
       Else
         Begin
+          If FOwnerSearch Then
+            Try
+              FOwnerRegEx.Create(FOwnerRegExSearch, [roIgnoreCase, roCompiled, roSingleLine]);
+            Except
+              On E : ERegularExpressionError Do
+                ESearchException.Create(E.Message);
+            End;
           For i := 0 To FSearchParams.Count - 1 Do
             Begin
               iPos := Pos('=', FSearchParams[i]);
@@ -2536,10 +2527,10 @@ Begin
             If clsOwner In CommandLineSwitches Then
               Begin
                 strOwner := OutputOwner(strPath + recSearch.Name);
-                CheckOwner(strOwner, FOwnerSearch, FOwnerSearchPos, FOwnerSearchOps,
-                  boolFound);
-              End;
-            If boolFound Then
+                If FOwnerSearch Then             
+                  boolFound := boolFound And CheckOwner(FOwnerRegEx, strOwner);          
+              End;                                             
+            If boolFound Then                                  
               Inc(Result, CheckFiles(recSearch, setAttributes, strPath, strOwner, FilesCollection));
             iResult := FindNext(recSearch);
             boolFound := True;
@@ -2610,8 +2601,7 @@ Begin
                   If clsOwner In CommandLineSwitches Then
                     Begin
                       strOwner := OutputOwner(strFileName);
-                      CheckOwner(strOwner, FOwnerSearch, FOwnerSearchPos,
-                        FOwnerSearchOps, boolFound);
+                      boolFound := boolFound And CheckOwner(FOwnerRegEx, strOwner);
                     End;
                   iLDirFiles := iDirFiles;
                   If boolFound Then
