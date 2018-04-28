@@ -35,7 +35,7 @@ uses
   SysUtils,
   Search.FilesCls in 'Source\Search.FilesCls.pas',
   Search.Functions in 'Source\Search.Functions.pas',
-  SearchEngine in 'Source\SearchEngine.pas',
+  Search.Engine in 'Source\Search.Engine.pas',
   Search.Types in 'Source\Search.Types.pas',
   Search.RegExMatches in 'Source\Search.RegExMatches.pas',
   Search.FileCls in 'Source\Search.FileCls.pas',
