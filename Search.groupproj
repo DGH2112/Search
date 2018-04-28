@@ -57,4 +57,44 @@
         <CallTarget Targets="SearchTests:Make;Search:Make;Search64:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+    <ItemGroup Condition="'$(BuildGroup)'=='Debug Builds'">
+        <BuildGroupProject Include="Search.dproj">
+            <ProjectGuid>{BDD783DC-5F57-4E0B-AF5B-304E0FAA0BC0}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Search64.dproj">
+            <ProjectGuid>{283C3AF7-B7D6-44F6-B311-8117A05B3F2C}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Test\SearchTests.dproj">
+            <ProjectGuid>{2D595517-B9C8-4924-AC85-98DF80B94F1C}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildGroup)'=='Release Builds'">
+        <BuildGroupProject Include="Search.dproj">
+            <ProjectGuid>{BDD783DC-5F57-4E0B-AF5B-304E0FAA0BC0}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Search64.dproj">
+            <ProjectGuid>{283C3AF7-B7D6-44F6-B311-8117A05B3F2C}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Test\SearchTests.dproj">
+            <ProjectGuid>{2D595517-B9C8-4924-AC85-98DF80B94F1C}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
 </Project>

@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    15 Apr 2018
+  @Date    28 Apr 2018
 
 **)
 Unit Search.Functions;
@@ -18,11 +18,8 @@ Uses
   WinAPI.Windows,
   VCL.Graphics,
   Search.FilesCls, 
-  Search.Types;
-
-Const
-  (** A constant to define that only files should be listed. **)
-  iFileOnly = $0100;
+  Search.Types, 
+  System.RegularExpressions;
 
 ResourceString
   (** An exception message for a missing Search Text definition. **)
@@ -37,7 +34,7 @@ Var
   Function  GetRangeString(Const slParams: TStringList; Const chEndToken: TSearchCharSet;
     Const strExceptionMsg: String; Var iIndex, iSwitch: Integer; Var strValue: String) : Char;
   Procedure GetDateRange(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
-    Var dtLDate, dtUdate: Double);
+    Var dtLDate, dtUdate: TDateTime);
   Procedure GetSummaryLevel(Const slParams: TStringList; Var iSwitch: Integer; Const iIndex: Integer;
     Var iSummaryLevel: Integer);
   Procedure GetSizeRange(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
@@ -52,9 +49,8 @@ Var
     Var DateType: TDateType);
   Procedure GetExclusions(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var strExlFileName: String);
-  Procedure GetOwnerSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
-    Var OwnerSearch: TOwnerSearch; Var OwnerSearchPos: TOwnerSearchPos;
-    Var strOwnerSearch: String);
+  Function GetOwnerSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
+    Var strOwnerRegEx : String) : Boolean;
   Function  OutputAttributes(Const setAttributes: TSearchFileAttrs): String;
   Procedure CheckDateRange(Const dtFileDateTime, dtLDate, dtUdate: TDateTime; Var boolFound: Boolean);
   Procedure CheckSizeRange(Const iSize, iLSize, iUSize: Int64; Var boolFound: Boolean);
@@ -62,12 +58,9 @@ Var
     Var boolFound: Boolean);
   Procedure CheckExclusions(Const strPath, strFilename: String; Var boolFound: Boolean;
     Const slExclusions: TStringList);
-  Procedure CheckOwner(Const strOwner, strOwnerSearch: String; Const OwnerSearchPos: TOwnerSearchPos;
-    Const OwnerSearch: TOwnerSearch; Var boolFound: Boolean);
+  Function  CheckOwner(Const OwnerRegEx : TRegEx; Const strOwner : String) : Boolean;
   Procedure GetSizeFormat(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var SizeFormat: TSizeFormat);
-  Function  PosOfNthChar(Const strText : String; Const Ch : Char; Const iIndex : Integer;
-    Const boolIgnoreQuotes : Boolean = True): Integer;
   Function  CheckConsoleMode(Const hndConsole : THandle) : Boolean;
   Procedure OutputToConsoleLn(Const hndConsole : THandle; Const strText : String = '';
     Const iTextColour : TColor = clNone; Const iBackColour : TColor = clNone;
@@ -76,19 +69,18 @@ Var
     Const iTextColour : TColor = clNone; Const iBackColour : TColor = clNone;
     Const boolUpdateCursor : Boolean = True);
   Function GetConsoleTitle : String;
-  Function  Like(Const strPattern, strText : String) : Boolean;
-  Function  CharCount(Const cChar : Char; Const strText : String;
-    Const boolIgnoreQuotes : Boolean = True) : Integer;
   Function  BuildRootKey(Const slParams : TStringList) : String;
-  Function  GetField(Const strText : String; Const Ch : Char; Const iIndex : Integer;
-    Const boolIgnoreQuotes : Boolean = True): String;
   Function  FileAttrsToAttrsSet(Const iAttributes : Cardinal) : TSearchFileAttrs;
+  Procedure GetColoursSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
+    Const slColourSettings : TStringList);
   
 Implementation
 
 Uses
   WinAPI.ShlObj,
-  RegularExpressions;
+  Search.StrUtils, 
+  Search.ConvertDate, 
+  System.RegularExpressionsCore;
 
 Type
   (** An enumerate to define the current console output mode **)
@@ -139,8 +131,6 @@ ResourceString
   strCloseSquareExpectedInOwnerSearchDef = '"]" Expected in Owner Search Definition';
   (** An exception message for a missing [ in an Search definition. **)
   strOpenSquareExpectedInOwnerSearchDef = '"[" Expected in Owner Search Definition.';
-  (** An exception message for the Owner Search Criteria being empty. **)
-  strOwnerSearchIsEmpty = 'You must specify a valid Owner Search Criteria.';
   (** An execption messages for a missing colon on the size format definition. **)
   strColonExpectedInSizeFormat = 'Colon expected in size format definition.';
   (** An execption messages for a missing size format character in the definition. **)
@@ -148,24 +138,11 @@ ResourceString
   (** An execption messages for a missing size format definition. **)
   strInvalidSizeFormatDirective = 'Invalid size format definition.';
 
-Const
-  (** Number of hours in a day **)
-  iHoursInDay = 23;
-  (** Number of minutes in an hour **)
-  iMinutesInHour = 59;
-  (** Number of seconds in a minute **)
-  iSecondsInMinute = 59;
-  (** Number of days in a month **)
-  iDaysInMonth = 31;
-  (** Number of months in a year **)
-  iMonthsInYear = 12;
-
 Var
   (** A private variable to hold the console output mode **)
   ConsoleMode : TConsoleMode;
 
   Function ComputerName : String; Forward;
-  Function IsKeyWord(Const strWord : String; Const strWordList : Array Of String): Boolean; Forward;
   Function UserName : String; Forward;
   
 (**
@@ -256,40 +233,6 @@ Begin
   Result := strUserAppDataPath + strINIFileName;
   For iParam := 1 To ParamCount Do
     slParams.Add(ParamStr(iParam));
-End;
-
-(**
-
-  This routine returns the number of occurrances of the char found in the string .
-
-  @precon  None.
-  @postcon Returns the number of occurrances of the char found in the string.
-
-  @param   cChar            as a Char as a constant
-  @param   strText          as a String as a constant
-  @param   boolIgnoreQuotes as a Boolean as a constant
-  @return  an Integer
-
-**)
-Function CharCount(Const cChar : Char; Const strText : String;
-  Const boolIgnoreQuotes : Boolean = True) : Integer;
-
-Var
-  iCount : Integer;
-  boolInQuotes : Boolean;
-
-Begin
-  Result := 0;
-  boolInQuotes := False;
-  For iCount := 1 to Length(strText) Do
-    Begin
-      If Not boolIgnoreQuotes Then
-        If strText[iCount] = '"' Then
-          boolInQuotes := Not boolInQuotes;
-      If strText[iCount] = cChar Then
-        If Not boolInQuotes Then
-          Inc(Result);
-    End;
 End;
 
 (**
@@ -390,39 +333,20 @@ End;
 
 (**
 
-  This method check the owner of the file against the owner search criteria.
+  This method check the owner of the file against the owner regex search criteria.
 
   @precon  None.
   @postcon Check the owner of the file against the owner search criteria.
 
-  @param   strOwner       as a String as a constant
-  @param   strOwnerSearch as a String as a constant
-  @param   OwnerSearchPos as a TOwnerSearchPos as a constant
-  @param   OwnerSearch    as a TOwnerSearch as a constant
-  @param   boolFound      as a Boolean as a reference
+  @param   OwnerRegEx as a TRegEx as a constant
+  @param   strOwner   as a String as a constant
+  @return  a Boolean
 
 **)
-Procedure CheckOwner(Const strOwner, strOwnerSearch: String; Const OwnerSearchPos: TOwnerSearchPos;
-  Const OwnerSearch: TOwnerSearch; Var boolFound: Boolean);
-
-Var
-  i   : Integer;
-  bool: Boolean;
+Function CheckOwner(Const OwnerRegEx : TRegEx; Const strOwner : String) : Boolean;
 
 Begin
-  i := Length(strOwnerSearch);
-  Case OwnerSearchPos Of
-    ospExact:  bool := AnsiCompareText(strOwner, strOwnerSearch) = 0;
-    ospStart:  bool := AnsiCompareText(strOwnerSearch, Copy(strOwner, 1, i)) = 0;
-    ospMiddle: bool := Pos(LowerCase(strOwnerSearch), LowerCase(strOwner)) > 0;
-    ospEnd:    bool := AnsiCompareText(strOwnerSearch,
-        Copy(strOwner, Length(strOwner) - i + 1, i)) = 0;
-  Else
-    bool := True;
-  End;
-  If OwnerSearch = osNotEquals Then
-    bool    := Not bool;
-  boolFound := boolFound And bool
+  Result := OwnerRegEx.IsMatch(strOwner);
 End;
 
 (**
@@ -473,261 +397,12 @@ End;
 
 (**
 
-  This function converts a freeform text string representing dates and times
-  in standard formats in to a TDateTime value.
-
-  @precon  strDate is the string to convert into a date.
-  @postcon Returns a valid TDateTime value.
-
-  @param   strDate as a String as a Constant
-  @return  a TDateTime
-
-**)
-Function ConvertDate(Const strDate : String) : TDateTime;
-
-Type
-  (** This is a record that defined the date and time for a date. **)
-  TDateRec = Record
-    iDay, iMonth, iYear, iHour, iMinute, iSecond, iMilli : Word;
-  End;
-
-Const
-  strErrMsg = 'Can not convert the date "%s" to a valid TDateTime value.';
-  Delimiters : Set Of AnsiChar = ['-', ' ', '\', '/', ':', '.'];
-  Days : Array[1..7] Of String = ('fri', 'mon', 'sat', 'sun', 'thu', 'tue', 'wed');
-  Months : Array[1..24] Of String = (
-    'apr', 'april',
-    'aug', 'august',
-    'dec', 'december',
-    'feb', 'february',
-    'jan', 'january',
-    'jul', 'july',
-    'jun', 'june',
-    'mar', 'march',
-    'may', 'may',
-    'nov', 'november',
-    'oct', 'october',
-    'sep', 'september'
-    );
-  MonthIndexes : Array[1..24] Of Word = (
-    4, 4,
-    8, 8,
-    12, 12,
-    2, 2,
-    1, 1,
-    7, 7,
-    6, 6,
-    3, 3,
-    5, 5,
-    11, 11,
-    10, 10,
-    9, 9
-  );
-  iMinYear = 1900;
-  iNextCentury = 2000;
-
-Var
-  i : Integer;
-  sl : TStringList;
-  strToken : String;
-  iTime : Integer;
-  recDate : TDateRec;
-  tmp : Word;
-  iIndex0, iIndex1, iIndex2 : Integer;
-
-  (**
-
-    This procedure adds the token to the specified string list and clears the token.
-
-    @precon  StringList is the string list to add the token too and strToken is the token to add to the 
-             list.
-    @postcon Adds the token to the specified string list and clears the token.
-
-    @param   StringList as a TStringList as a constant
-    @param   strToken   as a String as a reference
-
-  **)
-  Procedure AddToken(Const StringList : TStringList; var strToken  : String);
-
-  Begin
-    If strToken <> '' Then
-      Begin
-        StringList.Add(strToken);
-        strToken := '';
-      End;
-  End;
-
-  (**
-
-    This procedure assigns string list indexes to the three index values
-    according to the short date format and what information is supplied.
-
-    @precon  None.
-    @postcon Assigns string list indexes to the three index values
-             according to the short date format and what information is
-             supplied.
-
-  **)
-  Procedure AssignIndexes();
-
-  Const
-    iDefaultDayIdx = 0;
-    iDefaultMonthIdx = 1;
-    iDefaultYearIdx = 2;
-    iDayOfMonthLen = 2;
-
-  Var
-    slFormat : TStringList;
-    str : String;
-    j : Integer;
-
-  Begin
-    iIndex0 := iDefaultDayIdx; // Default Day / Month / Year
-    iIndex1 := iDefaultMonthIdx;
-    iIndex2 := iDefaultYearIdx;
-    slFormat := TStringList.Create;
-    Try
-      str := '';
-      For j := 1 To Length(FormatSettings.ShortDateFormat) Do
-        If CharInSet(FormatSettings.ShortDateFormat[j], Delimiters) Then
-          AddToken(slFormat, str)
-        Else
-          str := str + FormatSettings.ShortDateFormat[j];
-      AddToken(slFormat, str);
-      // Remove day of week
-      For j := slFormat.Count - 1 DownTo 0 Do
-        If (CharInSet(slFormat[j][1], ['d', 'D'])) And (Length(slFormat[j]) > iDayOfMonthLen) Then
-          slFormat.Delete(j);
-      For j := 0 To slFormat.Count - 1 Do
-        Begin
-          If CharInSet(slFormat[j][1], ['d', 'D']) Then
-            iIndex0 := j;
-          If CharInSet(slFormat[j][1], ['m', 'M']) Then
-            iIndex1 := j;
-          If CharInSet(slFormat[j][1], ['y', 'Y']) Then
-            iIndex2 := j;
-        End;
-    Finally
-      slFormat.Free;
-    End;
-  End;
-
-  (**
-
-    This procedure tries to extract the value from the indexed string list item into the passed variable 
-    reference. It delete is true it remove the item from the string list.
-
-    @precon  iIndex is the index of the item from the string list to extract, iValue is a word variable 
-             to place the converted item into and Delete determines whether the item is removed from 
-             the string list.
-    @postcon Tries to extract the value from the indexed string list item into the passed variable 
-             reference. It delete is true it remove the item from the string list.
-
-    @param   iIndex as an Integer as a constant
-    @param   iValue as a Word as a reference
-    @param   Delete as a Boolean as a constant
-
-  **)
-  Procedure ProcessValue(Const iIndex : Integer; var iValue : Word; Const Delete : Boolean);
-
-  Begin
-    If iIndex > sl.Count - 1 Then Exit;
-    Val(sl[iIndex], iValue, i);
-    If i <> 0 Then
-      Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-    If Delete Then
-      sl.Delete(iIndex);
-  End;
-
-Begin
-  sl := TStringList.Create;
-  Try
-    strToken := '';
-    iTime := -1;
-    For i := 1 To Length(strDate) Do
-      If CharInSet(strDate[i], Delimiters) Then
-        Begin
-          AddToken(sl, strToken);
-          If (CharInSet(strDate[i], [':'])) And (iTime = -1) Then
-            iTime := sl.Count - 1;
-        End Else
-          strToken := strToken + strDate[i];
-    AddToken(sl, strToken);
-    FillChar(recDate, SizeOf(recDate), 0);
-    // Decode time
-    If iTime > -1 Then
-      Begin
-        ProcessValue(iTime,recDate.iHour, True);
-        ProcessValue(iTime,recDate.iMinute, True);
-        ProcessValue(iTime,recDate.iSecond, True);
-        ProcessValue(iTime,recDate.iMilli, True);
-      End;
-    // Remove day value if present
-    For i := sl.Count - 1 DownTo 0 Do
-      If IsKeyWord(sl[i], Days) Then
-        sl.Delete(i);
-    // Decode date
-    Case sl.Count Of
-      1 :
-        Begin
-          DecodeDate(Now, recDate.iYear, recDate.iMonth, tmp);
-          ProcessValue(0, recDate.iDay, False); // Day only
-        End;
-      2, 3 : // Day and Month (Year)
-        Begin
-          DecodeDate(Now, recDate.iYear, tmp, tmp);
-          AssignIndexes;
-          ProcessValue(iIndex0, recDate.iDay, False); // Get day
-          If IsKeyWord(sl[iIndex1], Months) Then
-            Begin
-              For i := Low(Months) To High(Months) Do
-                If CompareText(Months[i], sl[iIndex1]) = 0 Then
-                  Begin
-                    recDate.iMonth := MonthIndexes[i];
-                    Break;
-                  End;
-            End Else
-              ProcessValue(iIndex1, recDate.iMonth, False); // Get Month
-            If sl.Count = 3 Then
-              Begin
-                ProcessValue(iIndex2, recDate.iYear, False); // Get Year
-                If recDate.iYear < iMinYear Then
-                  Inc(recDate.iYear, iNextCentury);
-              End;
-        End;
-    Else
-      If sl.Count <> 0 Then
-        Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-    End;
-    // Output result.
-    If Not (recDate.iHour In [0..iHoursInDay]) Then
-      Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-    If Not (recDate.iMinute In [0..iMinutesInHour]) Then
-      Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-    If Not (recDate.iSecond In [0..iSecondsInMinute]) Then
-      Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-    Result := EncodeTime(recDate.iHour, recDate.iMinute, recDate.iSecond, recDate.iMilli);
-    If recDate.iYear * recDate.iMonth * recDate.iDay <> 0 Then
-      Begin
-        If Not (recDate.iDay In [1..iDaysInMonth]) Then
-          Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-        If Not (recDate.iMonth In [1..iMonthsInYear]) Then
-          Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-        Result := Result + EncodeDate(recDate.iYear, recDate.iMonth, recDate.iDay);
-      End;
-  Finally
-    sl.Free;
-  End;
-End;
-
-(**
-
   This method returns a set of search file attributes for the given set of file attributes.
 
   @precon  None.
   @postcon A set of search file attributes is returned for the given file attributes.
 
-  @param   iAttributes as an Integer as a constant
+  @param   iAttributes as an Cardinal as a constant
   @return  a TSearchFileAttrs
 
 **)
@@ -927,6 +602,62 @@ End;
 
 (**
 
+  This method enables colour configations and if provided extracts colour settings.
+
+  @precon  slParams and slColourSettings must be valid instances.
+  @postcon Colour configuration is enabled and colour settings extracted else an exception is raised.
+
+  @param   slParams         as a TStringList as a constant
+  @param   iSwitch          as an Integer as a reference
+  @param   iIndex           as an Integer as a reference
+  @param   slColourSettings as a TStringList as a constant
+
+**)
+Procedure GetColoursSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
+  Const slColourSettings : TStringList);
+
+ResourceString
+  strInvalidColourSettingSpec = 'Invalid colour setting specification "%s"!';
+
+Const
+  strRegExSwitchPattern = '[[].*?\]';
+  strRegExConfigPattern = '^(?<Def1>\w+=\w+)$';
+  iFirfstCharOfDef = 2;
+  iSquareBracketPadding = 2;
+
+Var
+  RE : TRegEx;
+  M: TMatch;
+  i: Integer;
+  strConfig: String;
+  
+Begin
+  Include(CommandLineSwitches, clsColours);
+  If iIndex < Length(slParams[iSwitch]) Then
+    Inc(iIndex);
+  If (iIndex < Length(slParams[iSwitch])) And (slParams[iSwitch][iIndex] = '[') Then
+    Begin
+      RE.Create(strRegExSwitchPattern, [roIgnoreCase, roSingleLine, roCompiled]);
+      strConfig := Copy(slParams[iSwitch], iIndex, Length(slParams[iSwitch]) - iIndex + 1);
+      M := RE.Match(strConfig);
+      If M.Success Then
+        Begin
+          strConfig := Copy(M.Value, iFirfstCharOfDef, Length(M.Value) - iSquareBracketPadding);
+          RE.Create(strRegExConfigPattern, [roIgnoreCase, roSingleLine, roCompiled, roExplicitCapture]);
+          M := RE.Match(strConfig);
+          If M.Success Then
+            slColourSettings.Add(strConfig)
+          Else
+            Raise ESearchException.CreateFmt(strInvalidColourSettingSpec, [strConfig]);
+          For i := 0 To Length(M.Value) Do //FI:W514 //FI:W528
+            IncrementSwitchPosition(slParams, iIndex, iSwitch, strCloseSquareExpectedInRegExSearchDef);
+        End Else
+          Raise ESearchException.CreateFmt(strInvalidColourSettingSpec, [strConfig]);
+    End;
+End;
+
+(**
+
   This method returns a string for the title of a console application containing the version number and 
   build number.
 
@@ -982,58 +713,100 @@ End;
   @param   slParams as a TStringList as a constant
   @param   iSwitch  as an Integer as a reference
   @param   iIndex   as an Integer as a reference
-  @param   dtLDate  as a Double as a reference
-  @param   dtUdate  as a Double as a reference
+  @param   dtLDate  as a TDateTime as a reference
+  @param   dtUdate  as a TDateTime as a reference
 
 **)
 Procedure GetDateRange(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
-  Var dtLDate, dtUdate: Double);
+  Var dtLDate, dtUdate: TDateTime);
+
+  (**
+
+    This method checks the finish date in the command line switch.
+
+    @precon  None.
+    @postcon Sets dtUDate to the finish date in the command line switch if found else assigns the default
+             value.
+
+    @param   cDelimiter as a Char as a constant
+
+  **)
+  Procedure CheckFinishDate(Const cDelimiter : Char);
+
+  ResourceString
+    strCloseSquareExpectedInDate = '"]" Expected in Date Range.';
+
+  Const
+    strDefaultEndDate = '31/Dec/2099 23:59:59.999';
+    iMilliSecInSec = 999;
+  
+  Var
+    strDate : String;
+    wH, wM, wS, wMS: Word;
+    
+  Begin
+    GetRangeString(slParams, [']'], strCloseSquareExpectedInDate, iIndex, iSwitch, strDate);
+    If strDate <> '' Then
+      Begin
+        dtUdate := TConvertDate.ConvertDate(strDate);
+        DecodeTime(dtUdate, wH, wM, wS, wMS);
+        If (wH = 0) And (wM = 0) And (wS = 0) And (wMS = 0) Then
+          dtUdate := dtUdate + EncodeTime(iHoursInDay, iSecondsInMinute, iMinutesInHour, iMilliSecInSec);
+      End
+    Else If cDelimiter = ']' Then
+      Begin
+        dtUdate := Int(dtLDate);   
+        dtUdate := dtUdate + EncodeTime(iHoursInDay, iSecondsInMinute, iMinutesInHour, iMilliSecInSec);
+      End
+    Else
+        dtUdate := TConvertDate.ConvertDate(strDefaultEndDate);
+  End;
+
+  (**
+
+    This method checks for the starting date and returns that date in the strDate parameter.
+
+    @precon  None.
+    @postcon Sets dtLDate to the start date in the command line switch else returns the default value.
+
+    @return  a Char
+
+  **)
+  Function CheckStartDate : Char;
+
+  ResourceString
+    strMissingDateRangeSeparater = 'Missing Start Date Range Separater "-".';
+
+  Const
+    strDefaultStartDate = '01/Jan/1900 00:00:00';
+
+  Var    
+    strDate : String;
+    wH, wM, wS, wMS: Word;
+    
+  Begin
+    Result := GetRangeString(slParams, ['-', ']'], strMissingDateRangeSeparater, iIndex, iSwitch,
+      strDate);
+    If strDate <> '' Then
+      Begin
+        dtLDate := TConvertDate.ConvertDate(strDate);
+        DecodeTime(dtLDate, wH, wM, wS, wMS);
+        If (wH = 0) And (wM = 0) And (wS = 0) And (wMS = 0) Then
+          dtLDate := dtLDate + EncodeTime(0, 0, 0, 0);
+      End
+    Else 
+        dtLDate := TConvertDate.ConvertDate(strDefaultStartDate);
+  End;
 
 ResourceString
   strOpenSquareExpectedInDate = '"[" Expected in Date Range.';
-  strMissingDateRangeSeparater = 'Missing Start Date Range Separater "-".';
-  strCloseSquareExpectedInDate = '"]" Expected in Date Range.';
-
-Const
-  iMilliSecInSec = 999;
-  strDefaultEndDate = '31/Dec/2099 23:59:59.999';
-  strDefaultStartDate = '01/Jan/1900 00:00:00';
-
-Var
-  strDate        : String;
-  wH, wM, wS, wMS: Word;
-  C : Char;
 
 Begin
   Include(CommandLineSwitches, clsDateRange);
   IncrementSwitchPosition(slParams, iIndex, iSwitch, strOpenSquareExpectedInDate);
   If slParams[iSwitch][iIndex] <> '[' Then
     Raise ESearchException.Create(strOpenSquareExpectedInDate);
-  C := GetRangeString(slParams, ['-', ']'], strMissingDateRangeSeparater, iIndex, iSwitch, strDate);
-  If strDate <> '' Then
-    Begin
-      dtLDate := ConvertDate(strDate);
-      DecodeTime(dtLDate, wH, wM, wS, wMS);
-      If (wH = 0) And (wM = 0) And (wS = 0) And (wMS = 0) Then
-        dtLDate := dtLDate + EncodeTime(0, 0, 0, 0);
-    End
-  Else 
-      dtLDate := ConvertDate(strDefaultStartDate);
-  GetRangeString(slParams, [']'], strCloseSquareExpectedInDate, iIndex, iSwitch, strDate);
-  If strDate <> '' Then
-    Begin
-      dtUdate := ConvertDate(strDate);
-      DecodeTime(dtUdate, wH, wM, wS, wMS);
-      If (wH = 0) And (wM = 0) And (wS = 0) And (wMS = 0) Then
-        dtUdate := dtUdate + EncodeTime(iHoursInDay, iSecondsInMinute, iMinutesInHour, iMilliSecInSec);
-    End
-  Else If C = ']' Then
-    Begin
-      dtUdate := Int(dtLDate);   
-      dtUdate := dtUdate + EncodeTime(iHoursInDay, iSecondsInMinute, iMinutesInHour, iMilliSecInSec);
-    End
-  Else
-      dtUdate := ConvertDate(strDefaultEndDate);
+  CheckFinishDate(CheckStartDate);
 End;
 
 (**
@@ -1103,52 +876,6 @@ End;
 
 (**
 
-  This function returns the contents of the specified field in the delimited text.
-
-  @precon  None.
-  @postcon Returns the contents of the specified field in the delimited text.
-
-  @param   strText          as a String as a constant
-  @param   Ch               as a Char as a constant
-  @param   iIndex           as an Integer as a constant
-  @param   boolIgnoreQuotes as a Boolean as a constant
-  @return  a String
-
-**)
-Function GetField(Const strText : String; Const Ch : Char; Const iIndex : Integer;
-  Const boolIgnoreQuotes : Boolean = True): String;
-
-Var
-  iNumOfFields : Integer;
-  iStart, iEnd : Integer;
-
-Begin
-  Result := '';
-  iNumOfFields := CharCount(Ch, strText, boolIgnoreQuotes) + 1;
-  If iIndex = 1 Then
-    Begin
-      If iNumOfFields > 1  Then
-        Begin
-          iEnd := PosOfNthChar(strText, Ch, 1, boolIgnoreQuotes);
-          Result := Copy(strText, 1, iEnd - 1);
-        End Else
-          Result := strText;
-    End
-  Else If (iIndex > 1) And (iIndex < iNumOfFields) Then
-    Begin
-      iStart := PosOfNthChar(strText, Ch, iIndex - 1, boolIgnoreQuotes);
-      iEnd := PosOfNthChar(strText, Ch, iIndex, boolIgnoreQuotes);
-      Result := Copy(strText, iStart + 1, iEnd - iStart - 1);
-    End
-  Else If iIndex = iNumOfFields Then
-    Begin
-      iStart := PosOfNthChar(strText, Ch, iIndex - 1, boolIgnoreQuotes);
-      Result := Copy(strText, iStart + 1, Length(strText) - iStart);
-    End;
-End;
-
-(**
-
   This method gets the command line information for the ordering of the found files.
 
   @precon  None.
@@ -1195,65 +922,51 @@ End;
   @precon  None.
   @postcon Obtains the owner search information from the command line.
 
-  @param   slParams       as a TStringList as a constant
-  @param   iSwitch        as an Integer as a reference
-  @param   iIndex         as an Integer as a reference
-  @param   OwnerSearch    as a TOwnerSearch as a reference
-  @param   OwnerSearchPos as a TOwnerSearchPos as a reference
-  @param   strOwnerSearch as a String as a reference
+  @param   slParams      as a TStringList as a constant
+  @param   iSwitch       as an Integer as a reference
+  @param   iIndex        as an Integer as a reference
+  @param   strOwnerRegEx as a String as a reference
+  @return  a Boolean
 
 **)
-Procedure GetOwnerSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
-  Var OwnerSearch: TOwnerSearch; Var OwnerSearchPos: TOwnerSearchPos;
-  Var strOwnerSearch: String);
+Function GetOwnerSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
+  Var strOwnerRegEx : String) : Boolean;
+
+  (**
+
+    This method extracts the owner search string from the command line switch.
+
+    @precon  None.
+    @postcon The strOwnerSearch string is populated with the information from the command line switch.
+
+    @return  a String
+
+  **)
+  Function ExtractOwnerSearch : String;
+
+  Begin
+    Result := '';
+    While (iIndex <= Length(slParams[iSwitch])) And (slParams[iSwitch][iIndex] <> ']') Do
+      Begin
+        Result := Result + slParams[iSwitch][iIndex];
+        IncrementSwitchPosition(slParams, iIndex, iSwitch, strCloseSquareExpectedInOwnerSearchDef);
+      End;
+  End;
 
 Begin
+  Result := False;
   Include(CommandLineSwitches, clsOwner);
-  OwnerSearch    := osEquals;
-  OwnerSearchPos := ospNone;
   If Length(slParams[iSwitch]) = iIndex Then
     Exit;
   IncrementSwitchPosition(slParams, iIndex, iSwitch,
     strOpenSquareExpectedInOwnerSearchDef);
   If slParams[iSwitch][iIndex] = '[' Then
     Begin
-      OwnerSearchPos := ospExact;
-      strOwnerSearch := '';
+      Result := True;
       IncrementSwitchPosition(slParams, iIndex, iSwitch, strMissingSearchText);
-      While (iIndex <= Length(slParams[iSwitch])) And
-        (slParams[iSwitch][iIndex] <> ']') Do
-        Begin
-          strOwnerSearch := strOwnerSearch + slParams[iSwitch][iIndex];
-          IncrementSwitchPosition(slParams, iIndex, iSwitch,
-            strCloseSquareExpectedInOwnerSearchDef);
-        End;
-      OwnerSearch := osEquals;
-      If Length(strOwnerSearch) > 0 Then
-        Begin
-          If strOwnerSearch[1] = '!' Then
-            Begin
-              OwnerSearch := osNotEquals;
-              Delete(strOwnerSearch, 1, 1);
-            End;
-          If strOwnerSearch[1] = '*' Then
-            Begin
-              OwnerSearchPos := ospEnd;
-              Delete(strOwnerSearch, 1, 1);
-            End;
-          If strOwnerSearch[Length(strOwnerSearch)] = '*' Then
-            Begin
-              If OwnerSearchPos = ospEnd Then
-                OwnerSearchPos := ospMiddle
-              Else
-                OwnerSearchPos := ospStart;
-              Delete(strOwnerSearch, Length(strOwnerSearch), 1);
-            End;
-        End;
-      If Length(strOwnerSearch) = 0 Then
-        Raise ESearchException.Create(strOwnerSearchIsEmpty);
-    End
-  Else
-    Dec(iIndex);
+      strOwnerRegEx := ExtractOwnerSearch;
+    End Else
+      Dec(iIndex);
 End;
 
 (**
@@ -1307,8 +1020,13 @@ End;
 Procedure GetSearchInInfo(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
   var strRegExText: String; var iSurroundingLines : Integer);
 
+ResourceString
+  strInvalidGREPSpec = 'Invalid regular expression specification "%s"!';
+  strExpectsRegExpr = 'Commandline switch /I expects an option digit and regular expression in ' + 
+    'square brackets immediately after';
+  
 Const
-  strRegExSwitchPattern = '(?<SurroundLines>[0-9]*)[[](?<RegExText>.*)\]';
+  strRegExSwitchPattern = '(?<SurroundLines>[0-9]*)[[](?<RegExText>.*?)\]';
   iNoOfSurroundingLines = 1;
   iRegExText = 2;
 
@@ -1317,19 +1035,28 @@ Var
   M: TMatch;
   i: Integer;
   iErrorCode: Integer;
+  strConfig: String;
 
 Begin
   iSurroundingLines := 0;
   Include(CommandLineSwitches, clsRegExSearch);
-  RE.Create(strRegExSwitchPattern, [roIgnoreCase, roSingleLine, roCompiled]);
-  M := RE.Match(slParams[iSwitch]);
-  If M.Success Then
+  If iIndex < Length(slParams[iSwitch]) Then
+    Inc(iIndex);
+  If (iIndex <= Length(slParams[iSwitch])) And (slParams[iSwitch][iIndex] = '[') Then
     Begin
-      Val(M.Groups[iNoOfSurroundingLines].Value, iSurroundingLines, iErrorCode);
-      strRegExText := M.Groups[iRegExText].Value;
-      For i := 1 To Length(M.Value) Do
-        IncrementSwitchPosition(slParams, iIndex, iSwitch, strCloseSquareExpectedInRegExSearchDef);
-    End;
+      RE.Create(strRegExSwitchPattern, [roIgnoreCase, roSingleLine, roCompiled]);
+      strConfig := Copy(slParams[iSwitch], iIndex, Length(slParams[iSwitch]) - iIndex + 1);
+      M := RE.Match(strConfig);
+      If M.Success Then
+        Begin
+          Val(M.Groups[iNoOfSurroundingLines].Value, iSurroundingLines, iErrorCode);
+          strRegExText := M.Groups[iRegExText].Value;
+          For i := 1 To Pred(Length(M.Value)) Do //FI:W528
+            IncrementSwitchPosition(slParams, iIndex, iSwitch, strCloseSquareExpectedInRegExSearchDef);
+        End Else
+          Raise ESearchException.CreateFmt(strInvalidGREPSpec, [strConfig]);
+    End Else
+      Raise ESearchException.Create(strExpectsRegExpr);
 End;
 
 (**
@@ -1498,127 +1225,6 @@ End;
 
 (**
 
-  This function returns true if the given word is in the supplied word list. It uses a binary search, so 
-  the word lists need to be sorted.
-
-  @precon  strWord is the word to be searches for in the word list and strWordList is a static array of 
-           words in lowercase and alphabetical order.
-  @postcon Returns true if the word is found in the list.
-
-  @param   strWord     as a String as a constant
-  @param   strWordList as an Array Of String as a constant
-  @return  a Boolean
-
-**)
-function IsKeyWord(Const strWord : String; Const strWordList : Array Of String): Boolean;
-
-Var
-  l, m, r : Integer;
-  str : String;
-
-begin
-  Result := False;
-  str := LowerCase(strWord);
-  l := Low(strWordList);
-  r := High(strWordList);
-  While l <= r Do
-    Begin
-      m := (l + r) Div 2;
-      If strWordList[m] < str Then
-        l := Succ(m)
-      Else If strWordList[m] > str Then
-        r:= Pred(m)
-      Else
-        Begin
-          Result := True;
-          Exit;
-        End;
-    End;
-end;
-
-(**
-
-  This function returns true if the pattern matches the text.
-
-  @precon  None.
-  @postcon Returns true if the pattern matches the text.
-
-  @param   strPattern as a String as a constant
-  @param   strText    as a String as a constant
-  @return  a Boolean
-
-**)
-Function Like(Const strPattern, strText : String) : Boolean;
-
-Type
-  TMatchType = (mtStart, mtEnd);
-  TMatchTypes = Set Of TMatchType;
-
-Var
-  MatchTypes : TMatchTypes;
-  sl : TStringList;
-  i: Integer;
-  //iTokenIndex : Integer;
-  iStartIndex : Integer;
-  iPos: Integer;
-  strLPattern : String;
-
-Begin
-  Result := False;
-  MatchTypes := [];
-  strLPattern := strPattern;
-  If Length(strLPattern) = 0 Then
-    Exit;
-  If strLPattern = '*' Then
-    Begin
-      Result := True;
-      Exit;
-    End;
-  If strLPattern[1] <> '*' Then
-    Include(MatchTypes, mtStart)
-  Else
-    Delete(strLPattern, 1, 1);
-  If Length(strLPattern) > 0 Then
-    If strLPattern[Length(strLPattern)] <> '*' Then
-      Include(MatchTypes, mtEnd)
-    Else
-      Delete(strLPattern, Length(strLPattern), 1);
-  sl := TStringList.Create;
-  Try
-    For i := 1 To CharCount('*', strLPattern) + 1 Do
-      sl.Add(lowercase(GetField(strLPattern, '*', i)));
-    // Check start
-    //iTokenIndex := 1;
-    iStartIndex := 1;
-    If sl.Count > 0 Then
-      If mtStart In MatchTypes Then
-        If CompareText(sl[0], Copy(strText, 1, Length(sl[0]))) <> 0 Then
-          Exit
-        Else
-          Inc(iStartIndex, Length(sl[0]));
-    // Check in between
-    For i := Integer(mtStart In MatchTypes) To sl.Count - 1 - Integer(mtEnd In MatchTypes) Do
-      Begin
-        iPos := Pos(sl[i], lowercase(strText));
-        If (iPos = 0) Or (iPos < iStartIndex) Then
-          Exit;
-        //Inc(iTokenIndex, iPos);
-        Inc(iStartIndex, Length(sl[i]));
-      End;
-    // Check end
-    If sl.Count > 0 Then
-      If mtEnd In MatchTypes Then
-        If CompareText(sl[sl.Count - 1], Copy(strText, Length(strText) -
-          Length(sl[sl.Count - 1]) + 1, Length(sl[sl.Count - 1]))) <> 0 Then
-          Exit;
-    Result := True;
-  Finally
-    sl.Free;
-  End;
-End;
-
-(**
-
   This method outputs the files attributes if they are requireed at the command line.
 
   @precon  None.
@@ -1701,14 +1307,88 @@ Const
   iForegroundMask = $0F;
   iBackgroundMask = $F0;
 
+  (**
+
+    This method sets the fore and backgroudn colours for the console output.
+
+    @precon  None.
+    @postcon The console colour attributes are updated with the required colours.
+
+    @param   ConsoleInfo as a TConsoleScreenBufferInfo as a constant
+    @param   wChars      as a DWORD as a reference
+    @param   strTABText  as a String as a constant
+
+  **)
+  Procedure UpdateConsoleColours(Const ConsoleInfo : TConsoleScreenBufferInfo; Var wChars : DWORD;
+    Const strTABText : String);
+
+  Var
+    iForeAttrColour, iBackAttrColour : Integer;
+    iChar : Integer;
+    Attrs : Array of Word;
+  
+  Begin
+    SetLength(Attrs, wChars);
+    iForeAttrColour := ForeGroundColour(iTextColour, ConsoleInfo.wAttributes And iForegroundMask);
+    iBackAttrColour := BackGroundColour(iBackColour, ConsoleInfo.wAttributes And iBackgroundMask);
+    If wChars > 0 Then
+      For iChar := 0 To wChars - 1 Do
+        Attrs[iChar] := iForeAttrColour Or iBackAttrColour;
+    Win32Check(WriteConsoleOutputAttribute(hndConsole, Attrs,
+      Length(strTABText), ConsoleInfo.dwCursorPosition, wChars));
+  End;
+  
+  (**
+
+    This method sets the position of the cursor after the output of the string to the console.
+
+    @precon  None.
+    @postcon The position of the console cursor is updated.
+
+    @param   OldPos as a TCoord as a constant
+    @param   NewPos as a TCoord as a constant
+    @param   wChars as a DWORD as a reference
+
+  **)
+  Procedure UpdateCursor(Const OldPos, NewPos : TCoord; Var wChars : DWORD);
+
+  Begin
+    If boolUpdateCursor Then
+      Begin
+        // The only time the below fails is at the end of the buffer and a new
+        // line is required, hence the new line on failure.
+        If Not SetConsoleCursorPosition(hndConsole, NewPos) Then
+          Win32Check(WriteConsole(hndConsole, PChar(#13#10), Length(#13#10), wChars, Nil));
+      End Else
+        Win32Check(SetConsoleCursorPosition(hndConsole, OldPos));
+  End;
+  
+  (**
+
+    This procedure update the NewPos record based on the console information.
+
+    @precon  None.
+    @postcon The NewPos record is updated.
+
+    @param   ConsoleInfo as a TConsoleScreenBufferInfo as a constant
+    @param   NewPos      as a TCoord as a reference
+
+  **)
+  Procedure UpdateNewPos(Const ConsoleInfo : TConsoleScreenBufferInfo; Var NewPos : TCoord);
+
+  Begin
+    While NewPos.X >= ConsoleInfo.dwSize.X Do
+      Begin
+        Inc(NewPos.Y);
+        Dec(NewPos.X, ConsoleInfo.dwSize.X);
+      End;
+  End;
+
 Var
   ConsoleInfo : TConsoleScreenBufferInfo;
   wChars : DWord;
-  iChar : Integer;
-  Attrs : Array of Word;
   OldPos : TCoord;
   NewPos : TCoord;
-  iForeAttrColour, iBackAttrColour : Integer;
   strTABText : String;
 
 Begin
@@ -1721,22 +1401,11 @@ Begin
         NewPos := OldPos;
         Win32Check(WriteConsoleOutputCharacter(hndConsole, PChar(strTABText), Length(strTABText),
           ConsoleInfo.dwCursorPosition, wChars));
-        SetLength(Attrs, wChars);
-        iForeAttrColour := ForeGroundColour(iTextColour, ConsoleInfo.wAttributes And iForegroundMask);
-        iBackAttrColour := BackGroundColour(iBackColour, ConsoleInfo.wAttributes And iBackgroundMask);
-        If wChars > 0 Then
-          For iChar := 0 To wChars - 1 Do
-            Attrs[iChar] := iForeAttrColour Or iBackAttrColour;
-        Win32Check(WriteConsoleOutputAttribute(hndConsole, Attrs,
-          Length(strTABText), ConsoleInfo.dwCursorPosition, wChars));
+        UpdateConsoleColours(ConsoleInfo, wChars, strTABText);
         If wChars > 0 Then
           Delete(strTABText, 1, wChars);
         Inc(NewPos.X, wChars);
-        While NewPos.X >= ConsoleInfo.dwSize.X Do
-          Begin
-            Inc(NewPos.Y);
-            Dec(NewPos.X, ConsoleInfo.dwSize.X);
-          End;
+        UpdateNewPos(ConsoleInfo, NewPos);
         If strTABText <> '' Then
           Begin
             Win32Check(WriteConsole(hndConsole, PChar(#13#10), Length(#13#10), wChars, Nil));
@@ -1744,14 +1413,7 @@ Begin
             NewPos.X := 0;
           End;
       Until strTABText = '';
-      If boolUpdateCursor Then
-        Begin
-          // The only time the below fails is at the end of the buffer and a new
-          // line is required, hence the new line on failure.
-          If Not SetConsoleCursorPosition(hndConsole, NewPos) Then
-            Win32Check(WriteConsole(hndConsole, PChar(#13#10), Length(#13#10), wChars, Nil));
-        End Else
-          Win32Check(SetConsoleCursorPosition(hndConsole, OldPos));
+      UpdateCursor(OldPos, NewPos, wChars);
     End Else
       Write(strTABText);
 End;
@@ -1801,48 +1463,6 @@ Begin
   Finally
     sl.Free;
   End;
-End;
-
-(**
-
-  This routine returns the position of the Nth occurrance of the character in the text.
-
-  @precon  None.
-  @postcon Returns the position of the Nth occurrance of the character in the text.
-
-  @param   strText          as a String as a constant
-  @param   Ch               as a Char as a constant
-  @param   iIndex           as an Integer as a constant
-  @param   boolIgnoreQuotes as a Boolean as a constant
-  @return  an Integer
-
-**)
-Function PosOfNthChar(Const strText : String; Const Ch : Char; Const iIndex : Integer;
-  Const boolIgnoreQuotes : Boolean = True): Integer;
-
-Var
-  i : Integer;
-  iCount : Integer;
-  boolInQuotes : Boolean;
-
-Begin
-  Result := 0;
-  iCount := 0;
-  boolInQuotes := False;
-  For i := 1 To Length(strText) Do
-    Begin
-      If Not boolIgnoreQuotes Then
-        If strText[i] = '"' Then
-          boolInQuotes := Not boolInQuotes;
-      If strText[i] = Ch Then
-        If Not boolInQuotes Then
-          Inc(iCount);
-      If iIndex = iCount Then
-        Begin
-          Result := i;
-          Exit;
-        End;
-    End;
 End;
 
 (**

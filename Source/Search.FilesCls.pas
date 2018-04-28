@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    15 Apr 2018
+  @Date    22 Apr 2018
 
 **)
 Unit Search.FilesCls;
@@ -285,7 +285,7 @@ Begin
       For iLine := 0 To slFile.Count - 1 Do
         Begin
           M := FRegEx.Matches(slFile[iLine]);
-          If M.Count > 0 Then
+      If M.Count > 0 Then
             SearchFile.AddRegExLine(iLine + 1, M);
         End;
     Except

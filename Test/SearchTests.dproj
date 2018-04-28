@@ -106,18 +106,25 @@
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Source\TestApplicationFunction.pas"/>
+        <DCCReference Include="Source\Test.Search.Functions.pas"/>
         <DCCReference Include="..\Source\Search.Functions.pas"/>
         <DCCReference Include="..\Source\Search.FilesCls.pas"/>
         <DCCReference Include="..\Source\Search.Types.pas"/>
         <DCCReference Include="..\Source\Search.RegExMatches.pas"/>
         <DCCReference Include="..\Source\Search.FileCls.pas"/>
         <DCCReference Include="..\Source\Search.Interfaces.pas"/>
+        <DCCReference Include="Source\Test.Search.SearchFile.pas"/>
+        <DCCReference Include="Source\Test.Search.SearchFiles.pas"/>
+        <DCCReference Include="..\Source\Search.StrUtils.pas"/>
+        <DCCReference Include="Source\Test.Search.SearchStrUtils.pas"/>
+        <DCCReference Include="..\Source\Search.ConvertDate.pas"/>
+        <DCCReference Include="Source\Test.Search.ConvertDate.pas"/>
         <RcCompile Include="SearchTests32VersionInfo.RC">
             <Form>SearchTests32VersionInfo.res</Form>
         </RcCompile>

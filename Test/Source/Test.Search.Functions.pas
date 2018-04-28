@@ -1,5 +1,5 @@
 //: @nochecks for testing @nometrics for testing
-unit TestApplicationFunction;
+unit Test.Search.Functions;
 {
 
   Delphi DUnit Test Case
@@ -13,7 +13,8 @@ unit TestApplicationFunction;
 interface
 
 uses
-  TestFramework, Windows, SysUtils, Classes, Graphics;
+  TestFramework, Windows, SysUtils, Classes, Graphics, 
+  Search.Types;
 
 type
   TDGHTestCase = Class(TTestCase)
@@ -21,7 +22,18 @@ type
     Procedure CheckTolerance(dblExpected, dblActual, dblTolerance : Double; strMsg : String = '');
   End;
 
-  TestApplicationFunctions = Class(TDGHTestCase)
+  TTestSearchFunctions = Class(TDGHTestCase)
+  Strict Private
+    FParams    : TStringList;
+    FSwitch    : Integer;
+    FIndex     : Integer;
+    FFileAttrs : TSearchFileAttrs;
+    FLDate     : TDateTime;
+    FUDate     : TDateTime;
+  Strict Protected
+    Procedure GetAttributesException;
+    Procedure GetDateRangeException;
+  Public
   Published
     procedure TestIncrementSwitchPosition;
     Procedure TestGetRangeString;
@@ -39,6 +51,12 @@ type
     procedure TestCheckFileAttributes;
     Procedure TestCheckExclusions;
     Procedure TestCheckOwner;
+    Procedure TestGetColourSwitch;
+    Procedure TestCheckDateRange;
+    Procedure TestGetSizeFormat;
+    Procedure TestCheckConsoleMode;
+    Procedure TestGetConsoleTitle;
+    Procedure TestFileAttrsToAttrsSet;
   End;
 
 implementation
@@ -46,10 +64,9 @@ implementation
 Uses
   Search.Functions,
   Search.FilesCls, 
-  Search.Types;
+  System.RegularExpressions;
 
-procedure TDGHTestCase.CheckTolerance(dblExpected, dblActual,
-  dblTolerance: Double; strMsg: String = '');
+procedure TDGHTestCase.CheckTolerance(dblExpected, dblActual, dblTolerance: Double; strMsg: String = '');
 begin
   Check(Abs(dblExpected - dblActual) < dblTolerance,
     Format('%s : Expected %1.4f, Actual %1.4f (Delta %1.4f)',
@@ -58,7 +75,29 @@ end;
 
 { TestApplicationFunctions }
 
-procedure TestApplicationFunctions.TestCheckExclusions;
+Procedure TTestSearchFunctions.GetAttributesException;
+
+Begin
+  GetAttributes(FParams, FSwitch, FIndex, FFileAttrs);
+End;
+
+Procedure TTestSearchFunctions.GetDateRangeException;
+
+Begin
+  GetDateRange(FParams, FSwitch, FIndex, FLDate, FUdate);
+End;
+
+procedure TTestSearchFunctions.TestCheckConsoleMode;
+begin
+
+end;
+
+procedure TTestSearchFunctions.TestCheckDateRange;
+begin
+
+end;
+
+procedure TTestSearchFunctions.TestCheckExclusions;
 
 Var
   slExclusions : TstringList;
@@ -95,7 +134,7 @@ begin
   End;
 end;
 
-procedure TestApplicationFunctions.TestCheckFileAttributes;
+procedure TTestSearchFunctions.TestCheckFileAttributes;
 
 Var
   recSearch : TSearchRec;
@@ -144,30 +183,25 @@ begin
   CheckEquals(True, boolFound, 'Test 9');
 end;
 
-procedure TestApplicationFunctions.TestCheckOwner;
+procedure TTestSearchFunctions.TestCheckOwner;
 
 Var
-  bool : Boolean;
+  RE : TRegEx;  
 
 begin
-  bool := True;
-  CheckOwner('Rail\HoylD', 'Rail\HoylD', ospExact, osEquals, bool);
-  Check(bool, 'Test 1');
-  bool := True;
-  CheckOwner('Rail\HoylD', 'Rail\Hoyle', ospExact, osNotEquals, bool);
-  Check(bool, 'Test 2');
-  bool := True;
-  CheckOwner('Rail\HoylD', 'HoylD', ospEnd, osEquals, bool);
-  Check(bool, 'Test 3');
-  bool := True;
-  CheckOwner('Rail\HoylD', 'Rail\Hoyl', ospStart, osEquals, bool);
-  Check(bool, 'Test 4');
-  bool := True;
-  CheckOwner('Rail\HoylD', 'Hoyl', ospMiddle, osEquals, bool);
-  Check(bool, 'Test 5');
+  RE.Create('Rail\\HoylD', [roIgnoreCase, roSingleLine]);
+  Check(CheckOwner(RE, 'Rail\HoylD'), 'Test 1');
+  RE.Create('HoylD', [roIgnoreCase, roSingleLine]);
+  Check(CheckOwner(RE, 'Rail\HoylD'), 'Test 2');
+  RE.Create('Rail', [roIgnoreCase, roSingleLine]);
+  Check(CheckOwner(RE, 'Rail\HoylD'), 'Test 2');
+  RE.Create('HoylD$', [roIgnoreCase, roSingleLine]);
+  Check(CheckOwner(RE, 'Rail\HoylD'), 'Test 3');
+  RE.Create('^Rail', [roIgnoreCase, roSingleLine]);
+  Check(CheckOwner(RE, 'Rail\HoylD'), 'Test 4');
 end;
 
-procedure TestApplicationFunctions.TestCheckSizeRange;
+procedure TTestSearchFunctions.TestCheckSizeRange;
 
 Var
   iSize, iLSize, iUSize : Int64;
@@ -191,148 +225,152 @@ begin
   Check(Not bool, 'Test 3');
 end;
 
-procedure TestApplicationFunctions.TestGetAttributes;
-
-Var
-  slParams : TStringList;
-  iSwitch, iIndex : Integer;
-  setFileAttrs : TSearchFileAttrs;
+Procedure TTestSearchFunctions.TestFileAttrsToAttrsSet;
 
 Begin
-  slParams := TstringList.Create;
+End;
+
+procedure TTestSearchFunctions.TestGetAttributes;
+
+Begin
+  FParams := TstringList.Create;
   Try
-    slParams.Text := 'My.exe'#13#10'*.pas';
-    iSwitch := 1;
-    iIndex := 2;
-    Try
-      GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
-    Except
-      On E : ESearchException Do
-        Check(True);
-      Else
-        Check(False);
-    End;
-    slParams.Text := 'my.exe'#13#10'/t[F]';
-    iSwitch := 1;
-    iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
-    Check(setFileAttrs = [sfaFile]);
-    slParams.Text := 'my.exe'#13#10'/t[D]';
-    iSwitch := 1;
-    iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
-    Check(setFileAttrs = [sfaDirectory]);
-    slParams.Text := 'my.exe'#13#10'/t[V]';
-    iSwitch := 1;
-    iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
-    Check(setFileAttrs = [sfaVolume]);
-    slParams.Text := 'my.exe'#13#10'/t[R]';
-    iSwitch := 1;
-    iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
-    Check(setFileAttrs = [sfaReadOnly]);
-    slParams.Text := 'my.exe'#13#10'/t[A]';
-    iSwitch := 1;
-    iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
-    Check(setFileAttrs = [sfaArchive]);
-    slParams.Text := 'my.exe'#13#10'/t[S]';
-    iSwitch := 1;
-    iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
-    Check(setFileAttrs = [sfaSystem]);
-    slParams.Text := 'my.exe'#13#10'/t[H]';
-    iSwitch := 1;
-    iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
-    Check(setFileAttrs = [sfaHidden]);
-    slParams.Text := 'my.exe'#13#10'/t[FRASH]';
-    iSwitch := 1;
-    iIndex := 2;
-    GetAttributes(slParams, iSwitch, iIndex, setFileAttrs);
-    Check(setFileAttrs = [sfaReadOnly, sfaArchive, sfaSystem, sfaHidden, sfaFile]);
+    FParams.Text := 'My.exe'#13#10'*.pas';
+    FSwitch := 1;
+    FIndex := 2;
+    CheckException(GetAttributesException, ESearchException);
+    FParams.Text := 'my.exe'#13#10'/t[F]';
+    FSwitch := 1;
+    FIndex := 2;
+    GetAttributes(FParams, FSwitch, FIndex, FFileAttrs);
+    Check(FFileAttrs = [sfaFile]);
+    FParams.Text := 'my.exe'#13#10'/t[D]';
+    FSwitch := 1;
+    FIndex := 2;
+    GetAttributes(FParams, FSwitch, FIndex, FFileAttrs);
+    Check(FFileAttrs = [sfaDirectory]);
+    FParams.Text := 'my.exe'#13#10'/t[V]';
+    FSwitch := 1;
+    FIndex := 2;
+    GetAttributes(FParams, FSwitch, FIndex, FFileAttrs);
+    Check(FFileAttrs = [sfaVolume]);
+    FParams.Text := 'my.exe'#13#10'/t[R]';
+    FSwitch := 1;
+    FIndex := 2;
+    GetAttributes(FParams, FSwitch, FIndex, FFileAttrs);
+    Check(FFileAttrs = [sfaReadOnly]);
+    FParams.Text := 'my.exe'#13#10'/t[A]';
+    FSwitch := 1;
+    FIndex := 2;
+    GetAttributes(FParams, FSwitch, FIndex, FFileAttrs);
+    Check(FFileAttrs = [sfaArchive]);
+    FParams.Text := 'my.exe'#13#10'/t[S]';
+    FSwitch := 1;
+    FIndex := 2;
+    GetAttributes(FParams, FSwitch, FIndex, FFileAttrs);
+    Check(FFileAttrs = [sfaSystem]);
+    FParams.Text := 'my.exe'#13#10'/t[H]';
+    FSwitch := 1;
+    FIndex := 2;
+    GetAttributes(FParams, FSwitch, FIndex, FFileAttrs);
+    Check(FFileAttrs = [sfaHidden]);
+    FParams.Text := 'my.exe'#13#10'/t[FRASH]';
+    FSwitch := 1;
+    FIndex := 2;
+    GetAttributes(FParams, FSwitch, FIndex, FFileAttrs);
+    Check(FFileAttrs = [sfaReadOnly, sfaArchive, sfaSystem, sfaHidden, sfaFile]);
   Finally
-    slParams.Free;
+    FParams.Free;
   End;
 end;
 
-procedure TestApplicationFunctions.TestGetDateRange;
+Procedure TTestSearchFunctions.TestGetColourSwitch;
+
+Var
+  sl: TStringList;
+  slColour : TStringList;
+
+Begin
+  sl := TStringList.Create;
+  Try
+    slColour := TStringList.Create;
+    Try
+      sl.Text := 'my.exe'#13#10'/l';
+      FSwitch := 1;
+      FIndex := 2;
+      GetColoursSwitch(sl, FSwitch, FIndex, slColour);
+      CheckEquals(2, FIndex);
+      CheckEquals(0, slColour.Count);
+      sl.Text := 'my.exe'#13#10'/l[MyColour=clRed]';
+      FSwitch := 1;
+      FIndex := 2;
+      GetColoursSwitch(sl, FSwitch, FIndex, slColour);
+      CheckEquals(18, FIndex);
+      CheckEquals(1, slColour.Count);
+      CheckEquals('MyColour=clRed', slColour[0]);
+    Finally
+      slColour.Free;
+    End;
+  Finally
+    sl.Free;
+  End;
+End;
+
+procedure TTestSearchFunctions.TestGetConsoleTitle;
+begin
+
+end;
+
+procedure TTestSearchFunctions.TestGetDateRange;
 
 Const
   dblTolerance = 1 / (24 * 60 * 60 * 999);
 
-Var
-  slParams : TStringList;
-  iSwitch, iIndex : Integer;
-  dtLDate, dtUDate : Double;
-
 begin
-  slParams := TStringList.Create;
+  FParams := TStringList.Create;
   Try
-    slParams.Text := 'My.exe'#13#10'/d';
-    iSwitch := 1;
-    iIndex := 2;
-    Try
-      GetDateRange(slParams, iSwitch, iIndex, dtLDate, dtUdate);
-    Except
-      On E : ESearchException Do
-        Check(True);
-      Else
-        Check(False);
-    End;
-    slParams.Text := 'My.exe'#13#10'/d[';
-    iSwitch := 1;
-    iIndex := 2;
-    Try
-      GetDateRange(slParams, iSwitch, iIndex, dtLDate, dtUdate);
-    Except
-      On E : ESearchException Do
-        Check(True);
-      Else
-        Check(False);
-    End;
-    slParams.Text := 'My.exe'#13#10'/d[-';
-    iSwitch := 1;
-    iIndex := 2;
-    Try
-      GetDateRange(slParams, iSwitch, iIndex, dtLDate, dtUdate);
-    Except
-      On E : ESearchException Do
-        Check(True);
-      Else
-        Check(False);
-    End;
-    slParams.Text := 'My.exe'#13#10'/d[-]';
-    iSwitch := 1;
-    iIndex := 2;
-    GetDateRange(slParams, iSwitch, iIndex, dtLDate, dtUdate);
-    CheckTolerance(dtLDate, EncodeDate(1900, 1, 1) + EncodeTime(0, 0, 0, 0), dblTolerance, 'Test 1.1');
-    CheckTolerance(dtUDate, EncodeDate(2099, 12, 31) + EncodeTime(23, 59, 59, 999), dblTolerance, 'Test 1.2');
-    slParams.Text := 'My.exe'#13#10'/d[12/Jan/2007-]';
-    iSwitch := 1;
-    iIndex := 2;
-    GetDateRange(slParams, iSwitch, iIndex, dtLDate, dtUdate);
-    CheckTolerance(dtLDate, EncodeDate(2007, 1, 12) + EncodeTime(0, 0, 0, 0), dblTolerance, 'Test 2.1');
-    CheckTolerance(dtUDate, EncodeDate(2099, 12, 31) + EncodeTime(23, 59, 59, 999), dblTolerance, 'Test 2.2');
-    slParams.Text := 'My.exe'#13#10'/d[12/Jan/2007-31/Jan/2007]';
-    iSwitch := 1;
-    iIndex := 2;
-    GetDateRange(slParams, iSwitch, iIndex, dtLDate, dtUdate);
-    CheckTolerance(dtLDate, EncodeDate(2007, 1, 12) + EncodeTime(0, 0, 0, 0), dblTolerance, 'Test 3.1');
-    CheckTolerance(dtUDate, EncodeDate(2007, 1, 31) + EncodeTime(23, 59, 59, 999), dblTolerance, 'Test 3.2');
-    slParams.Text := 'My.exe'#13#10'/d[12/Jan/2007 12:34-31/Jan/2007 23:50]';
-    iSwitch := 1;
-    iIndex := 2;
-    GetDateRange(slParams, iSwitch, iIndex, dtLDate, dtUdate);
-    CheckTolerance(dtLDate, EncodeDate(2007, 1, 12) + EncodeTime(12, 34, 0, 0), dblTolerance, 'Test 4.1');
-    CheckTolerance(dtUDate, EncodeDate(2007, 1, 31) + EncodeTime(23, 50, 0, 0), dblTolerance, 'Test 4.2');
+    FParams.Text := 'My.exe'#13#10'/d';
+    FSwitch := 1;
+    FIndex := 2;
+    CheckException(GetDateRangeException, ESearchException);
+    FParams.Text := 'My.exe'#13#10'/d[';
+    FSwitch := 1;
+    FIndex := 2;
+    CheckException(GetDateRangeException, ESearchException);
+    FParams.Text := 'My.exe'#13#10'/d[-';
+    FSwitch := 1;
+    FIndex := 2;
+    CheckException(GetDateRangeException, ESearchException);
+    FParams.Text := 'My.exe'#13#10'/d[-]';
+    FSwitch := 1;
+    FIndex := 2;
+    GetDateRange(FParams, FSwitch, FIndex, FLDate, FUdate);
+    CheckTolerance(FLDate, EncodeDate(1900, 1, 1) + EncodeTime(0, 0, 0, 0), dblTolerance, 'Test 1.1');
+    CheckTolerance(FUdate, EncodeDate(2099, 12, 31) + EncodeTime(23, 59, 59, 999), dblTolerance, 'Test 1.2');
+    FParams.Text := 'My.exe'#13#10'/d[12/Jan/2007-]';
+    FSwitch := 1;
+    FIndex := 2;
+    GetDateRange(FParams, FSwitch, FIndex, FLDate, FUdate);
+    CheckTolerance(FLDate, EncodeDate(2007, 1, 12) + EncodeTime(0, 0, 0, 0), dblTolerance, 'Test 2.1');
+    CheckTolerance(FUdate, EncodeDate(2099, 12, 31) + EncodeTime(23, 59, 59, 999), dblTolerance, 'Test 2.2');
+    FParams.Text := 'My.exe'#13#10'/d[12/Jan/2007-31/Jan/2007]';
+    FSwitch := 1;
+    FIndex := 2;
+    GetDateRange(FParams, FSwitch, FIndex, FLDate, FUdate);
+    CheckTolerance(FLDate, EncodeDate(2007, 1, 12) + EncodeTime(0, 0, 0, 0), dblTolerance, 'Test 3.1');
+    CheckTolerance(FUdate, EncodeDate(2007, 1, 31) + EncodeTime(23, 59, 59, 999), dblTolerance, 'Test 3.2');
+    FParams.Text := 'My.exe'#13#10'/d[12/Jan/2007 12:34-31/Jan/2007 23:50]';
+    FSwitch := 1;
+    FIndex := 2;
+    GetDateRange(FParams, FSwitch, FIndex, FLDate, FUdate);
+    CheckTolerance(FLDate, EncodeDate(2007, 1, 12) + EncodeTime(12, 34, 0, 0), dblTolerance, 'Test 4.1');
+    CheckTolerance(FUdate, EncodeDate(2007, 1, 31) + EncodeTime(23, 50, 0, 0), dblTolerance, 'Test 4.2');
   Finally
-    slParams.Free;
+    FParams.Free;
   End;
 end;
 
-procedure TestApplicationFunctions.TestGetDateType;
+procedure TTestSearchFunctions.TestGetDateType;
 
 Var
   slParams : TStringList;
@@ -395,7 +433,7 @@ begin
   End;
 end;
 
-procedure TestApplicationFunctions.TestGetExclusions;
+procedure TTestSearchFunctions.TestGetExclusions;
 
 Var
   slParams : TStringList;
@@ -448,7 +486,7 @@ begin
   End;
 end;
 
-procedure TestApplicationFunctions.TestGetOrderBy;
+procedure TTestSearchFunctions.TestGetOrderBy;
 
 Var
   slParams : TStringList;
@@ -572,14 +610,13 @@ begin
   End;
 end;
 
-procedure TestApplicationFunctions.TestGetOwnerSwitch;
+procedure TTestSearchFunctions.TestGetOwnerSwitch;
 
 Var
   slParams : TStringList;
   iSwitch, iIndex : Integer;
-  OwnerSearch : TOwnerSearch;
-  OwnerSearchPos : TOwnerSearchPos;
-  strOwnerSearch : String;
+  RE: TRegEx;
+  strSearchRegEx: String;
 
 begin
   slParams := TStringList.Create;
@@ -587,15 +624,12 @@ begin
     iSwitch := 1;
     iIndex := 2;
     slParams.Text := 'my.exe'#13#10'/w';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osEquals, 'Test 1.1');
-    Check(OwnerSearchPos = ospNone, 'Test 1.2');
-    CheckEquals('', strOwnerSearch, 'Test 1.3');
+    CheckEquals(False, GetOwnerSwitch(slParams, iSwitch, iIndex, strSearchRegEx), 'Test 1.1');
     iSwitch := 1;
     iIndex := 2;
     slParams.Text := 'my.exe'#13#10'/w[';
     Try
-      GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
+      GetOwnerSwitch(slParams, iSwitch, iIndex, strSearchRegEx);
     Except
       On E: Exception Do
         Check(True);
@@ -604,7 +638,7 @@ begin
     End;
     slParams.Text := 'my.exe'#13#10'/w[HoylD';
     Try
-      GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
+      GetOwnerSwitch(slParams, iSwitch, iIndex, strSearchRegEx);
     Except
       On E: Exception Do
         Check(True);
@@ -613,66 +647,34 @@ begin
     End;
     iSwitch := 1;
     iIndex := 2;
+    slParams.Text := 'my.exe'#13#10'/w[^rail\\hoyld$]';
+    CheckEquals(True, GetOwnerSwitch(slParams, iSwitch, iIndex, strSearchRegEx), 'Test 2.1');
+    RE.Create(strSearchRegEx, [roIgnoreCase, roSingleLine]);
+    CheckEquals(True, RE.IsMatch('Rail\HoylD'), 'Test 2.2');
+    iSwitch := 1;
+    iIndex := 2;
+    slParams.Text := 'my.exe'#13#10'/w[hoyld$]';
+    CheckEquals(True, GetOwnerSwitch(slParams, iSwitch, iIndex, strSearchRegEx), 'Test 3.1');
+    RE.Create(strSearchRegEx, [roIgnoreCase, roSingleLine]);
+    CheckEquals(True, RE.IsMatch('Rail\HoylD'), 'Test 3.2');
+    iSwitch := 1;
+    iIndex := 2;
+    slParams.Text := 'my.exe'#13#10'/w[^rail]';
+    CheckEquals(True, GetOwnerSwitch(slParams, iSwitch, iIndex, strSearchRegEx), 'Test 4.1');
+    RE.Create(strSearchRegEx, [roIgnoreCase, roSingleLine]);
+    CheckEquals(True, RE.IsMatch('Rail\HoylD'), 'Test 4.2');
+    iSwitch := 1;
+    iIndex := 2;
     slParams.Text := 'my.exe'#13#10'/w[hoyld]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osEquals, 'Test 2.1');
-    Check(OwnerSearchPos = ospExact, 'Test 2.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 2.3');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/w[!hoyld]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osNotEquals, 'Test 3.1');
-    Check(OwnerSearchPos = ospExact, 'Test 3.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 3.3');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/w[*hoyld]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osEquals, 'Test 4.1');
-    Check(OwnerSearchPos = ospEnd, 'Test 4.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 4.3');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/w[!*hoyld]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osNotEquals, 'Test 5.1');
-    Check(OwnerSearchPos = ospEnd, 'Test 5.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 5.3');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/w[hoyld*]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osEquals, 'Test 6.1');
-    Check(OwnerSearchPos = ospStart, 'Test 6.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 6.3');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/w[!hoyld*]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osNotEquals, 'Test 7.1');
-    Check(OwnerSearchPos = ospStart, 'Test 7.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 7.3');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/w[*hoyld*]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osEquals, 'Test 8.1');
-    Check(OwnerSearchPos = ospMiddle, 'Test 8.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 8.3');
-    iSwitch := 1;
-    iIndex := 2;
-    slParams.Text := 'my.exe'#13#10'/w[!*hoyld*]';
-    GetOwnerSwitch(slParams, iSwitch, iIndex, OwnerSearch, OwnerSearchPos, strOwnerSearch);
-    Check(OwnerSearch = osNotEquals, 'Test 9.1');
-    Check(OwnerSearchPos = ospMiddle, 'Test 9.2');
-    CheckEquals('hoyld', strOwnerSearch, 'Test 9.3');
+    CheckEquals(True, GetOwnerSwitch(slParams, iSwitch, iIndex, strSearchRegEx), 'Test 5.1');
+    RE.Create(strSearchRegEx, [roIgnoreCase, roSingleLine]);
+    CheckEquals(True, RE.IsMatch('Rail\HoylD'), 'Test 5.2');
   Finally
     slParams.Free;
   End;
 end;
 
-procedure TestApplicationFunctions.TestGetRangeString;
+procedure TTestSearchFunctions.TestGetRangeString;
 
 Var
   slParams : TStringList;
@@ -713,7 +715,7 @@ begin
   End;
 end;
 
-procedure TestApplicationFunctions.TestGetSearchInInfo;
+procedure TTestSearchFunctions.TestGetSearchInInfo;
 
 Var
   slParams : TStringList;
@@ -729,33 +731,36 @@ begin
     slParams.Text := 'my.exe'#13#10'/i';
     Try
       GetSearchInInfo(slParams, iSwitch, iIndex, strSearchInText, iLines);
+      Check(False, 'First Exception');
     Except
       On E: ESearchException Do
         Check(True);
       Else
-        Check(False);
+        Check(False, 'First Exception');
     End;
     iSwitch := 1;
     iIndex := 2;
     slParams.Text := 'my.exe'#13#10'/i[';
     Try
       GetSearchInInfo(slParams, iSwitch, iIndex, strSearchInText, iLines);
+      Check(False, 'Second Exception');
     Except
       On E: ESearchException Do
         Check(True);
       Else
-        Check(False);
+        Check(False, 'Second Exception');
     End;
     iSwitch := 1;
     iIndex := 2;
     slParams.Text := 'my.exe'#13#10'/i[hello';
     Try
       GetSearchInInfo(slParams, iSwitch, iIndex, strSearchInText, iLines);
+      Check(False, 'Third Exception');
     Except
       On E: ESearchException Do
         Check(True);
       Else
-        Check(False);
+        Check(False, 'Third Exception');
     End;
     iSwitch := 1;
     iIndex := 2;
@@ -767,7 +772,12 @@ begin
   End;
 end;
 
-procedure TestApplicationFunctions.TestGetSizeRange;
+procedure TTestSearchFunctions.TestGetSizeFormat;
+begin
+
+end;
+
+procedure TTestSearchFunctions.TestGetSizeRange;
 
 Var
   slParams : TStringList;
@@ -839,7 +849,7 @@ begin
   End;
 end;
 
-procedure TestApplicationFunctions.TestGetSummaryLevel;
+procedure TTestSearchFunctions.TestGetSummaryLevel;
 
 Var
   slParams : TStringList;
@@ -871,7 +881,7 @@ begin
   End;
 end;
 
-procedure TestApplicationFunctions.TestIncrementSwitchPosition;
+procedure TTestSearchFunctions.TestIncrementSwitchPosition;
 
 Var
   sl : TStringList;
@@ -902,7 +912,7 @@ begin
   End;
 end;
 
-procedure TestApplicationFunctions.TestOutputAttributes;
+procedure TTestSearchFunctions.TestOutputAttributes;
 
 Var
   S : String;
@@ -928,7 +938,5 @@ end;
 
 initialization
   // Register any test cases with the test runner
-  RegisterTest('Application Functions', TestApplicationFunctions.Suite);
+  RegisterTest('Search Functions', TTestSearchFunctions.Suite);
 end.
-
-

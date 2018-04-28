@@ -1,14 +1,13 @@
 (**
 
- This module defines the Search Win32 console application. This application
- is designed to provide regular expression search capabilities for files on
- disk.
+  This module defines the Search Win64 console application. This application is designed to provide
+  general file search and regular expression search capabilities for files on disk.
 
- @Version 1.2
- @Author  David Hoyle
- @Date    08 Apr 2018
+  @version 1.2
+  @Author  David Hoyle
+  @Date    28 Apr 2018
 
- **)
+**)
 Program Search64;
 
 {$APPTYPE CONSOLE}
@@ -34,17 +33,20 @@ uses
   SysUtils,
   Search.FilesCls in 'Source\Search.FilesCls.pas',
   Search.Functions in 'Source\Search.Functions.pas',
-  SearchEngine in 'Source\SearchEngine.pas',
+  Search.Engine in 'Source\Search.Engine.pas',
   Search.Types in 'Source\Search.Types.pas',
   Search.RegExMatches in 'Source\Search.RegExMatches.pas',
   Search.FileCls in 'Source\Search.FileCls.pas',
-  Search.Interfaces in 'Source\Search.Interfaces.pas';
+  Search.Interfaces in 'Source\Search.Interfaces.pas',
+  Search.StrUtils in 'Source\Search.StrUtils.pas',
+  Search.Constants in 'Source\Search.Constants.pas',
+  Search.ConvertDate in 'Source\Search.ConvertDate.pas';
 
 ResourceString
   (** A resource string to define the Exception output format. **)
   strException = 'ESearchException: %s';
   (** A resource string for formatting information. **)
-  strPressEnterToFinish = 'Press <Enter> to finish.';
+  strPressEnterToFinish = 'Debug Mode: Press <Enter> to finish.';
 
 Var
   (** A variable to hold whether an exception has occurred. **)
@@ -69,7 +71,7 @@ Begin
         boolException := True;
       End;
   End;
-  If clsDebug In CommandLineSwitches Then
+  If (clsDebug In CommandLineSwitches) Or (DebugHook <> 0) Then
     Begin
       OutputToConsoleLn(SearchEngine.StdHnd);
       OutputToConsole(SearchEngine.StdHnd, strPressEnterToFinish);

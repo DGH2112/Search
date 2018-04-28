@@ -5,7 +5,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    15 Apr 2018
+  @Date    22 Apr 2018
   
 **)
 Unit Search.FileCls;
@@ -32,7 +32,7 @@ Type
     FRegExMatches   : TList<TRegExMatches>;
   Strict Protected
     // ISearchFile
-    Procedure AddRegExLine(Const iLine: Integer; Const Matches: TMatchCollection);
+    Procedure AddRegExLine(Const iLine : Integer; Const Matches: TMatchCollection);
     Function  Clone: ISearchFile;
     Function  GetAttributes: TSearchFileAttrs;
     Function  GetDate: TDateTime;
@@ -62,7 +62,7 @@ Uses
   @param   Matches as a TMatchCollection as a constant
 
 **)
-Procedure TSearchFile.AddRegExLine(Const iLine: Integer; Const Matches: TMatchCollection);
+Procedure TSearchFile.AddRegExLine(Const iLine : Integer; Const Matches: TMatchCollection);
 
 Begin
   FRegExMatches.Add(TRegExMatches.Create(iLine, Matches));
@@ -79,12 +79,13 @@ End;
 
 **)
 Function TSearchFile.Clone: ISearchFile;
+
 Var
   R: TRegExMatches;
 
 Begin
   Result := TSearchFile.Create(TSearchFileRec.Create(FDate, FSize, FCompressedSize, FAttributes, FOwner,
-    ExtractFileName(FName)));
+    FName));
   For R In FRegExMatches Do
     Result.RegExMatches.Add(R);
 End;
