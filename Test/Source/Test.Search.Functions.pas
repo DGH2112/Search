@@ -28,8 +28,8 @@ type
     FSwitch    : Integer;
     FIndex     : Integer;
     FFileAttrs : TSearchFileAttrs;
-    FLDate     : Double;
-    FUDate     : Double;
+    FLDate     : TDateTime;
+    FUDate     : TDateTime;
   Strict Protected
     Procedure GetAttributesException;
     Procedure GetDateRangeException;

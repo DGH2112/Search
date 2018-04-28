@@ -35,9 +35,9 @@ Type
      (** This is the lower limit of a file size search. **)
     FLSize: Int64;
     (** This is the lower limit of a file date search. **)
-    FLDate: Double;
+    FLDate: TDateTime;
     (** This is the upper limit of a file date search. **)
-    FUDate: Double;
+    FUDate: TDateTime;
     (** The total size of al the files found in the search. **)
     FFileSize: Int64;
     (** Height of the console. **)

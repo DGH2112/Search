@@ -37,7 +37,7 @@ Var
   Function  GetRangeString(Const slParams: TStringList; Const chEndToken: TSearchCharSet;
     Const strExceptionMsg: String; Var iIndex, iSwitch: Integer; Var strValue: String) : Char;
   Procedure GetDateRange(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
-    Var dtLDate, dtUdate: Double);
+    Var dtLDate, dtUdate: TDateTime);
   Procedure GetSummaryLevel(Const slParams: TStringList; Var iSwitch: Integer; Const iIndex: Integer;
     Var iSummaryLevel: Integer);
   Procedure GetSizeRange(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
@@ -739,12 +739,12 @@ End;
   @param   slParams as a TStringList as a constant
   @param   iSwitch  as an Integer as a reference
   @param   iIndex   as an Integer as a reference
-  @param   dtLDate  as a Double as a reference
-  @param   dtUdate  as a Double as a reference
+  @param   dtLDate  as a TDateTime as a reference
+  @param   dtUdate  as a TDateTime as a reference
 
 **)
 Procedure GetDateRange(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
-  Var dtLDate, dtUdate: Double); //: @todo Change these to TDateTime
+  Var dtLDate, dtUdate: TDateTime);
 
   (**
 
