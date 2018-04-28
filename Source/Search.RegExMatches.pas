@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    07 Apr 2018
+  @Date    22 Apr 2018
 
 **)
 Unit Search.RegExMatches;
@@ -81,10 +81,10 @@ Begin
   FLineNum := iLine;
   SetLength(FMatches, Matches.Count);
   For iMatch := 0 To Matches.Count - 1 Do
-  Begin
-    FMatches[iMatch].FIndex := Matches.Item[iMatch].Index;
-    FMatches[iMatch].FLength := Matches.Item[iMatch].Length;
-  End;
+    Begin
+      FMatches[iMatch].FIndex := Matches.Item[iMatch].Index;
+      FMatches[iMatch].FLength := Matches.Item[iMatch].Length;
+    End;
   FCount := Matches.Count;
 End;
 

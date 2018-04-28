@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    15 Apr 2018
+  @Date    28 Apr 2018
   
 **)
 Unit Search.Types;
@@ -38,8 +38,9 @@ Type
     clsExclusions,                   { /x or -x }
     clsSearchZip,                    { /p or -p }
     clsSizeOutput,                   { /f or -f }
-    clsOutputAsCSV                   { /v or -v }
-    );
+    clsOutputAsCSV,                  { /v or -v }
+    clsColours                       { /l or -l }
+  );
 
   (** This is a set of boolean command line switches. **)
   TCommandLineSwitches = Set Of TCommandLineSwitch;
@@ -102,6 +103,52 @@ Type
 
   (** A set of characters - for delimiting text. **)
   TSearchCharSet = Set Of AnsiChar;
+
+  (** An enumerate to describe each console output colour. **)
+  TSearchColour = (
+    scUnknown,
+    scTitle,
+    scHeader,
+    scFooter,
+    scSearchPath,
+    scFoundSearchPath,
+    scFileInfo,
+    scRegExLineNumbers,
+    scRegExLineOutput,
+    scRegExFindOutputFG,
+    scRegExFindOutputBG,
+    scSummaryOutput,
+    scZipFile,
+    scSuccess,
+    scWarning,
+    scException,
+    scHelpHeader,
+    scHelpInfo,
+    scHelpText,
+    scHelpSwitch,
+    scHelpFootNote
+  );    
+
+  (** A list of available colours for the console output. **)
+  TSearchColourList = (
+    sclBlack,
+    sclMaroon, 
+    sclGreen,  
+    sclNavy,   
+    sclOlive,  
+    sclPurple, 
+    sclTeal,   
+    sclGray,   
+    sclRed,    
+    sclLime,   
+    sclBlue,  
+    sclYellow, 
+    sclFuchsia,
+    sclAqua,   
+    sclWhite,    
+    sclNone
+  );
+
 
 Implementation
 

@@ -119,8 +119,8 @@
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
         <DCC_RangeChecking>true</DCC_RangeChecking>
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
-        <Debugger_CWD>D:\Documents\RAD Studio\IDE Addins\Message View Helper\</Debugger_CWD>
-        <Debugger_RunParams>&quot;D:\Documents\Web Page\Zips\*.pas&quot; /capsi[DGH]!</Debugger_RunParams>
+        <Debugger_CWD>D:\Documents\RAD Studio\Applications\Search\</Debugger_CWD>
+        <Debugger_RunParams>/?</Debugger_RunParams>
         <VerInfo_Keys>CompanyName=;FileVersion=1.0.21.544;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Release>0</VerInfo_Release>
@@ -141,6 +141,8 @@
         <DCCReference Include="Source\Search.RegExMatches.pas"/>
         <DCCReference Include="Source\Search.FileCls.pas"/>
         <DCCReference Include="Source\Search.Interfaces.pas"/>
+        <DCCReference Include="Source\Search.Constants.pas"/>
+        <DCCReference Include="Source\Search.StrUtils.pas"/>
         <None Include="..\..\LIBRARY\CompilerDefinitions.inc"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
