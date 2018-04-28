@@ -13,7 +13,8 @@ Unit Search.ConvertDate;
 Interface
 
 Uses
-  System.Classes;
+  System.Classes, 
+  System.Generics.Collections;
 
 Type
   (** A cord that can convert a string representation of a date and time to a date time value. **)
@@ -33,7 +34,7 @@ Type
       (** Indexes for the day, month and year parts of the date into the string list. **)
       FDayIndex, FMonthIndex, FYearIndex : Integer;
       (** A string list to contain the parts of the date when broken down. **)
-      FDateParts : TStringList;
+      FDateParts : TArray<String>;
   Strict Private
     Class Procedure AddToken(Const slStringList : TStringList; Var strToken  : String); Static;
     Class Procedure AssignIndexes; Static;
@@ -63,6 +64,9 @@ Const
 Implementation
 
 Uses
+  {$IFDEF DEBUG}
+  CodeSiteLogging,
+  {$ENDIF}
   System.SysUtils,
   Search.Types, 
   Search.StrUtils;
@@ -72,8 +76,6 @@ ResourceString
   strErrMsg = 'Cannot convert the date "%s" to a valid date and time value!';
 
 Const
-  (** A set of AnsiChars for valid date and time format delimiters. **)
-  Delimiters : Set Of AnsiChar = ['-', ' ', '\', '/', ':', '.'];
   (** A constant array of day of the week short names. **)
   Days : Array[1..7] Of String = ('fri', 'mon', 'sat', 'sun', 'thu', 'tue', 'wed');
   (** A constant array of short and long month names. **)
@@ -145,6 +147,7 @@ End;
 Class Procedure TConvertDate.AssignIndexes;
 
 Const
+  Delimiters : Set Of AnsiChar = ['-', ' ', '\', '/', ':', '.'];
   iDefaultDayIdx = 0;
   iDefaultMonthIdx = 1;
   iDefaultYearIdx = 2;
@@ -211,46 +214,41 @@ Var
 
 Begin
   FDate := strDate;
-  fDateParts := TStringList.Create;
-  Try
-    InitialiseDateParts;
-    // Decode date
-    Case FDateParts.Count Of
-      iDayOnly:
-        Begin
-          DecodeDate(Now, FDateRec.iYear, FDateRec.iMonth, tmp);
-          ProcessValue(0, FDateRec.iDay, False);
-        End;
-      iDayAndMonthOnly, iDayMonthAndYear:
-        Begin
-          DecodeDate(Now, FDateRec.iYear, tmp, tmp);
-          AssignIndexes;
-          ProcessValue(FDayIndex, FDateRec.iDay, False); // Get day
-          If TSearchStrUtils.IsKeyWord(FDateParts[FMonthIndex], Months) Then
+  InitialiseDateParts;
+  // Decode date
+  Case Length(FDateParts) Of
+    iDayOnly:
+      Begin
+        DecodeDate(Now, FDateRec.iYear, FDateRec.iMonth, tmp);
+        ProcessValue(0, FDateRec.iDay, False);
+      End;
+    iDayAndMonthOnly, iDayMonthAndYear:
+      Begin
+        DecodeDate(Now, FDateRec.iYear, tmp, tmp);
+        AssignIndexes;
+        ProcessValue(FDayIndex, FDateRec.iDay, False); // Get day
+        If TSearchStrUtils.IsKeyWord(FDateParts[FMonthIndex], Months) Then
+          Begin
+            For i := Low(Months) To High(Months) Do
+              If CompareText(Months[i], FDateParts[FMonthIndex]) = 0 Then
+                Begin
+                  FDateRec.iMonth := MonthIndexes[i];
+                  Break;
+                End;
+          End Else
+            ProcessValue(FMonthIndex, FDateRec.iMonth, False); // Get Month
+          If Length(FDateParts) = iDayMonthAndYear Then
             Begin
-              For i := Low(Months) To High(Months) Do
-                If CompareText(Months[i], FDateParts[FMonthIndex]) = 0 Then
-                  Begin
-                    FDateRec.iMonth := MonthIndexes[i];
-                    Break;
-                  End;
-            End Else
-              ProcessValue(FMonthIndex, FDateRec.iMonth, False); // Get Month
-            If FDateParts.Count = iDayMonthAndYear Then
-              Begin
-                ProcessValue(FYearIndex, FDateRec.iYear, False); // Get Year
-                If FDateRec.iYear < iMinYear Then
-                  Inc(FDateRec.iYear, iNextCentury);
-              End;
-        End;
-    Else
-      If FDateParts.Count <> 0 Then
-        Raise ESearchException.CreateFmt(strErrMsg, [FDate]);
-    End;
-    Result := OutputResult;
-  Finally
-    FDateParts.Free;
+              ProcessValue(FYearIndex, FDateRec.iYear, False); // Get Year
+              If FDateRec.iYear < iMinYear Then
+                Inc(FDateRec.iYear, iNextCentury);
+            End;
+      End;
+  Else
+    If Length(FDateParts) > 0 Then
+      Raise ESearchException.CreateFmt(strErrMsg, [FDate]);
   End;
+  Result := OutputResult;
 End;
 
 (**
@@ -349,13 +347,13 @@ Var
   iErrorCode : Integer;
     
 Begin
-  If iIndex > FDateParts.Count - 1 Then
+  If iIndex > Length(FDateParts) - 1 Then
     Exit;
   Val(FDateParts[iIndex], iValue, iErrorCode);
   If iErrorCode <> 0 Then
     Raise ESearchException.CreateFmt(strErrMsg, [FDate]);
   If boolDelete Then
-    FDateParts.Delete(iIndex);
+    Delete(FDateParts, iIndex, 1);
 End;
 
 (**
@@ -372,9 +370,9 @@ Var
   iIndex: Integer;
 
 Begin
-  For iIndex := FDateParts.Count - 1 DownTo 0 Do
+  For iIndex := High(FDateParts) DownTo Low(FDateParts) Do
     If TSearchStrUtils.IsKeyWord(FDateParts[iIndex], Days) Then
-      FDateParts.Delete(iIndex);
+      Delete(FDateParts, iIndex, 1);
 End;
 
 (**
@@ -389,21 +387,27 @@ End;
 **)
 Class Procedure TConvertDate.SplitDate(Var iTime : Integer);
 
+Const
+  Delimiters : Array[1..6] Of Char = ('-', ' ', '\', '/', ':', '.');
+
 Var
-  i: Integer;
-  strToken: String;
+  iPos: Integer;
+  iIndex: Integer;
 
 Begin
-  strToken := '';
-  For i := 1 To Length(FDate) Do
-    If CharInSet(FDate[i], Delimiters) Then
-      Begin
-        AddToken(FDateParts, strToken);
-        If (CharInSet(FDate[i], [':'])) And (iTime = -1) Then
-          iTime := FDateParts.Count - 1;
-      End Else
-        strToken := strToken + FDate[i];
-  AddToken(FDateParts, strToken);
+  FDateParts := FDate.Split(Delimiters);
+  // Find Time Index
+  iPos := Pos(':', FDate);
+  For iIndex := Low(FDateParts) To High(FDateParts) Do
+    Begin
+      Dec(iPos, Length(FDateParts[iIndex]));
+      If iPos = 1 Then
+        Begin
+          iTime := iIndex;
+          Break;
+        End;
+      Dec(iPos);
+    End;
 End;
 
 End.
