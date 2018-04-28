@@ -2354,8 +2354,6 @@ End;
   @precon  None.
   @postcon Opens the named file safely.
 
-  @todo    Make this a method of the main Search class.
-
   @param   slText      as a TStringList as a constant
   @param   strFileName as a String as a constant
 
