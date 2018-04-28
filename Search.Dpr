@@ -7,7 +7,6 @@
   @Author  David Hoyle
   @Date    28 Apr 2018
 
-  @todo    Undo change so that now search pattern is an except - this will stop accidently mass searches.
   @todo    Add switch for RegEx filename matching
   @todo    Check that GREP will work with multi-line matches
   @todo    Replaced Owner search with regular expressions.

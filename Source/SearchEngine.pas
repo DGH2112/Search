@@ -931,8 +931,10 @@ End;
 Procedure TSearch.GetCommandLineSwitches;
 
 ResourceString
-  strInvalidCommandLineSwitch = 'Invalid command line switch "%s" in parameter "%s."';
-  strNoSearchPattern = 'No search pattern provided! Searching for all files...';
+  strInvalidCommandLineSwitch = 'Invalid command line switch "%s" in parameter "%s." ' + 
+    'Type SEARCH /? for more help!';
+  strNeedToSpecifyCriteria = 'You need to specify at least one search criteria. ' +
+    'Type SEARCH /? for more help!';
 
 Const
   iSwitchLetterStart = 2;
@@ -996,11 +998,7 @@ Begin
     If FParams.Count = 0 Then
       Include(CommandLineSwitches, clsShowHelp)
     Else
-      Begin
-        OutputToConsoleLn(FStdHnd, strNoSearchPattern, FColours[scWarning]);
-        OutputToConsoleLn(FStdHnd);
-        FSearchParams.AddPair(GetCurrentDir, '*.*');
-      End;
+      Raise ESearchException.Create(strNeedToSpecifyCriteria);
 End;
 
 (**
@@ -2312,8 +2310,9 @@ Procedure TSearch.Run;
 
 ResourceString
   strErrorInPathSearchParamString = 'There was an error in the path=search param pairing. (%s)';
-  strExclusionsNotFound = 'The filename "%s" was not found to process exclusions in the searches.';
-
+  strExclusionsNotFound = 'The filename "%s" was not found to process exclusions in the searches.' +
+    'Type SEARCH /? for more help!';
+                                  
 Const
   iUNCPrefixLen = 2;
 
@@ -2355,8 +2354,7 @@ Begin
             Begin
               iPos := Pos('=', FSearchParams[i]);
               If iPos = 0 Then
-                Raise ESearchException.CreateFmt(strErrorInPathSearchParamString,
-                  [FSearchParams[i]]);
+                Raise ESearchException.CreateFmt(strErrorInPathSearchParamString, [FSearchParams[i]]);
               strPath := FSearchParams.Names[i];
               If strPath = '' Then
                 strPath := GetCurrentDir;
