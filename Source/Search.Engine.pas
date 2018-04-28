@@ -157,6 +157,7 @@ Type
     Procedure PrintHelpColourConfig;
     Procedure OutputConfiguredColours;
     Procedure ConfigureColour;
+    Procedure SafeLoadFromFile(Const slText : TStringList; Const strFileName: String);
     // ISearchEngine;
     Function  GetExceptionColour : TColor;
     Function  GetStdHnd : THandle;
@@ -169,11 +170,6 @@ Type
 
   (** A type for a pointer to a PSID structure **)
   PPSID = ^PSID;
-
-  (** This is a helper class for the TStrings class. **)
-  TStringsHelper = Class Helper For TStrings
-    Procedure SafeLoadFromFile(Const strFileName: String; Const slErrorLog : TStringList);
-  End;
 
 Implementation
 
@@ -290,39 +286,6 @@ Begin
 End;
 
 (**
-
-  This method provide the RegEx functionality of SEARCH with a safe mechanism to load information from 
-  files without any share violations.
-
-  @precon  None.
-  @postcon Opens the named file safely.
-
-  @todo    Make this a method of the main Search class.
-
-  @param   strFileName as a String as a constant
-  @param   slErrorLog  as a TStringList as a constant
-
-**)
-Procedure TStringsHelper.SafeLoadFromFile(Const strFileName: String; Const slErrorLog : TStringList);
-
-Var
-  Stream: TStream;
-
-Begin
-  Try
-    Stream := TFileStream.Create(strFileName, fmOpenRead Or fmShareDenyNone);
-    Try
-      LoadFromStream(Stream);
-    Finally
-      Stream.Free;
-    End;
-  Except
-    On E : EFOpenError Do
-      slErrorLog.Add(Format('%s: %s', [E.ClassName, E.Message]));
-  End;
-End;
-
-(**
   This method adds an error messages to the error message log.
 
   @precon  None.
@@ -380,7 +343,7 @@ Function TSearch.CheckFiles(Const recSearch: TSearchRec; Const setAttrs : TSearc
       Begin
         sl := TStringList.Create;
         Try
-          sl.SafeLoadFromFile(strPath + recSearch.Name, FErrorLog);
+          SafeLoadFromFile(sl, strPath + recSearch.Name);
           Result := sl.Text;
         Finally
           sl.Free;
@@ -1501,7 +1464,7 @@ Begin
         strFileName := strPath + FileInfo.FileName;
         MZip := REZip.Match(strPath);
         If Not MZip.Success Then
-          slText.SafeLoadFromFile(strFileName, FErrorLog)
+          SafeLoadFromFile(slText, strFileName)
         Else
           Begin
             Z := TZipForge.Create(Nil);
@@ -2337,7 +2300,7 @@ Begin
     ((clsExclusions In CommandLineSwitches) And FileExists(FExlFileName)) Then
     Begin
       If clsExclusions In CommandLineSwitches Then
-        FExclusions.SafeLoadFromFile(FExlFileName, FErrorLog);
+        SafeLoadFromFile(FExclusions, FExlFileName);
       FExclusions.Text := LowerCase(FExclusions.Text);
       If clsShowHelp In CommandLineSwitches Then
         PrintHelp
@@ -2381,6 +2344,39 @@ Begin
     End
   Else
     Raise ESearchException.CreateFmt(strExclusionsNotFound, [FExlFileName]);
+End;
+
+(**
+
+  This method provide the RegEx functionality of SEARCH with a safe mechanism to load information from 
+  files without any share violations.
+
+  @precon  None.
+  @postcon Opens the named file safely.
+
+  @todo    Make this a method of the main Search class.
+
+  @param   slText      as a TStringList as a constant
+  @param   strFileName as a String as a constant
+
+**)
+Procedure TSearch.SafeLoadFromFile(Const slText : TStringList; Const strFileName: String);
+
+Var
+  Stream: TStream;
+
+Begin
+  Try
+    Stream := TFileStream.Create(strFileName, fmOpenRead Or fmShareDenyNone);
+    Try
+      slText.LoadFromStream(Stream);
+    Finally
+      Stream.Free;
+    End;
+  Except
+    On E : EFOpenError Do
+      FErrorLog.Add(Format('%s: %s', [E.ClassName, E.Message]));
+  End;
 End;
 
 (**
