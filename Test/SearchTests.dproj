@@ -122,6 +122,8 @@
         <DCCReference Include="Source\Test.Search.SearchFiles.pas"/>
         <DCCReference Include="..\Source\Search.StrUtils.pas"/>
         <DCCReference Include="Source\Test.Search.SearchStrUtils.pas"/>
+        <DCCReference Include="..\Source\Search.ConvertDate.pas"/>
+        <DCCReference Include="Source\Test.Search.ConvertDate.pas"/>
         <RcCompile Include="SearchTests32VersionInfo.RC">
             <Form>SearchTests32VersionInfo.res</Form>
         </RcCompile>

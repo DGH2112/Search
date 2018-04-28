@@ -12,7 +12,9 @@ uses
   Test.Search.SearchFile in 'Source\Test.Search.SearchFile.pas',
   Test.Search.SearchFiles in 'Source\Test.Search.SearchFiles.pas',
   Search.StrUtils in '..\Source\Search.StrUtils.pas',
-  Test.Search.SearchStrUtils in 'Source\Test.Search.SearchStrUtils.pas';
+  Test.Search.SearchStrUtils in 'Source\Test.Search.SearchStrUtils.pas',
+  Search.ConvertDate in '..\Source\Search.ConvertDate.pas',
+  Test.Search.ConvertDate in 'Source\Test.Search.ConvertDate.pas';
 
 {$R *.RES}
 

@@ -39,7 +39,8 @@ uses
   Search.FileCls in 'Source\Search.FileCls.pas',
   Search.Interfaces in 'Source\Search.Interfaces.pas',
   Search.StrUtils in 'Source\Search.StrUtils.pas',
-  Search.Constants in 'Source\Search.Constants.pas';
+  Search.Constants in 'Source\Search.Constants.pas',
+  Search.ConvertDate in 'Source\Search.ConvertDate.pas';
 
 ResourceString
   (** A resource string to define the Exception output format. **)

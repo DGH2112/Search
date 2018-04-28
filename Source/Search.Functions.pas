@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    26 Apr 2018
+  @Date    28 Apr 2018
 
 **)
 Unit Search.Functions;
@@ -78,15 +78,14 @@ Var
   Function  FileAttrsToAttrsSet(Const iAttributes : Cardinal) : TSearchFileAttrs;
   Procedure GetColoursSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
     Const slColourSettings : TStringList);
-  //: @refactor Refcator this to its own class/record.
-  Function ConvertDate(Const strDate : String) : TDateTime;
   
 Implementation
 
 Uses
   WinAPI.ShlObj,
   RegularExpressions, 
-  Search.StrUtils;
+  Search.StrUtils, 
+  Search.ConvertDate;
 
 Type
   (** An enumerate to define the current console output mode **)
@@ -145,18 +144,6 @@ ResourceString
   strMissingSizeFormatDirective = 'Missing size format definition.';
   (** An execption messages for a missing size format definition. **)
   strInvalidSizeFormatDirective = 'Invalid size format definition.';
-
-Const
-  (** Number of hours in a day **)
-  iHoursInDay = 23;
-  (** Number of minutes in an hour **)
-  iMinutesInHour = 59;
-  (** Number of seconds in a minute **)
-  iSecondsInMinute = 59;
-  (** Number of days in a month **)
-  iDaysInMonth = 31;
-  (** Number of months in a year **)
-  iMonthsInYear = 12;
 
 Var
   (** A private variable to hold the console output mode **)
@@ -432,300 +419,6 @@ Begin
   GetComputerName(@Result[1], i);
   Win32Check(LongBool(i));
   SetLength(Result, i);
-End;
-
-(**
-
-  This function converts a freeform text string representing dates and times
-  in standard formats in to a TDateTime value.
-
-  @precon  strDate is the string to convert into a date.
-  @postcon Returns a valid TDateTime value.
-
-  @param   strDate as a String as a Constant
-  @return  a TDateTime
-
-**)
-Function ConvertDate(Const strDate : String) : TDateTime;
-
-Type
-  (** This is a record that defined the date and time for a date. **)
-  TDateRec = Record
-    iDay, iMonth, iYear, iHour, iMinute, iSecond, iMilli : Word;
-  End;
-
-Const
-  strErrMsg = 'Can not convert the date "%s" to a valid TDateTime value.';
-  Delimiters : Set Of AnsiChar = ['-', ' ', '\', '/', ':', '.'];
-  Days : Array[1..7] Of String = ('fri', 'mon', 'sat', 'sun', 'thu', 'tue', 'wed');
-  Months : Array[1..24] Of String = (
-    'apr', 'april',
-    'aug', 'august',
-    'dec', 'december',
-    'feb', 'february',
-    'jan', 'january',
-    'jul', 'july',
-    'jun', 'june',
-    'mar', 'march',
-    'may', 'may',
-    'nov', 'november',
-    'oct', 'october',
-    'sep', 'september'
-    );
-  MonthIndexes : Array[1..24] Of Word = (
-    4, 4,
-    8, 8,
-    12, 12,
-    2, 2,
-    1, 1,
-    7, 7,
-    6, 6,
-    3, 3,
-    5, 5,
-    11, 11,
-    10, 10,
-    9, 9
-  );
-  iMinYear = 1900;
-  iNextCentury = 2000;
-
-  (**
-
-    This procedure adds the token to the specified string list and clears the token.
-
-    @precon  StringList is the string list to add the token too and strToken is the token to add to the 
-             list.
-    @postcon Adds the token to the specified string list and clears the token.
-
-    @param   StringList as a TStringList as a constant
-    @param   strToken   as a String as a reference
-
-  **)
-  Procedure AddToken(Const StringList : TStringList; var strToken  : String);
-
-  Begin
-    If strToken <> '' Then
-      Begin
-        StringList.Add(strToken);
-        strToken := '';
-      End;
-  End;
-
-  (**
-
-    This procedure assigns string list indexes to the three index values according to the short date 
-    format and what information is supplied.
-
-    @precon  None.
-    @postcon Assigns string list indexes to the three index values according to the short date format 
-             and what information is supplied.
-
-    @param   iIndex0 as an Integer as a reference
-    @param   iiNdex1 as an Integer as a reference
-    @param   iIndex2 as an Integer as a reference
-
-  **)
-  Procedure AssignIndexes(Var iIndex0, iiNdex1, iIndex2 : Integer);
-
-  Const
-    iDefaultDayIdx = 0;
-    iDefaultMonthIdx = 1;
-    iDefaultYearIdx = 2;
-    iDayOfMonthLen = 2;
-
-  Var
-    slFormat : TStringList;
-    str : String;
-    j : Integer;
-
-  Begin
-    iIndex0 := iDefaultDayIdx; // Default Day / Month / Year
-    iIndex1 := iDefaultMonthIdx;
-    iIndex2 := iDefaultYearIdx;
-    slFormat := TStringList.Create;
-    Try
-      str := '';
-      For j := 1 To Length(FormatSettings.ShortDateFormat) Do
-        If CharInSet(FormatSettings.ShortDateFormat[j], Delimiters) Then
-          AddToken(slFormat, str)
-        Else
-          str := str + FormatSettings.ShortDateFormat[j];
-      AddToken(slFormat, str);
-      // Remove day of week
-      For j := slFormat.Count - 1 DownTo 0 Do
-        If (CharInSet(slFormat[j][1], ['d', 'D'])) And (Length(slFormat[j]) > iDayOfMonthLen) Then
-          slFormat.Delete(j);
-      For j := 0 To slFormat.Count - 1 Do
-        Begin
-          If CharInSet(slFormat[j][1], ['d', 'D']) Then
-            iIndex0 := j;
-          If CharInSet(slFormat[j][1], ['m', 'M']) Then
-            iIndex1 := j;
-          If CharInSet(slFormat[j][1], ['y', 'Y']) Then
-            iIndex2 := j;
-        End;
-    Finally
-      slFormat.Free;
-    End;
-  End;
-
-  Procedure ProcessValue(Const sl : TStringList; Const iIndex : Integer; var iValue : Word;
-    Const Delete : Boolean); Forward;
-    
-  (**
-
-    This method extracts the date and time values from the string list into the geiven date record.
-
-    @precon  sl Must be a valid instance.
-    @postcon The date and time components are extracted from the string list and placed in the record.
-
-    @param   sl      as a TStringList as a constant
-    @param   iTime   as an Integer as a constant
-    @param   recDate as a TDateRec as a reference
-
-  **)
-  Procedure DecodeTime(Const sl : TStringList; Const iTime : Integer; Var recDate : TDateRec);
-
-  Begin
-    If iTime > -1 Then
-      Begin
-        ProcessValue(sl, iTime, recDate.iHour, True);
-        ProcessValue(sl, iTime, recDate.iMinute, True);
-        ProcessValue(sl, iTime, recDate.iSecond, True);
-        ProcessValue(sl, iTime, recDate.iMilli, True);
-      End;
-  End;
-
-  (**
-
-    This procedure outputs the results of the conversion of the date else raises an exception.
-
-    @precon  None.
-    @postcon Outputs the results of the conversion of the date else raises an exception.
-
-    @param   recDate as a TDateRec as a constant
-    @return  a TDateTime
-
-  **)
-  Function OutputResult(Const recDate : TDateRec) : TDateTime;
-
-  Begin
-    If Not (recDate.iHour In [0..iHoursInDay]) Then
-      Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-    If Not (recDate.iMinute In [0..iMinutesInHour]) Then
-      Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-    If Not (recDate.iSecond In [0..iSecondsInMinute]) Then
-      Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-    Result := EncodeTime(recDate.iHour, recDate.iMinute, recDate.iSecond, recDate.iMilli);
-    If recDate.iYear * recDate.iMonth * recDate.iDay <> 0 Then
-      Begin
-        If Not (recDate.iDay In [1..iDaysInMonth]) Then
-          Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-        If Not (recDate.iMonth In [1..iMonthsInYear]) Then
-          Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-        Result := Result + EncodeDate(recDate.iYear, recDate.iMonth, recDate.iDay);
-      End;
-  End;
-
-  (**
-
-    This procedure tries to extract the value from the indexed string list item into the passed variable 
-    reference. It delete is true it remove the item from the string list.
-
-    @precon  iIndex is the index of the item from the string list to extract, iValue is a word variable 
-             to place the converted item into and Delete determines whether the item is removed from 
-             the string list.
-    @postcon Tries to extract the value from the indexed string list item into the passed variable 
-             reference. It delete is true it remove the item from the string list.
-
-    @param   sl     as a TStringList as a constant
-    @param   iIndex as an Integer as a constant
-    @param   iValue as a Word as a reference
-    @param   Delete as a Boolean as a constant
-
-  **)
-  Procedure ProcessValue(Const sl : TStringList; Const iIndex : Integer; var iValue : Word;
-    Const Delete : Boolean);
-
-  Var
-    iErrorCode : Integer;
-    
-  Begin
-    If iIndex > sl.Count - 1 Then
-      Exit;
-    Val(sl[iIndex], iValue, iErrorCode);
-    If iErrorCode <> 0 Then
-      Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-    If Delete Then
-      sl.Delete(iIndex);
-  End;
-
-Var
-  i : Integer;
-  sl : TStringList;
-  strToken : String;
-  iTime : Integer;
-  recDate : TDateRec;
-  tmp : Word;
-  iIndex0, iIndex1, iIndex2 : Integer;
-
-Begin
-  sl := TStringList.Create;
-  Try
-    strToken := '';
-    iTime := -1;
-    For i := 1 To Length(strDate) Do
-      If CharInSet(strDate[i], Delimiters) Then
-        Begin
-          AddToken(sl, strToken);
-          If (CharInSet(strDate[i], [':'])) And (iTime = -1) Then
-            iTime := sl.Count - 1;
-        End Else
-          strToken := strToken + strDate[i];
-    AddToken(sl, strToken);
-    FillChar(recDate, SizeOf(recDate), 0);
-    DecodeTime(sl, iTime, recDate);
-    // Remove day value if present
-    For i := sl.Count - 1 DownTo 0 Do
-      If TSearchStrUtils.IsKeyWord(sl[i], Days) Then
-        sl.Delete(i);
-    // Decode date
-    Case sl.Count Of
-      1 :
-        Begin
-          DecodeDate(Now, recDate.iYear, recDate.iMonth, tmp);
-          ProcessValue(sl, 0, recDate.iDay, False); // Day only
-        End;
-      2, 3 : // Day and Month (Year)
-        Begin
-          DecodeDate(Now, recDate.iYear, tmp, tmp);
-          AssignIndexes(iIndex0, iIndex1, iIndex2);
-          ProcessValue(sl, iIndex0, recDate.iDay, False); // Get day
-          If TSearchStrUtils.IsKeyWord(sl[iIndex1], Months) Then
-            Begin
-              For i := Low(Months) To High(Months) Do
-                If CompareText(Months[i], sl[iIndex1]) = 0 Then
-                  Begin
-                    recDate.iMonth := MonthIndexes[i];
-                    Break;
-                  End;
-            End Else
-              ProcessValue(sl, iIndex1, recDate.iMonth, False); // Get Month
-            If sl.Count = 3 Then
-              Begin
-                ProcessValue(sl, iIndex2, recDate.iYear, False); // Get Year
-                If recDate.iYear < iMinYear Then
-                  Inc(recDate.iYear, iNextCentury);
-              End;
-        End;
-    Else
-      If sl.Count <> 0 Then
-        Raise ESearchException.CreateFmt(strErrMsg, [strDate]);
-    End;
-    Result := OutputResult(recDate);
-  Finally
-    sl.Free;
-  End;
 End;
 
 (**
@@ -1081,7 +774,7 @@ Procedure GetDateRange(Const slParams: TStringList; Var iSwitch, iIndex: Integer
     GetRangeString(slParams, [']'], strCloseSquareExpectedInDate, iIndex, iSwitch, strDate);
     If strDate <> '' Then
       Begin
-        dtUdate := ConvertDate(strDate);
+        dtUdate := TConvertDate.ConvertDate(strDate);
         DecodeTime(dtUdate, wH, wM, wS, wMS);
         If (wH = 0) And (wM = 0) And (wS = 0) And (wMS = 0) Then
           dtUdate := dtUdate + EncodeTime(iHoursInDay, iSecondsInMinute, iMinutesInHour, iMilliSecInSec);
@@ -1092,7 +785,7 @@ Procedure GetDateRange(Const slParams: TStringList; Var iSwitch, iIndex: Integer
         dtUdate := dtUdate + EncodeTime(iHoursInDay, iSecondsInMinute, iMinutesInHour, iMilliSecInSec);
       End
     Else
-        dtUdate := ConvertDate(strDefaultEndDate);
+        dtUdate := TConvertDate.ConvertDate(strDefaultEndDate);
   End;
 
   (**
@@ -1122,13 +815,13 @@ Procedure GetDateRange(Const slParams: TStringList; Var iSwitch, iIndex: Integer
       strDate);
     If strDate <> '' Then
       Begin
-        dtLDate := ConvertDate(strDate);
+        dtLDate := TConvertDate.ConvertDate(strDate);
         DecodeTime(dtLDate, wH, wM, wS, wMS);
         If (wH = 0) And (wM = 0) And (wS = 0) And (wMS = 0) Then
           dtLDate := dtLDate + EncodeTime(0, 0, 0, 0);
       End
     Else 
-        dtLDate := ConvertDate(strDefaultStartDate);
+        dtLDate := TConvertDate.ConvertDate(strDefaultStartDate);
   End;
 
 ResourceString

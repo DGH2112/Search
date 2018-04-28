@@ -57,7 +57,6 @@ type
     Procedure TestCheckConsoleMode;
     Procedure TestGetConsoleTitle;
     Procedure TestFileAttrsToAttrsSet;
-    Procedure TestConvertDate;
   End;
 
 implementation
@@ -229,16 +228,6 @@ begin
   CheckSizeRange(iSize, iLSize, iUSize, bool);
   Check(Not bool, 'Test 3');
 end;
-
-Procedure TTestSearchFunctions.TestConvertDate;
-
-Const
-  dblTolerance = 1.0 / 24.0 / 60.0 / 60.0;
-
-Begin
-  CheckEquals(EncodeDate(2007, 01, 07) + EncodeTime(12, 34, 56, 0), ConvertDate('07 Jan 2007 12:34:56'),
-    dblTolerance);
-End;
 
 Procedure TTestSearchFunctions.TestFileAttrsToAttrsSet;
 
