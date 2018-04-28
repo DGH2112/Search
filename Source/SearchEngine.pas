@@ -4,12 +4,8 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    19 Apr 2018
+  @Date    28 Apr 2018
 
-  @todo    Add switch for RegEx filename matching
-  @todo    Check that GREP will work with multi-line matches
-  @todo    Allow a switch to change a default colour
-  
 **)
 Unit SearchEngine;
 
@@ -86,6 +82,7 @@ Type
     FColours : Array[Low(TSearchColour)..High(TSearchColour)] Of TColor;
     FErrorLog : TStringList;
     FUNCPath : Boolean;
+    FColourSettings : TStringList;
   Strict Protected
     Procedure OutputDateTime(Const SearchFile: ISearchFile; Var strOutput: String);
     Procedure OutputSize(Const SearchFile: ISearchFile; Const boolHasCompressed : Boolean;
@@ -157,6 +154,9 @@ Type
     Procedure PrintHelpFileOutputSize;
     Procedure PrintHelpOutputInCSV;
     Procedure PrintHelpFooter;
+    Procedure PrintHelpColourConfig;
+    Procedure OutputConfiguredColours;
+    Procedure ConfigureColour;
     // ISearchEngine;
     Function  GetExceptionColour : TColor;
     Function  GetStdHnd : THandle;
@@ -172,7 +172,7 @@ Type
 
   (** This is a helper class for the TStrings class. **)
   TStringsHelper = Class Helper For TStrings
-    Procedure SafeLoadFromFile(Const strFileName : String);
+    Procedure SafeLoadFromFile(Const strFileName: String; Const slErrorLog : TStringList);
   End;
 
 Implementation
@@ -189,7 +189,9 @@ Uses
   System.RegularExpressions,
   Search.RegExMatches,
   Search.FilesCls,
-  System.TypInfo;
+  System.TypInfo, 
+  Search.Constants, 
+  Search.StrUtils;
 
 Const
   (** An ini section for the console colours. **)
@@ -226,6 +228,8 @@ Const
   strRegExFindOutputBGKey = 'RegExFindOutputBG';
   (** An ini key for the Summary Output colour **)
   strSummaryOutputKey = 'SummaryOutput';
+  (** An ini key for the Warning colour **)
+  strSuccessKey = 'Success';
   (** An ini key for the Warning colour **)
   strWarningKey = 'Warning';
   (** An ini key for the Exception colour **)
@@ -287,26 +291,34 @@ End;
 
 (**
 
-  This method provide the RegEx functionality of SEARCH with a safe mechanism to load information from
+  This method provide the RegEx functionality of SEARCH with a safe mechanism to load information from 
   files without any share violations.
 
   @precon  None.
   @postcon Opens the named file safely.
 
+  @todo    Make this a method of the main Search class.
+
   @param   strFileName as a String as a constant
+  @param   slErrorLog  as a TStringList as a constant
 
 **)
-Procedure TStringsHelper.SafeLoadFromFile(Const strFileName: String);
+Procedure TStringsHelper.SafeLoadFromFile(Const strFileName: String; Const slErrorLog : TStringList);
 
 Var
   Stream: TStream;
 
 Begin
-  Stream := TFileStream.Create(strFileName, fmOpenRead Or fmShareDenyNone);
   Try
-    LoadFromStream(Stream);
-  Finally
-    Stream.Free;
+    Stream := TFileStream.Create(strFileName, fmOpenRead Or fmShareDenyNone);
+    Try
+      LoadFromStream(Stream);
+    Finally
+      Stream.Free;
+    End;
+  Except
+    On E : EFOpenError Do
+      slErrorLog.Add(Format('%s: %s', [E.ClassName, E.Message]));
   End;
 End;
 
@@ -368,7 +380,7 @@ Function TSearch.CheckFiles(Const recSearch: TSearchRec; Const setAttrs : TSearc
       Begin
         sl := TStringList.Create;
         Try
-          sl.SafeLoadFromFile(strPath + recSearch.Name);
+          sl.SafeLoadFromFile(strPath + recSearch.Name, FErrorLog);
           Result := sl.Text;
         Finally
           sl.Free;
@@ -386,9 +398,9 @@ Var
 
 Begin
   Result := 0;
-  If Not(clsSummaryLevel In CommandLineSwitches) Then
+  If Not (clsSummaryLevel In CommandLineSwitches) Then
     Begin
-      Inc(iDirFiles);
+      //: @debug Inc(iDirFiles);
       Case FDateType Of
         dtCreation:   dtDate := recSearch.FindData.ftCreationTime;
         dtLastAccess: dtDate := recSearch.FindData.ftLastAccessTime;
@@ -483,6 +495,61 @@ End;
 
 (**
 
+  This method configures a colour for a specific output as provided on the command line.
+
+  @precon  None.
+  @postcon The specified output colour us updated.
+
+**)
+Procedure TSearch.ConfigureColour;
+
+ResourceString
+  strInvalidUseColourName = 'The output colour name "%s" is not valid. Use the command line switch /' + 
+    'L so see valid colour names';
+  strInvalidUseColourValue = 'The output colour value "%s" is not valid. Use the command line switch /' + 
+    'L so see valid colour values';
+  strColoursUpdated1 = 'Colour name "';
+  strcoloursUpdated2 = '" updated to colour value "';
+  strColoursUpdated3 = '"!';
+
+Var
+  iColour: TSearchColour;
+  iColourItem : TSearchColourList;
+  iColourName : TSearchColour;
+  iColourValue : TSearchColourList;
+  iOldColour: TColor;
+
+Begin
+  iColourName := scUnknown;
+  For iColour := Low(TSearchColour) To High(TSearchColour) Do
+    If CompareText(strSearchColour[iColour], FColourSettings.Names[0]) = 0 Then
+      Begin
+        iColourName := iColour;
+        Break;
+      End;
+  If iColourName = scUnknown Then
+    Raise ESearchException.CreateFmt(strInvalidUseColourName, [FColourSettings.Names[0]]);
+  iColourValue := sclNone;
+  For iColourItem := Low(TSearchColourList) To High(TSearchColourList) Do
+    If CompareText(strSearchColourList[iColourItem], FColourSettings.ValueFromIndex[0]) = 0 Then
+      Begin
+        iColourValue := iColourItem;
+        Break;
+      End;
+  If iColourValue = sclNone Then
+    Raise ESearchException.CreateFmt(strInvalidUseColourValue, [FColourSettings.ValueFromIndex[0]]);
+  iOldColour := FColours[iColourName];
+  FColours[iColourName] := SearchColourList[iColourValue];
+  OutputToConsole(FStdHnd, strColoursUpdated1, FColours[scSuccess]);
+  OutputToConsole(FStdHnd, FColourSettings.Names[0], iOldColour);
+  OutputToConsole(FStdHnd, strcoloursUpdated2, FColours[scSuccess]);
+  OutputToConsole(FStdHnd, FColourSettings.ValueFromIndex[0], SearchColourList[iColourItem]);
+  OutputToConsoleLn(FStdHnd, strColoursUpdated3, FColours[scSuccess]);
+  OutputToConsoleLn(FStdHnd);
+End;
+
+(**
+
   This is the constructor method for the TSearch class.
 
   @precon  None.
@@ -497,6 +564,7 @@ Begin
   FExclusions := TStringList.Create;
   FParams := TStringList.Create;
   FErrorLog := TStringList.Create;
+  FColourSettings := TStringList.Create;
   CoInitialize(Nil);
   FLevel := -1;
   FGrepCount := 0;
@@ -515,6 +583,7 @@ Destructor TSearch.Destroy;
 
 Begin
   SaveSettings;
+  FColourSettings.Free;
   FErrorLog.Free;
   FExclusions.Free;
   FSearchParams.Free;
@@ -908,10 +977,11 @@ Begin
                 'p', 'P': Include(CommandLineSwitches, clsSearchZip);
                 'f', 'F': GetSizeFormat(FParams, iSwitch, iIndex, FSizeFormat);
                 'v', 'V': Include(CommandLineSwitches, clsOutputAsCSV);
-                Else
-                  Raise ESearchException.CreateFmt(strInvalidCommandLineSwitch,
-                    [FParams[iSwitch][iIndex], FParams[iSwitch]]);
-                End;
+                'l', 'L': GetColoursSwitch(FParams, iSwitch, iIndex, FColourSettings);
+              Else
+                Raise ESearchException.CreateFmt(strInvalidCommandLineSwitch, [FParams[iSwitch][iIndex],
+                  FParams[iSwitch]]);
+              End;
               Inc(iIndex);
             End;
         End
@@ -1030,6 +1100,7 @@ Const
   strDefaultRegExFindoutputFG = 'clRed';
   strDefaultRegExFindoutputBG = 'clYellow';
   strDefaultSummaryOutput = 'clNone';
+  strDefaultSuccess = 'clLime';
   strDefaultWarning = 'clYellow';
   strDefaultException = 'clRed';
   strDefaultZipFile = 'clFuchsia';
@@ -1056,6 +1127,7 @@ Begin
     FColours[scRegExFindOutputFG] := StringToColor(iniFile.ReadString(strColoursINISection, strRegExFindOutputFGKey, strDefaultRegExFindoutputFG));
     FColours[scRegExFindOutputBG] := StringToColor(iniFile.ReadString(strColoursINISection, strRegExFindOutputBGKey, strDefaultRegExFindoutputBG));
     FColours[scSummaryOutput] := StringToColor(iniFile.ReadString(strColoursINISection, strSummaryOutputKey, strDefaultSummaryOutput));
+    FColours[scSuccess] := StringToColor(iniFile.ReadString(strColoursINISection, strSuccessKey, strDefaultSuccess));
     FColours[scWarning] := StringToColor(iniFile.ReadString(strColoursINISection, strWarningKey, strDefaultWarning));
     FColours[scException] := StringToColor(iniFile.ReadString(strColoursINISection, strExceptionKey, strDefaultException));
     FColours[scZipFile] := StringToColor(iniFile.ReadString(strColoursINISection, strZipFileKey, strDefaultZipFile));
@@ -1102,6 +1174,50 @@ End;
 
 (**
 
+  This method outputs the current colour configuration and the list of available colours.
+
+  @precon  None.
+  @postcon Outputs the current colour configuration and the list of available colours.
+
+**)
+Procedure TSearch.OutputConfiguredColours;
+
+ResourceString
+  strCurrentlyConfigColours = 'Currently configured colours are:';
+  strAvailableColours = 'Available Colours:';
+  strSampleText = 'Sample text...';
+
+Const
+  strColours = '  %20s = ';
+
+Var
+  iColour: TSearchColour;
+  iAvailableColour : TSearchColourList;
+  strValue : String;
+
+Begin
+  OutputToConsoleLn(FStdHnd, strCurrentlyConfigColours, FColours[scTitle]);
+  For iColour := Low(TSearchColour) To High(TSearchColour) Do
+    Begin
+      strValue := GetEnumName(TypeInfo(TSearchColour), Ord(iColour));
+      Delete(strValue, 1, 2);
+      OutputToConsole(FStdHnd, Format(strColours, [strValue]));
+      strValue := ColorToString(FColours[iColour]);
+      Delete(strValue, 1, 2);
+      OutputToConsoleLn(FStdHnd, strValue, FColours[iColour]);
+    End;
+  OutputToConsoleLn(FStdHnd);
+  OutputToConsoleLn(FStdHnd, strAvailableColours, FColours[scTitle]);
+  For iAvailableColour := Low(TSearchColourList) To High(TSearchColourList) Do
+    Begin
+      OutputToConsole(FStdHnd, Format(strColours, [strSearchColourList[iAvailableColour]]));
+      OutputToConsoleLn(FStdHnd, strSampleText, SearchColourList[iAvailableColour]);
+    End;
+  OutputToConsoleLn(FStdHnd);
+End;
+
+(**
+
   This method outputs the currently being searched path to the screen.
 
   @precon  None.
@@ -1129,8 +1245,8 @@ Begin
     Begin
       If Pos('...', strLPath) = 0 Then
         Begin
-          i := PosOfNthChar(strLPath, '\', 1 + Integer(FUNCPath) * 2) + 1;
-          j := PosOfNthChar(strLPath, '\', 2 + Integer(FUNCPath) * 2);
+          i := TSearchStrUtils.PosOfNthChar(strLPath, '\', 1 + Integer(FUNCPath) * 2) + 1;
+          j := TSearchStrUtils.PosOfNthChar(strLPath, '\', 2 + Integer(FUNCPath) * 2);
           If (i > 0) And (j > 0) Then
             strLPath := StringReplace(strLPath, Copy(strLPath, i, j - i), '...', [])
           Else
@@ -1139,8 +1255,8 @@ Begin
         End
       Else
         Begin
-          i := PosOfNthChar(strLPath, '\', 2 + Integer(FUNCPath) * 2);
-          j := PosOfNthChar(strLPath, '\', 3 + Integer(FUNCPath) * 2);
+          i := TSearchStrUtils.PosOfNthChar(strLPath, '\', 2 + Integer(FUNCPath) * 2);
+          j := TSearchStrUtils.PosOfNthChar(strLPath, '\', 3 + Integer(FUNCPath) * 2);
           If (i > 0) And (j > 0) Then
             strLPath := StringReplace(strLPath, Copy(strLPath, i, j - i), '', [])
           Else
@@ -1210,7 +1326,7 @@ Begin
     Begin
       If CheckConsoleMode(FStdHnd) Then
         OutputToConsole(FStdHnd, StringOfChar(' ', FWidth), clNone, clNone, False);
-      If Not Like(strZipPattern, strPath) Then
+      If Not TSearchStrUtils.Like(strZipPattern, strPath) Then
         OutputToConsoleLn(FStdHnd, strPath, FColours[scFoundSearchPath])
       Else
         Begin
@@ -1387,7 +1503,7 @@ Begin
         strFileName := strPath + FileInfo.FileName;
         MZip := REZip.Match(strPath);
         If Not MZip.Success Then
-          slText.SafeLoadFromFile(strFileName)
+          slText.SafeLoadFromFile(strFileName, FErrorLog)
         Else
           Begin
             Z := TZipForge.Create(Nil);
@@ -1611,6 +1727,7 @@ Begin
   PrintHelpDateType;                //E
   PrintHelpFileOutputSize;          //F
   PrintHelpGrepSearch;              //I
+  PrintHelpColourConfig;            //L
   PrintHelpOrderBy;                 //O
   PrintHelpSearchWithinZips;        //P
   PrintHelpQuietMode;               //Q
@@ -1621,6 +1738,29 @@ Begin
   PrintHelpExclusions;              //X
   PrintHelpFilterBySize;            //Z
   PrintHelpFooter;
+End;
+
+(**
+
+  This methods outputs the command line switches for showing and updating the console output colours.
+
+  @precon  None.
+  @postcon The help associated with the console colours is output.
+
+**)
+Procedure TSearch.PrintHelpColourConfig;
+
+ResourceString
+  strSwitch = '/L{[...]}';
+  strDescription = 'Updates the colour configuration with /L[ColourName=ColourValue]';
+  strOptions1 = 'Use /L on its own to display the current colour configure and';
+  strOptions2 = 'available names and values';
+
+Begin
+  OutputToConsole(FStdHnd, Indent(strSwitch, iMainIndent, iWidth), FColours[scHelpSwitch]);
+  OutputToConsoleLn(FStdHnd, strDescription, FColours[scHelpText]);
+  OutputToConsoleLn(FStdHnd, Indent(strOptions1, iTextIndent + iMainIndent, 0), FColours[scHelpInfo]);
+  OutputToConsoleLn(FStdHnd, Indent(strOptions2, iTextIndent + iMainIndent, 0), FColours[scHelpInfo]);
 End;
 
 (**
@@ -1979,7 +2119,7 @@ End;
 Procedure TSearch.PrintHelpShowOwner;
 
 ResourceString
-  strSwitch = '/W {[Owner]}';
+  strSwitch = '/W{[Owner]}';
   strDescription = 'Owner Information. The owner search can be a wildcard search with an *.';
   strOptions = 'Searches beginning with ! force a negated criteria.';
 
@@ -2145,14 +2285,14 @@ Var
 
 Begin
   Result := 0;
-  iResult := FindFirst(strPath + '*.*', faAnyFile Or faHidden Or faSysFile, recSearch);
+  iResult := FindFirst(strPath + '*.*', faAnyFile, recSearch);
   While (iResult = 0) Do
     Begin
       If recSearch.Attr And faDirectory > 0 Then
         If (recSearch.Name <> '.') And (recSearch.Name <> '..') Then
           Inc(Result, SearchDirectory(strPath + recSearch.Name + '\', slPatterns, iLevel));
       If clsSearchZip In CommandLineSwitches Then
-        If Like(strZipExt, recSearch.Name) Then
+        If TSearchStrUtils.Like(strZipExt, recSearch.Name) Then
           Inc(Result, SearchZip(strPath + recSearch.Name, slPatterns, iLevel));
       iResult := FindNext(recSearch);
     End;
@@ -2198,9 +2338,18 @@ Begin
     ((clsExclusions In CommandLineSwitches) And FileExists(FExlFileName)) Then
     Begin
       If clsExclusions In CommandLineSwitches Then
-        FExclusions.LoadFromFile(FExlFileName);
+        FExclusions.SafeLoadFromFile(FExlFileName, FErrorLog);
       FExclusions.Text := LowerCase(FExclusions.Text);
-      If Not(clsShowHelp In CommandLineSwitches) Then
+      If clsShowHelp In CommandLineSwitches Then
+        PrintHelp
+      Else If clsColours In CommandLineSwitches Then
+        Begin
+          If FColourSettings.Count = 0 Then
+            OutputConfiguredColours
+          Else
+            ConfigureColour;
+        End
+      Else
         Begin
           For i := 0 To FSearchParams.Count - 1 Do
             Begin
@@ -2218,8 +2367,8 @@ Begin
               PrintHeader(strPath, strSearch);
               FPatterns := TStringList.Create;
               Try
-                For iPattern := 1 To CharCount(';', strSearch) + 1 Do
-                  FPatterns.Add(GetField(strSearch, ';', iPattern));
+                For iPattern := 1 To TSearchStrUtils.CharCount(';', strSearch) + 1 Do
+                  FPatterns.Add(TSearchStrUtils.GetField(strSearch, ';', iPattern));
                 FUNCPath := Copy(strPath, 1, iUNCPrefixLen) = '\\';
                 SearchDirectory(strPath, FPatterns, FLevel);
               Finally
@@ -2230,9 +2379,7 @@ Begin
               PrintFooter(strPath);
               PrintErrorLog;
             End;
-        End
-      Else
-        PrintHelp;
+        End;
     End
   Else
     Raise ESearchException.CreateFmt(strExclusionsNotFound, [FExlFileName]);
@@ -2270,6 +2417,7 @@ Begin
     iniFile.WriteString(strColoursINISection, strRegExFindOutputFGKey, ColorToString(FColours[scRegExFindOutputFG]));
     iniFile.WriteString(strColoursINISection, strRegExFindOutputBGKey, ColorToString(FColours[scRegExFindOutputBG]));
     iniFile.WriteString(strColoursINISection, strSummaryOutputKey, ColorToString(FColours[scSummaryOutput]));
+    iniFile.WriteString(strColoursINISection, strSuccessKey, ColorToString(FColours[scSuccess]));
     iniFile.WriteString(strColoursINISection, strWarningKey, ColorToString(FColours[scWarning]));
     iniFile.WriteString(strColoursINISection, strExceptionKey, ColorToString(FColours[scException]));
     iniFile.WriteString(strColoursINISection, strZipFileKey, ColorToString(FColours[scZipFile]));
@@ -2375,12 +2523,12 @@ Begin
   Result := 0;
   For iPattern := 0 To slPatterns.Count - 1 Do
     Begin
-      iResult := FindFirst(strPath + slPatterns[iPattern], faAnyFile, recSearch);
+      iResult := FindFirst(strPath + slPatterns[iPattern], faAnyFile - faDirectory, recSearch);
       Try
         While iResult = 0 Do
           Begin
             boolFound := True;
-            setAttributes := FileAttrsToAttrsSet(GetFileAttributes(PChar(strPath + recSearch.Name)));
+            setAttributes := FileAttrsToAttrsSet(recSearch.Attr);
             CheckFileAttributes(FFileAttrs, setAttributes, boolFound);
             CheckSizeRange(recSearch.Size, FLSize, FUSize, boolFound);
             Case FDateType Of
@@ -2546,15 +2694,14 @@ Begin
       Files := Nil;
       For iFile := 0 To FilesCollection.Count - 1 Do
         Begin
-          If (strPath <> ExtractFilePath(FilesCollection.FileInfo[iFile].FileName)) Or
-            (Files = Nil) Then
+          If (strPath <> ExtractFilePath(FilesCollection.FileInfo[iFile].FileName)) Or (Files = Nil) Then
             Begin
               Files := TSearchFiles.Create(FilesExceptionHandler, FRegExSearch);
               PathCollections.Add(Files);
               strPath := ExtractFilePath(FilesCollection.FileInfo[iFile].FileName);
               Files.Path := strPath;
             End;
-          If Files <> Nil Then
+          If Assigned(Files) Then
             Files.Add(FilesCollection.FileInfo[iFile].Clone);
         End;
       For iPath := 0 To PathCollections.Count - 1 Do
