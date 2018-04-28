@@ -120,7 +120,7 @@
         <DCC_RangeChecking>true</DCC_RangeChecking>
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
         <Debugger_CWD>D:\Documents\RAD Studio\Applications\Search\</Debugger_CWD>
-        <Debugger_RunParams>*pas;*.dpr;*.dfm /sc /w[hoyld$]</Debugger_RunParams>
+        <Debugger_RunParams>*pas;*.dpr;*.dfm /sac /w[hoyld$]</Debugger_RunParams>
         <VerInfo_Keys>CompanyName=;FileVersion=1.0.21.544;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Release>0</VerInfo_Release>

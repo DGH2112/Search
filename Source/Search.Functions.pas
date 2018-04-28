@@ -21,10 +21,6 @@ Uses
   Search.Types, 
   System.RegularExpressions;
 
-Const
-  (** A constant to define that only files should be listed. **)
-  iFileOnly = $0100;
-
 ResourceString
   (** An exception message for a missing Search Text definition. **)
   strMissingSearchText = 'Missing Search Text';
@@ -653,7 +649,7 @@ Begin
             slColourSettings.Add(strConfig)
           Else
             Raise ESearchException.CreateFmt(strInvalidColourSettingSpec, [strConfig]);
-          For i := 0 To Length(M.Value) Do
+          For i := 0 To Length(M.Value) Do //FI:W514 //FI:W528
             IncrementSwitchPosition(slParams, iIndex, iSwitch, strCloseSquareExpectedInRegExSearchDef);
         End Else
           Raise ESearchException.CreateFmt(strInvalidColourSettingSpec, [strConfig]);
@@ -1055,7 +1051,7 @@ Begin
         Begin
           Val(M.Groups[iNoOfSurroundingLines].Value, iSurroundingLines, iErrorCode);
           strRegExText := M.Groups[iRegExText].Value;
-          For i := 1 To Pred(Length(M.Value)) Do
+          For i := 1 To Pred(Length(M.Value)) Do //FI:W528
             IncrementSwitchPosition(slParams, iIndex, iSwitch, strCloseSquareExpectedInRegExSearchDef);
         End Else
           Raise ESearchException.CreateFmt(strInvalidGREPSpec, [strConfig]);

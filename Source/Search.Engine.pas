@@ -259,7 +259,7 @@ Const
   @return  a DWORD
 
 **)
-Function GetNamedSecurityInfo(pObjectName: PAnsiChar; ObjectType: SE_OBJECT_TYPE;
+Function GetNamedSecurityInfo(pObjectName: PAnsiChar; ObjectType: SE_OBJECT_TYPE; //FI:C102
   SecurityInfo: SECURITY_INFORMATION; ppsidOwner, ppsidGroup: PPSID;
   ppDacl, ppSacl: PACL; Var ppSecurityDescriptor: PSECURITY_DESCRIPTOR): DWORD; Stdcall;
   External 'advapi32.dll' Name 'GetNamedSecurityInfoA';
@@ -1227,19 +1227,9 @@ Procedure TSearch.OutputDateTime(Const SearchFile: ISearchFile; Var strOutput: S
 
 Begin
   If Not(clsOutputAsCSV In CommandLineSwitches) Then
-    Begin
-      If Not (sfaDirectory In SearchFile.Attributes) Then
-        strOutput := strOutput + Format('  %s', [FormatDateTime(strOutputDateFmt, SearchFile.Date)])
-      Else
-        strOutput := strOutput + Format('  %s', [FormatDateTime(strOutputDateFmt, SearchFile.Date)]);
-    End
+    strOutput := strOutput + Format('  %s', [FormatDateTime(strOutputDateFmt, SearchFile.Date)])
   Else
-    Begin
-      If Not (sfaDirectory In SearchFile.Attributes) Then
-        strOutput := strOutput + Format('%s,', [FormatDateTime(strOutputDateFmt, SearchFile.Date)])
-      Else
-        strOutput := strOutput + Format('%s,', [FormatDateTime(strOutputDateFmt, SearchFile.Date)]);
-    End;
+    strOutput := strOutput + Format('%s,', [FormatDateTime(strOutputDateFmt, SearchFile.Date)]);
 End;
 
 (**
@@ -2182,9 +2172,9 @@ End;
   @param   Action       as a TZFAction as a reference
 
 **)
-Procedure TSearch.ProcessZipFileFailure(Sender: TObject; FileName: String;
+Procedure TSearch.ProcessZipFileFailure(Sender: TObject; FileName: String; //FI:O801
   Operation: TZFProcessOperation; NativeError, ErrorCode: Integer;
-  ErrorMessage: String; Var Action: TZFAction);
+  ErrorMessage: String; Var Action: TZFAction); //FI:O801
 
 ResourceString
   strExceptionMsg =
@@ -2708,7 +2698,7 @@ End;
 
 **)
 Procedure TSearch.ZipDiskFull(Sender: TObject; VolumeNumber: Integer;
-  VolumeFileName: String; Var Cancel: Boolean);
+  VolumeFileName: String; Var Cancel: Boolean); //FI:O801
 
 ResourceString
   strDiskVolumeFull = 'Disk volume %d full [%s]';
