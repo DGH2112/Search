@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    28 Apr 2018
+  @Date    11 May 2018
 
 **)
 Unit Search.Engine;
@@ -2591,7 +2591,8 @@ Begin
                   If clsOwner In CommandLineSwitches Then
                     Begin
                       strOwner := OutputOwner(strFileName);
-                      boolFound := boolFound And CheckOwner(FOwnerRegEx, strOwner);
+                      If FOwnerSearch Then             
+                        boolFound := boolFound And CheckOwner(FOwnerRegEx, strOwner);
                     End;
                   iLDirFiles := iDirFiles;
                   If boolFound Then
