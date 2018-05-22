@@ -7,6 +7,8 @@
   @Author  David Hoyle
   @Date    22 May 2018
 
+  @todo    Break this code down in to smaller parts using a record to encapsulate.
+
 **)
 Unit Search.Functions;
 
@@ -1009,9 +1011,6 @@ End;
 
   @precon  None.
   @postcon Gets the command line parameter for the search in text file for a text string option.
-
-  @bug     Grep search does not allow the specification of a number of lines
-           before the search criteria.
 
   @param   slParams          as a TStringList as a constant
   @param   iSwitch           as an Integer as a reference
