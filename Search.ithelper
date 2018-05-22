@@ -10,7 +10,7 @@ CompileWithBRCC32=0
 MajorVer=1
 MinorVer=2
 ReleaseVer=1
-BuildVer=988
+BuildVer=989
 ResourceName=SearchVersionInfo
 
 [Zipping]
@@ -29,7 +29,7 @@ C:\Program Files (x86)\Inno Setup 5\ISCC.exe|"Search Setup.iss"|{$PROJDRIVE$}\Ho
 [VersionInfo]
 CompanyName=Season's Fall Music
 FileDescription=Win32 Command line file search tool
-FileVersion=1.2.1.988
+FileVersion=1.2.1.989
 InternalName=Search
 LegalCopyright=Season's Fall Music
 LegalTrademarks=Season's Fall Music
