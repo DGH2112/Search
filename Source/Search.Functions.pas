@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    28 Apr 2018
+  @Date    22 May 2018
 
 **)
 Unit Search.Functions;
@@ -1010,6 +1010,9 @@ End;
   @precon  None.
   @postcon Gets the command line parameter for the search in text file for a text string option.
 
+  @bug     Grep search does not allow the specification of a number of lines
+           before the search criteria.
+
   @param   slParams          as a TStringList as a constant
   @param   iSwitch           as an Integer as a reference
   @param   iIndex            as an Integer as a reference
@@ -1042,7 +1045,7 @@ Begin
   Include(CommandLineSwitches, clsRegExSearch);
   If iIndex < Length(slParams[iSwitch]) Then
     Inc(iIndex);
-  If (iIndex <= Length(slParams[iSwitch])) And (slParams[iSwitch][iIndex] = '[') Then
+  If (iIndex <= Length(slParams[iSwitch])) And (CharInSet(slParams[iSwitch][iIndex], ['[', '0'..'9'])) Then
     Begin
       RE.Create(strRegExSwitchPattern, [roIgnoreCase, roSingleLine, roCompiled]);
       strConfig := Copy(slParams[iSwitch], iIndex, Length(slParams[iSwitch]) - iIndex + 1);
