@@ -5,7 +5,9 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    28 Apr 2018
+  @Date    22 May 2018
+
+  @todo    Break this code down in to smaller parts using a record to encapsulate.
 
 **)
 Unit Search.Functions;
@@ -1042,7 +1044,7 @@ Begin
   Include(CommandLineSwitches, clsRegExSearch);
   If iIndex < Length(slParams[iSwitch]) Then
     Inc(iIndex);
-  If (iIndex <= Length(slParams[iSwitch])) And (slParams[iSwitch][iIndex] = '[') Then
+  If (iIndex <= Length(slParams[iSwitch])) And (CharInSet(slParams[iSwitch][iIndex], ['[', '0'..'9'])) Then
     Begin
       RE.Create(strRegExSwitchPattern, [roIgnoreCase, roSingleLine, roCompiled]);
       strConfig := Copy(slParams[iSwitch], iIndex, Length(slParams[iSwitch]) - iIndex + 1);

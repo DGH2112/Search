@@ -767,6 +767,18 @@ begin
     slParams.Text := 'my.exe'#13#10'/i[hello]';
     GetSearchInInfo(slParams, iSwitch, iIndex, strSearchInText, iLines);
     CheckEquals('hello', strSearchInText, 'Test 1');
+    iSwitch := 1;
+    iIndex := 2;
+    slParams.Text := 'my.exe'#13#10'/i5[HelloAgain]';
+    GetSearchInInfo(slParams, iSwitch, iIndex, strSearchInText, iLines);
+    CheckEquals('HelloAgain', strSearchInText, 'Test 2.1');
+    CheckEquals(5, iLines, 'Test 2.2');
+    iSwitch := 1;
+    iIndex := 2;
+    slParams.Text := 'my.exe'#13#10'/i15[HelloAgain]';
+    GetSearchInInfo(slParams, iSwitch, iIndex, strSearchInText, iLines);
+    CheckEquals('HelloAgain', strSearchInText, 'Test 2.1');
+    CheckEquals(15, iLines, 'Test 2.2');
   Finally
     slParams.Free;
   End;
