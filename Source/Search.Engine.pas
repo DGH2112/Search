@@ -4,7 +4,11 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    20 May 2018
+  @Date    27 May 2018
+
+  @bug     RegEx exception is shown for each search file / location. This should
+           be evaluated once at the start and the exception raised and NO
+           processing take place.
 
 **)
 Unit Search.Engine;
