@@ -1135,6 +1135,7 @@ ResourceString
 
 Const
   strColours = '  %20s = ';
+  iColourPrefixLen = 2;
 
 Var
   iColour: TSearchColour;
@@ -1146,10 +1147,10 @@ Begin
   For iColour := Low(TSearchColour) To High(TSearchColour) Do
     Begin
       strValue := GetEnumName(TypeInfo(TSearchColour), Ord(iColour));
-      Delete(strValue, 1, 2);
+      Delete(strValue, 1, iColourPrefixLen);
       OutputToConsole(FStdHnd, Format(strColours, [strValue]));
       strValue := ColorToString(FColours[iColour]);
-      Delete(strValue, 1, 2);
+      Delete(strValue, 1, iColourPrefixLen);
       OutputToConsoleLn(FStdHnd, strValue, FColours[iColour]);
     End;
   OutputToConsoleLn(FStdHnd);
@@ -1436,7 +1437,7 @@ Begin
       slText := TStringList.Create;
       Try
         REZip := TRegEx.Create(strZipRegExPattern, [roCompiled, roIgnoreCase, roSingleLine]);
-        strFileName := strPath + FileInfo.FileName;
+        strFileName := strPath + ExtractFileName(FileInfo.FileName);
         MZip := REZip.Match(strPath);
         If Not MZip.Success Then
           SafeLoadFromFile(slText, strFileName)
