@@ -6,10 +6,6 @@
   @Version 1.0
   @Date    27 May 2018
 
-  @bug     RegEx exception is shown for each search file / location. This should
-           be evaluated once at the start and the exception raised and NO
-           processing take place.
-
 **)
 Unit Search.Engine;
 
@@ -2290,12 +2286,7 @@ Begin
       Else
         Begin
           If FOwnerSearch Then
-            Try
-              FOwnerRegEx.Create(FOwnerRegExSearch, [roIgnoreCase, roCompiled, roSingleLine]);
-            Except
-              On E : ERegularExpressionError Do
-                ESearchException.Create(E.Message);
-            End;
+            FOwnerRegEx.Create(FOwnerRegExSearch, [roIgnoreCase, roCompiled, roSingleLine]);
           For i := 0 To FSearchParams.Count - 1 Do
             Begin
               iPos := Pos('=', FSearchParams[i]);

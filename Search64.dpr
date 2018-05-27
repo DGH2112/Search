@@ -5,7 +5,7 @@
 
   @version 1.2
   @Author  David Hoyle
-  @Date    28 Apr 2018
+  @Date    27 May 2018
 
 **)
 Program Search64;
@@ -30,7 +30,8 @@ uses
   EAppConsole,
   ExceptionLog7,
   {$ENDIF EurekaLog}
-  SysUtils,
+  System.SysUtils,
+  System.RegularExpressionsCore,
   Search.FilesCls in 'Source\Search.FilesCls.pas',
   Search.Functions in 'Source\Search.Functions.pas',
   Search.Engine in 'Source\Search.Engine.pas',
@@ -65,6 +66,12 @@ Begin
     SearchEngine.Run;
   Except
     On E: ESearchException Do
+      Begin
+        OutputToConsoleLn(SearchEngine.ErrHnd, Format(strException, [E.Message]),
+          SearchEngine.ExceptionColour);
+        boolException := True;
+      End;
+    On E : ERegularExpressionError Do
       Begin
         OutputToConsoleLn(SearchEngine.ErrHnd, Format(strException, [E.Message]),
           SearchEngine.ExceptionColour);

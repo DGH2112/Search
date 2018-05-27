@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    22 Apr 2018
+  @Date    27 May 2018
 
 **)
 Unit Search.FilesCls;
@@ -47,7 +47,7 @@ Type
     Function  OwnerWidth: Integer;
     Function  Add(Const FileInfo : ISearchFile) : Boolean; Overload;
     // General Methods
-    Function GrepFile(Const SearchFile : ISearchFile; Const strName, strSearchText : String) : Integer;
+    Function GrepFile(Const SearchFile : ISearchFile; Const strSearchText : String) : Integer;
   Public
     Constructor Create(Const ExceptionHandler : TFilesExceptionHandler;
       Const strRegExSearchText : String);
@@ -118,7 +118,7 @@ Begin
     Begin
       If Not (sfaDirectory In SearchFileRec.FAttrs) Then
         Begin
-          iMatchCount := GrepFile(FFile, SearchFileRec.FName, strSearchText);
+          iMatchCount := GrepFile(FFile, strSearchText);
           If iMatchCount > 0 Then
             Begin
               Collection.Add(FFile);
@@ -147,28 +147,17 @@ End;
 Constructor TSearchFiles.Create(Const ExceptionHandler : TFilesExceptionHandler;
   Const strRegExSearchText : String);
 
-Const
-  strRegExError = 'Reg Ex Error: %s ("%s")';
-
 Begin
   FDirectories := TInterfaceList.Create;
   FFiles := TInterfaceList.Create;
   FExceptionHandler := ExceptionHandler;
   FRegExSearch := False;
   FHasCompressed := False;
-  Try
-    If strRegExSearchText <> '' Then
-      Begin
-        FRegEx := TRegEx.Create(strRegExSearchText, [roIgnoreCase, roCompiled, roSingleLine]);
-        FRegExSearch := True;
-      End;
-  Except
-    On E : ERegularExpressionError Do
-      Begin
-        If Assigned(FExceptionHandler) Then
-          FExceptionHandler(Format(strRegExError, [E.Message, strRegExSearchText]));
-      End;
-  End;
+  If strRegExSearchText <> '' Then
+    Begin
+      FRegEx := TRegEx.Create(strRegExSearchText, [roIgnoreCase, roCompiled, roSingleLine]);
+      FRegExSearch := True;
+    End;
 End;
 
 (**
@@ -260,17 +249,15 @@ End;
   This method searches the given text for match regular expressions.
 
   @precon  None.
-  @postcon This method searches the given file for regular expression matches and retuns the number of
+  @postcon This method searches the given file for regular expression matches and retuns the number of 
            matches found.
 
   @param   SearchFile    as an ISearchFile as a constant
-  @param   strName       as a String as a constant
   @param   strSearchText as a String as a constant
   @return  an Integer
 
 **)
-Function TSearchFiles.GrepFile(Const SearchFile : ISearchFile; Const strName,
-  strSearchText : String) : Integer;
+Function TSearchFiles.GrepFile(Const SearchFile : ISearchFile; Const strSearchText : String) : Integer;
 
 Var
   iLine: Integer;
@@ -281,18 +268,12 @@ Begin
   slFile := TStringList.Create;
   Try
     slFile.Text := strSearchText;
-    Try
-      For iLine := 0 To slFile.Count - 1 Do
-        Begin
-          M := FRegEx.Matches(slFile[iLine]);
-      If M.Count > 0 Then
-            SearchFile.AddRegExLine(iLine + 1, M);
-        End;
-    Except
-      On E : ERegularExpressionError Do
-        If Assigned(FExceptionHandler) Then
-          FExceptionHandler(Format('%s (%s)', [E.Message, strName]));
-    End;
+    For iLine := 0 To slFile.Count - 1 Do
+      Begin
+        M := FRegEx.Matches(slFile[iLine]);
+    If M.Count > 0 Then
+          SearchFile.AddRegExLine(iLine + 1, M);
+      End;
   Finally
     slFile.Free;
   End;

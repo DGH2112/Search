@@ -5,8 +5,7 @@
 
   @version 1.2
   @Author  David Hoyle
-  @Date    28 Apr 2018
-
+  @Date    27 May 2018
   @todo    Add switch for RegEx filename matching
   @todo    Check that GREP will work with multi-line matches
 
@@ -31,7 +30,8 @@ uses
   EAppConsole,
   ExceptionLog7,
   {$ENDIF EurekaLog}
-  SysUtils,
+  System.SysUtils,
+  System.RegularExpressionsCore,
   Search.FilesCls in 'Source\Search.FilesCls.pas',
   Search.Functions in 'Source\Search.Functions.pas',
   Search.Engine in 'Source\Search.Engine.pas',
@@ -45,7 +45,7 @@ uses
 
 ResourceString
   (** A resource string to define the Exception output format. **)
-  strException = 'ESearchException: %s';
+  strException = #13#10'Exception raised:'#13#10'  %s';
   (** A resource string for formatting information. **)
   strPressEnterToFinish = 'Debug Mode: Press <Enter> to finish.';
 
@@ -68,6 +68,12 @@ Begin
     On E: ESearchException Do
       Begin
         OutputToConsoleLn(SearchEngine.ErrHnd, Format(strException, [E.Message]), 
+          SearchEngine.ExceptionColour);
+        boolException := True;
+      End;
+    On E : ERegularExpressionError Do
+      Begin
+        OutputToConsoleLn(SearchEngine.ErrHnd, Format(strException, [E.Message]),
           SearchEngine.ExceptionColour);
         boolException := True;
       End;
