@@ -18,7 +18,7 @@ Uses
 Const
   (** A constant array of output colour names. **)
   strSearchColour : Array[Low(TSearchColour)..High(TSearchColour)] Of String = (
-    'Unknown',
+    'None',
     'Title',
     'Header',
     'Footer',

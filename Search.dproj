@@ -145,6 +145,8 @@
         <DCCReference Include="Source\Search.StrUtils.pas"/>
         <DCCReference Include="Source\Search.ConvertDate.pas"/>
         <DCCReference Include="Source\Search.ResourceStrings.pas"/>
+        <DCCReference Include="Source\Search.Help.pas"/>
+        <DCCReference Include="Source\Search.Console.pas"/>
         <None Include="..\..\LIBRARY\CompilerDefinitions.inc"/>
         <None Include="License.md"/>
         <None Include="Readme.md"/>

@@ -1,3 +1,12 @@
+(**
+  
+  This module contains resource string used through the application.
+
+  @Author  David Hoyle
+  @Version 1.0
+  @Date    02 Jun 2018
+  
+**)
 Unit Search.ResourceStrings;
 
 Interface

@@ -42,7 +42,9 @@ uses
   Search.StrUtils in 'Source\Search.StrUtils.pas',
   Search.Constants in 'Source\Search.Constants.pas',
   Search.ConvertDate in 'Source\Search.ConvertDate.pas',
-  Search.ResourceStrings in 'Source\Search.ResourceStrings.pas';
+  Search.ResourceStrings in 'Source\Search.ResourceStrings.pas',
+  Search.Console in 'Source\Search.Console.pas',
+  Search.Help in 'Source\Search.Help.pas';
 
 ResourceString
   (** A resource string to define the Exception output format. **)
@@ -68,26 +70,24 @@ Begin
   Except
     On E: EAbort Do
       Begin
-        OutputToConsoleLn(SearchEngine.StdHnd, strSearchAborted);
+        SearchEngine.Console.OutputToConsoleLn(coStd, strSearchAborted);
         boolException := False;
       End;
     On E: ESearchException Do
       Begin
-        OutputToConsoleLn(SearchEngine.ErrHnd, Format(strException, [E.Message]),
-          SearchEngine.ExceptionColour);
+        SearchEngine.Console.OutputToConsoleLn(coErr, Format(strException, [E.Message]), scException);
         boolException := True;
       End;
     On E : ERegularExpressionError Do
       Begin
-        OutputToConsoleLn(SearchEngine.ErrHnd, Format(strException, [E.Message]),
-          SearchEngine.ExceptionColour);
+        SearchEngine.Console.OutputToConsoleLn(coErr, Format(strException, [E.Message]), scException);
         boolException := True;
       End;
   End;
   If (clsDebug In CommandLineSwitches) Or (DebugHook <> 0) Then
     Begin
-      OutputToConsoleLn(SearchEngine.StdHnd);
-      OutputToConsole(SearchEngine.StdHnd, strPressEnterToFinish);
+      SearchEngine.Console.OutputToConsoleLn(coStd);
+      SearchEngine.Console.OutputToConsole(coStd, strPressEnterToFinish);
       Readln;
     End;
   If boolException Then

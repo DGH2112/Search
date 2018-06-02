@@ -100,7 +100,7 @@ Type
 
   (** An enumerate to describe each console output colour. **)
   TSearchColour = (
-    scUnknown,
+    scNone,
     scTitle,
     scHeader,
     scFooter,
@@ -144,6 +144,8 @@ Type
     sclNone
   );
 
+  (** An enumerate to define the type of console output to be used. **)
+  TConsoleOutput = (coStd, coErr);
 
 Implementation
 
