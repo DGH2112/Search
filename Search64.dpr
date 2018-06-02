@@ -5,7 +5,7 @@
 
   @version 1.2
   @Author  David Hoyle
-  @Date    27 May 2018
+  @Date    02 Jun 2018
 
 **)
 Program Search64;
@@ -41,7 +41,8 @@ uses
   Search.Interfaces in 'Source\Search.Interfaces.pas',
   Search.StrUtils in 'Source\Search.StrUtils.pas',
   Search.Constants in 'Source\Search.Constants.pas',
-  Search.ConvertDate in 'Source\Search.ConvertDate.pas';
+  Search.ConvertDate in 'Source\Search.ConvertDate.pas',
+  Search.ResourceStrings in 'Source\Search.ResourceStrings.pas';
 
 ResourceString
   (** A resource string to define the Exception output format. **)
@@ -65,6 +66,11 @@ Begin
   Try
     SearchEngine.Run;
   Except
+    On E: EAbort Do
+      Begin
+        OutputToConsoleLn(SearchEngine.StdHnd, strSearchAborted);
+        boolException := False;
+      End;
     On E: ESearchException Do
       Begin
         OutputToConsoleLn(SearchEngine.ErrHnd, Format(strException, [E.Message]),

@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    28 Apr 2018
+  @Date    02 Jun 2018
   
 **)
 Unit Search.Constants;
@@ -38,7 +38,8 @@ Const
     'HelpInfo',
     'HelpText',
     'HelpSwitch',
-    'HelpFootNote'
+    'HelpFootNote',
+    'Input'
   );
   (** A constant array of colour names for the console output colours. **)
   strSearchColourList : Array[Low(TSearchColourList)..High(TSearchColourList)] Of String = (

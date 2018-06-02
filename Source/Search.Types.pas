@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    28 Apr 2018
+  @Date    02 Jun 2018
   
 **)
 Unit Search.Types;
@@ -120,7 +120,8 @@ Type
     scHelpInfo,
     scHelpText,
     scHelpSwitch,
-    scHelpFootNote
+    scHelpFootNote,
+    scInput
   );    
 
   (** A list of available colours for the console output. **)

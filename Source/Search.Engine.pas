@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    27 May 2018
+  @Date    02 Jun 2018
 
 **)
 Unit Search.Engine;
@@ -156,6 +156,9 @@ Type
     Procedure OutputConfiguredColours;
     Procedure ConfigureColour;
     Procedure SafeLoadFromFile(Const slText : TStringList; Const strFileName: String);
+    Procedure ClearLine;
+    Function  GetConsoleCharacter(Const Characters: TSysCharSet): Char;
+    Procedure CheckForEscape;
     // ISearchEngine;
     Function  GetExceptionColour : TColor;
     Function  GetStdHnd : THandle;
@@ -230,6 +233,8 @@ Const
   strExceptionKey = 'Exception';
   (** An ini key for the Zip File colour **)
   strZipFileKey = 'ZipFile';
+  (** An ini key for the Input colour **)
+  strInputKey = 'Input';
   (** An output format for all dates. **)
   strOutputDateFmt = 'ddd dd/mmm/yyyy hh:mm:ss';
   (** This is the width of the help information. **)
@@ -391,6 +396,75 @@ End;
 
 (**
 
+  This method checks for the Escape having been pressed at the command line and if true
+  prompts the user as to whether they wish to terminate the process.
+
+  @precon  None.
+  @postcon If Esacape is pressed the user is prompted to stop the processing.
+
+**)
+Procedure TSearch.CheckForEscape;
+
+ResourceString
+  strMsg = 'Are you sure you want to stop processing? (Y/N): ';
+  strYes = 'Yes';
+
+Const
+  wBufferLength : DWord = 1024;
+
+Var
+  KBBuffer : Array Of TInputRecord;
+  wCharsRead : DWord;
+  wEvents : DWord;
+  Hnd : THandle;
+  i : Integer;
+  C: Char;
+  ConsoleInfo : TConsoleScreenBufferInfo;
+  OldPos : TCoord;
+
+Begin
+  Hnd := GetStdHandle(STD_INPUT_HANDLE);
+  Win32Check(GetNumberOfConsoleInputEvents(Hnd, wEvents));
+  If wEvents > 0 Then
+    Begin
+      SetLength(KBBuffer, wBufferLength);
+      Win32Check(PeekConsoleInput(Hnd, KBBuffer[0], wBufferLength, wCharsRead));
+      If wCharsRead > 0 Then
+        For i := 0 To wEvents - 1 Do
+          If KBBuffer[i].EventType = KEY_EVENT Then
+            Begin
+              If Boolean(KBBuffer[i].Event.KeyEvent.bKeyDown) Then
+                Case KBBuffer[i].Event.KeyEvent.wVirtualKeyCode Of
+                  VK_ESCAPE:
+                    Begin
+                      Win32Check(GetConsoleScreenBufferInfo(FStdHnd, ConsoleInfo));
+                      OldPos := ConsoleInfo.dwCursorPosition;
+                      ClearLine;
+                      OutputToConsole(FStdHnd, strMsg, FColours[scInput]);
+                      C := GetConsoleCharacter(['y', 'Y', 'n', 'N']);
+                      Case C Of
+                        'y', 'Y':
+                          Begin
+                            OutputToConsoleLn(FStdHnd, strYes, FColours[scInput]);
+                            Abort
+                          End;
+                        'n', 'N':
+                          Begin
+                            Win32Check(SetConsoleCursorPosition(FStdHnd, OldPos));
+                            OutputToConsole(FStdHnd, StringOfChar(#32, Length(strMsg)));
+                            Win32Check(SetConsoleCursorPosition(FStdHnd, OldPos));
+                          End;
+                      End;
+                    End;
+                End;
+              FlushConsoleInputBuffer(Hnd);
+            End;
+      FlushConsoleInputBuffer(Hnd);
+    End;
+End;
+
+(**
+
   This method adds the zip file to the collection and increments the various counters.
 
   @precon  None.
@@ -450,6 +524,27 @@ Begin
       Inc(FFileSize, ZFAI.UncompressedSize);
       Inc(Result, ZFAI.UncompressedSize);
     End;
+End;
+
+(**
+
+  This method clears the current command line from the current cursor position to the
+  end of the buffer on the same line.
+
+  @precon  None.
+  @postcon Clears the current command line from the current cursor position to the
+           end of the buffer on the same line.
+
+**)
+Procedure TSearch.ClearLine;
+
+Var
+  ConsoleInfo: _CONSOLE_SCREEN_BUFFER_INFO;
+
+Begin
+  GetConsoleScreenBufferInfo(FStdHnd, ConsoleInfo);
+  OutputToConsole(FStdHnd, StringOfChar(#32, ConsoleInfo.dwSize.X -
+        ConsoleInfo.dwCursorPosition.X - 1), clNone, clNone, False);
 End;
 
 (**
@@ -947,6 +1042,38 @@ End;
 
 (**
 
+  This method queries the console input buffer for key presses and returns the character pressed if its 
+  in a predefined list.
+
+  @precon  Characters is an array of chars that are valid inputs.
+  @postcon Queries the console input buffer for key presses and returns the character pressed if its in 
+           a predefined list.
+
+  @param   Characters as a TSysCharSet as a constant
+  @return  a Char
+
+**)
+Function TSearch.GetConsoleCharacter(Const Characters: TSysCharSet): Char;
+
+Var
+  Buffer  : TInputRecord;
+  iCount  : Cardinal;
+  hndInput: THandle;
+
+Begin
+  hndInput := GetStdHandle(STD_INPUT_HANDLE);
+  Repeat
+    Result := #0;
+    If ReadConsoleInput(hndInput, Buffer, 1, iCount) Then
+      If iCount > 0 Then
+        If Buffer.EventType = KEY_EVENT Then
+          If Buffer.Event.KeyEvent.bKeyDown Then
+            Result := Buffer.Event.KeyEvent.UnicodeChar;
+  Until CharInSet(Result, Characters);
+End;
+
+(**
+
   This routine get and stores the current number of lines and columns
   in the console window.
 
@@ -1046,6 +1173,7 @@ Const
   strDefaultWarning = 'clYellow';
   strDefaultException = 'clRed';
   strDefaultZipFile = 'clFuchsia';
+  strDefaultInput = 'clFuchsia';
 
 Var
   iniFile: TMemIniFile;
@@ -1073,6 +1201,7 @@ Begin
     FColours[scWarning] := StringToColor(iniFile.ReadString(strColoursINISection, strWarningKey, strDefaultWarning));
     FColours[scException] := StringToColor(iniFile.ReadString(strColoursINISection, strExceptionKey, strDefaultException));
     FColours[scZipFile] := StringToColor(iniFile.ReadString(strColoursINISection, strZipFileKey, strDefaultZipFile));
+    FColours[scInput] := StringToColor(iniFile.ReadString(strColoursINISection, strInputKey, strDefaultInput));
   Finally
     iniFile.Free;
   End;
@@ -2387,6 +2516,7 @@ Begin
     iniFile.WriteString(strColoursINISection, strWarningKey, ColorToString(FColours[scWarning]));
     iniFile.WriteString(strColoursINISection, strExceptionKey, ColorToString(FColours[scException]));
     iniFile.WriteString(strColoursINISection, strZipFileKey, ColorToString(FColours[scZipFile]));
+    iniFile.WriteString(strColoursINISection, strInputKey, ColorToString(FColours[scInput]));
     iniFile.UpdateFile;
   Finally
     iniFile.Free;
@@ -2487,6 +2617,7 @@ Begin
       Try
         While iResult = 0 Do
           Begin
+            CheckForEscape;
             boolFound := True;
             setAttributes := FileAttrsToAttrsSet(recSearch.Attr);
             CheckFileAttributes(FFileAttrs, setAttributes, boolFound);
@@ -2569,6 +2700,7 @@ Begin
         Try
           For iPattern := 0 To slPatterns.Count - 1 Do
             Begin
+              CheckForEscape;
               boolResult := Z.FindFirst(slPatterns[iPattern], ZFAI);
               While boolResult And Not ZFAI.Encrypted Do
                 Begin
