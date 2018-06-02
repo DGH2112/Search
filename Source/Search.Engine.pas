@@ -1381,6 +1381,7 @@ Const
 
 Var
   iZipPos: Integer;
+  strZipFileName: String;
 
 Begin
   // Output Dir / Zip file
@@ -1393,12 +1394,11 @@ Begin
       Else
         Begin
           iZipPos := Pos(strZipExt, LowerCase(strPath));
-          OutputToConsole(FStdHnd, ExtractFilePath(Copy(strPath, 1, iZipPos + 3)),
-            FColours[scFoundSearchPath]);
-          OutputToConsole(FStdHnd, ExtractFileName(Copy(strPath, 1, iZipPos + 3)),
-            FColours[scZipFile]);
-          OutputToConsoleLn(FStdHnd, Copy(strPath, iZipPos + 4,
-              Length(strPath) - iZipPos - 4), FColours[scFoundSearchPath]);
+          strZipFileName := Copy(strPath, 1, iZipPos + Length(strZipExt) - 1);
+          OutputToConsole(FStdHnd, ExtractFilePath(strZipFileName), FColours[scFoundSearchPath]);
+          OutputToConsole(FStdHnd, ExtractFileName(strZipFileName), FColours[scZipFile]);
+          OutputToConsoleLn(FStdHnd, Copy(strPath, iZipPos + Length(strZipExt),
+              Length(strPath) - iZipPos - Length(strZipExt)), FColours[scFoundSearchPath]);
         End;
       boolDirPrinted := True;
     End;

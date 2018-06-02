@@ -1,8 +1,8 @@
 LANGUAGE LANG_ENGLISH,SUBLANG_ENGLISH_US
 
 1 VERSIONINFO LOADONCALL MOVEABLE DISCARDABLE IMPURE
-FILEVERSION 1, 2, 1, 1006
-PRODUCTVERSION 1, 2, 1, 1006
+FILEVERSION 1, 2, 3, 1007
+PRODUCTVERSION 1, 2, 3, 1007
 FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 FILEOS VOS__WINDOWS32
 FILETYPE VFT_APP
@@ -13,13 +13,13 @@ FILETYPE VFT_APP
     {
       VALUE "CompanyName", "Season's Fall Music\000"
       VALUE "FileDescription", "Win32 Command line file search tool\000"
-      VALUE "FileVersion", "1.2.1.1006\000"
+      VALUE "FileVersion", "1.2.3.1007\000"
       VALUE "InternalName", "Search\000"
       VALUE "LegalCopyright", "Season's Fall Music\000"
       VALUE "LegalTrademarks", "Season's Fall Music\000"
       VALUE "OriginalFilename", "Search\000"
       VALUE "ProductName", "Search\000"
-      VALUE "ProductVersion", "1.2a\000"
+      VALUE "ProductVersion", "1.2c\000"
       VALUE "Comments", "\000"
     }
   }
