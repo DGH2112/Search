@@ -1303,6 +1303,12 @@ Procedure TSearch.OutputCurrentSearchPath(Const strPath: String);
 ResourceString
   strSearchLabel = 'Searching: (D:%1.0n,F:%1.0n) ';
   
+Const
+  iUNCLen = 2;
+  iFirstSlash = 1;
+  iSecondSlash = 2;
+  iThirdSlash = 3;
+
 Var
   i, j: Integer;
   iLength: Integer;
@@ -1317,18 +1323,17 @@ Begin
     Begin
       If Pos('...', strLPath) = 0 Then
         Begin
-          i := TSearchStrUtils.PosOfNthChar(strLPath, '\', 1 + Integer(FUNCPath) * 2) + 1;
-          j := TSearchStrUtils.PosOfNthChar(strLPath, '\', 2 + Integer(FUNCPath) * 2);
+          i := TSearchStrUtils.PosOfNthChar(strLPath, '\', iFirstSlash + Integer(FUNCPath) * iUNCLen) + 1;
+          j := TSearchStrUtils.PosOfNthChar(strLPath, '\', iSecondSlash + Integer(FUNCPath) * iUNCLen);
           If (i > 0) And (j > 0) Then
             strLPath := StringReplace(strLPath, Copy(strLPath, i, j - i), '...', [])
           Else
             strLPath := Copy(strLPath, Length(strLPath) - (FWidth - iLength),
               FWidth - iLength);
-        End
-      Else
+        End Else
         Begin
-          i := TSearchStrUtils.PosOfNthChar(strLPath, '\', 2 + Integer(FUNCPath) * 2);
-          j := TSearchStrUtils.PosOfNthChar(strLPath, '\', 3 + Integer(FUNCPath) * 2);
+          i := TSearchStrUtils.PosOfNthChar(strLPath, '\', iSecondSlash + Integer(FUNCPath) * iUNCLen);
+          j := TSearchStrUtils.PosOfNthChar(strLPath, '\', iThirdSlash + Integer(FUNCPath) * iUNCLen);
           If (i > 0) And (j > 0) Then
             strLPath := StringReplace(strLPath, Copy(strLPath, i, j - i), '', [])
           Else
@@ -1570,7 +1575,7 @@ Begin
           Begin
             Z := TZipForge.Create(Nil);
             Try
-              Z.FileName := Copy(strFileName, 1, MZip.Index + MZip.Length - 2);
+              Z.FileName := Copy(strFileName, 1, MZip.Index + (MZip.Length - 1) - 1);
               If Z.IsValidArchiveFile Then
                 Begin
                   Z.OpenArchive;
