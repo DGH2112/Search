@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    28 Apr 2018
+  @Date    03 Jun 2018
   
 **)
 Unit Search.Constants;
@@ -18,7 +18,7 @@ Uses
 Const
   (** A constant array of output colour names. **)
   strSearchColour : Array[Low(TSearchColour)..High(TSearchColour)] Of String = (
-    'Unknown',
+    'None',
     'Title',
     'Header',
     'Footer',
@@ -38,7 +38,8 @@ Const
     'HelpInfo',
     'HelpText',
     'HelpSwitch',
-    'HelpFootNote'
+    'HelpFootNote',
+    'Input'
   );
   (** A constant array of colour names for the console output colours. **)
   strSearchColourList : Array[Low(TSearchColourList)..High(TSearchColourList)] Of String = (
@@ -78,6 +79,9 @@ Const
     clWhite, 
     clNone
   );
+
+  (** An output format for all dates. **)
+  strOutputDateFmt = 'ddd dd/mmm/yyyy hh:mm:ss';
 
 Implementation
 

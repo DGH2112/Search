@@ -5,7 +5,7 @@
 
   @version 1.2
   @Author  David Hoyle
-  @Date    27 May 2018
+  @Date    02 Jun 2018
   @todo    Add switch for RegEx filename matching
   @todo    Check that GREP will work with multi-line matches
 
@@ -41,7 +41,12 @@ uses
   Search.Interfaces in 'Source\Search.Interfaces.pas',
   Search.Constants in 'Source\Search.Constants.pas',
   Search.StrUtils in 'Source\Search.StrUtils.pas',
-  Search.ConvertDate in 'Source\Search.ConvertDate.pas';
+  Search.ConvertDate in 'Source\Search.ConvertDate.pas',
+  Search.ResourceStrings in 'Source\Search.ResourceStrings.pas',
+  Search.Help in 'Source\Search.Help.pas',
+  Search.Console in 'Source\Search.Console.pas',
+  Search.DisplayCriteria in 'Source\Search.DisplayCriteria.pas',
+  Search.Options in 'Source\Search.Options.pas';
 
 ResourceString
   (** A resource string to define the Exception output format. **)
@@ -65,23 +70,26 @@ Begin
   Try
     SearchEngine.Run;
   Except
+    On E: EAbort Do
+      Begin
+        SearchEngine.Console.OutputToConsoleLn(coStd, strSearchAborted);
+        boolException := False;
+      End;
     On E: ESearchException Do
       Begin
-        OutputToConsoleLn(SearchEngine.ErrHnd, Format(strException, [E.Message]), 
-          SearchEngine.ExceptionColour);
+        SearchEngine.Console.OutputToConsoleLn(coErr, Format(strException, [E.Message]), scException);
         boolException := True;
       End;
     On E : ERegularExpressionError Do
       Begin
-        OutputToConsoleLn(SearchEngine.ErrHnd, Format(strException, [E.Message]),
-          SearchEngine.ExceptionColour);
+        SearchEngine.Console.OutputToConsoleLn(coErr, Format(strException, [E.Message]), scException);
         boolException := True;
       End;
   End;
   If (clsDebug In CommandLineSwitches) Or (DebugHook <> 0) Then
     Begin
-      OutputToConsoleLn(SearchEngine.StdHnd);
-      OutputToConsole(SearchEngine.StdHnd, strPressEnterToFinish);
+      SearchEngine.Console.OutputToConsoleLn(coStd);
+      SearchEngine.Console.OutputToConsole(coStd, strPressEnterToFinish);
       Readln;
     End;
   If boolException Then

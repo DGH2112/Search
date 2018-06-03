@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    22 Apr 2018
+  @Date    03 Jun 2018
   
 **)
 Unit Search.Interfaces;
@@ -126,20 +126,29 @@ Type
     Property HasCompressed : Boolean Read GetHasCompressed;
   End;
 
-  (** An interface for the main search engine. **)
-  ISearchEngine = Interface
-  ['{678751F5-EF72-4159-B0A6-9097D790D3E0}']
-    Function  GetExceptionColour : TColor;
+  (** This interface provide access to methods for getting console information and outputting
+      coloured text to the console. **)
+  ISearchConsole = Interface
+  ['{4D2819D3-1C20-4A43-AA46-55D0D642F039}']
     Function  GetStdHnd : THandle;
     Function  GetErrHnd : THandle;
-    Procedure Run;
-    (**
-     This property returns the Exception colour to outside the class.
-     @precon  None.
-     @postcon Returns the Exception colour to outside the class.
-     @return  a TColor
-     **)
-    Property ExceptionColour: TColor Read GetExceptionColour;
+    Function  GetColour(Const eColour : TSearchColour) : TColor;
+    Procedure SetColour(Const eColour : TSearchColour; Const iColour : TColor);
+    Function  GetWidth : Integer;
+    Function  CheckConsoleMode(Const eConsoleHnd : TConsoleHnd) : Boolean;
+    Procedure OutputToConsole(Const eConsoleHnd : TConsoleHnd; Const strText : String = '';
+      Const eTextColour : TSearchColour = scNone; Const eBackColour : TSearchColour = scNone;
+      Const boolUpdateCursor : Boolean = True); Overload;
+    Procedure OutputToConsoleLn(Const eConsoleHnd : TConsoleHnd; Const strText : String = '';
+      Const eTextColour : TSearchColour = scNone; Const eBackColour : TSearchColour = scNone;
+      Const boolUpdateCursor : Boolean = True); OverLoad;
+    Procedure OutputToConsole(Const eConsoleHnd : TConsoleHnd; Const strText : String;
+      Const iTextColour : TColor; Const iBackColour : TColor; Const boolUpdateCursor : Boolean);
+      Overload;
+    Procedure OutputToConsoleLn(Const eConsoleHnd : TConsoleHnd; Const strText : String;
+      Const iTextColour : TColor; Const iBackColour : TColor; Const boolUpdateCursor : Boolean);
+      Overload;
+    Procedure CheckForEscape;
     (**
       This property returns the error handle for console output.
       @precon  None.
@@ -154,8 +163,37 @@ Type
       @return  a THandle
     **)
     Property StdHnd : THandle Read GetStdHnd;
+    (**
+      This property returns the Exception colour to outside the class.
+      @precon  None.
+      @postcon Returns the Exception colour to outside the class.
+      @param   eSearchColour as a TSearchColour as a constant
+      @return  a TColor
+    **)
+    Property Colour[Const eSearchColour : TSearchColour]: TColor Read GetColour Write SetColour;
+    (**
+      This method returns the width of the console.
+      @precon  None.
+      @postcon The width of the console it returned.
+      @return  an Integer
+    **)
+    Property Width : Integer Read GetWidth;
   End;
   
+  (** An interface for the main search engine. **)
+  ISearchEngine = Interface
+  ['{678751F5-EF72-4159-B0A6-9097D790D3E0}']
+    Function  GetSearchConsole : ISearchConsole;
+    Procedure Run;
+    (**
+      This property allow external code to access the console for outputting information.
+      @precon  None.
+      @postcon An interface to the console is returned.
+      @return  an ISearchConsole
+    **)
+    Property  Console : ISearchConsole Read GetSearchConsole;
+  End;
+
 Implementation
 
 End.

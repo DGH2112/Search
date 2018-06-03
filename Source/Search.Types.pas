@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    28 Apr 2018
+  @Date    03 Jun 2018
   
 **)
 Unit Search.Types;
@@ -100,7 +100,7 @@ Type
 
   (** An enumerate to describe each console output colour. **)
   TSearchColour = (
-    scUnknown,
+    scNone,
     scTitle,
     scHeader,
     scFooter,
@@ -120,7 +120,8 @@ Type
     scHelpInfo,
     scHelpText,
     scHelpSwitch,
-    scHelpFootNote
+    scHelpFootNote,
+    scInput
   );    
 
   (** A list of available colours for the console output. **)
@@ -143,6 +144,8 @@ Type
     sclNone
   );
 
+  (** An enumerate to define the type of console output to be used. **)
+  TConsoleHnd = (coStd, coErr);
 
 Implementation
 

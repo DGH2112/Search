@@ -119,6 +119,11 @@
         <DCCReference Include="Source\Search.StrUtils.pas"/>
         <DCCReference Include="Source\Search.Constants.pas"/>
         <DCCReference Include="Source\Search.ConvertDate.pas"/>
+        <DCCReference Include="Source\Search.ResourceStrings.pas"/>
+        <DCCReference Include="Source\Search.Console.pas"/>
+        <DCCReference Include="Source\Search.Help.pas"/>
+        <DCCReference Include="Source\Search.DisplayCriteria.pas"/>
+        <DCCReference Include="Source\Search.Options.pas"/>
         <None Include="Readme.md"/>
         <None Include="License.md"/>
         <BuildConfiguration Include="Debug">

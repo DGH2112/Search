@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    22 May 2018
+  @Date    02 Jun 2018
 
   @todo    Break this code down in to smaller parts using a record to encapsulate.
 
@@ -63,14 +63,7 @@ Var
   Function  CheckOwner(Const OwnerRegEx : TRegEx; Const strOwner : String) : Boolean;
   Procedure GetSizeFormat(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
     Var SizeFormat: TSizeFormat);
-  Function  CheckConsoleMode(Const hndConsole : THandle) : Boolean;
-  Procedure OutputToConsoleLn(Const hndConsole : THandle; Const strText : String = '';
-    Const iTextColour : TColor = clNone; Const iBackColour : TColor = clNone;
-    Const boolUpdateCursor : Boolean = True);
-  Procedure OutputToConsole(Const hndConsole : THandle; Const strText : String = '';
-    Const iTextColour : TColor = clNone; Const iBackColour : TColor = clNone;
-    Const boolUpdateCursor : Boolean = True);
-  Function GetConsoleTitle : String;
+  Function  GetConsoleTitle : String;
   Function  BuildRootKey(Const slParams : TStringList) : String;
   Function  FileAttrsToAttrsSet(Const iAttributes : Cardinal) : TSearchFileAttrs;
   Procedure GetColoursSwitch(Const slParams: TStringList; Var iSwitch, iIndex: Integer;
@@ -83,10 +76,6 @@ Uses
   Search.StrUtils, 
   Search.ConvertDate, 
   System.RegularExpressionsCore;
-
-Type
-  (** An enumerate to define the current console output mode **)
-  TConsoleMode = (cmUnknown, cmStandard, cmRedirected);
 
 ResourceString
   (** An exception message for a missing [ in a size Range. **)
@@ -140,55 +129,9 @@ ResourceString
   (** An execption messages for a missing size format definition. **)
   strInvalidSizeFormatDirective = 'Invalid size format definition.';
 
-Var
-  (** A private variable to hold the console output mode **)
-  ConsoleMode : TConsoleMode;
-
   Function ComputerName : String; Forward;
   Function UserName : String; Forward;
   
-(**
-
-  This function returns the background colour attribute for the console associated with the given cl#### 
-  colour.
-
-  @precon  CSBI must be a valid Console Screen Buffer Info structure.
-  @postcon Returns the background colour attribute for the console associated with the given cl#### 
-           colour.
-
-  @param   iColour as a TColor as a constant
-  @param   iNone   as a TColor as a constant
-  @return  an Integer
-
-**)
-Function BackGroundColour(Const iColour, iNone : TColor) : Integer;
-
-ResourceString
-  strInvalidConsoleColour = 'Invalid console colour.';
-
-Begin
-  Case iColour Of
-    clBlack  : Result := 0;
-    clMaroon  :Result := BACKGROUND_RED;
-    clGreen   :Result := BACKGROUND_GREEN;
-    clNavy    :Result := BACKGROUND_BLUE;
-    clOlive   :Result := BACKGROUND_RED Or BACKGROUND_GREEN;
-    clPurple  :Result := BACKGROUND_RED or BACKGROUND_GREEN;
-    clTeal    :Result := BACKGROUND_BLUE Or BACKGROUND_GREEN;
-    clGray    :Result := BACKGROUND_BLUE Or BACKGROUND_GREEN Or BACKGROUND_RED;
-    clRed     :Result := BACKGROUND_RED   Or BACKGROUND_INTENSITY;
-    clLime    :Result := BACKGROUND_GREEN Or BACKGROUND_INTENSITY;
-    clBlue    :Result := BACKGROUND_BLUE  Or BACKGROUND_INTENSITY;
-    clYellow  :Result := BACKGROUND_RED Or BACKGROUND_GREEN Or BACKGROUND_INTENSITY;
-    clFuchsia :Result := BACKGROUND_BLUE Or BACKGROUND_RED  Or BACKGROUND_INTENSITY;
-    clAqua    :Result := BACKGROUND_BLUE Or BACKGROUND_GREEN  Or BACKGROUND_INTENSITY;
-    clWhite   :Result := BACKGROUND_BLUE Or BACKGROUND_GREEN Or BACKGROUND_RED Or BACKGROUND_INTENSITY;
-    clNone    :Result  := iNone;
-  Else
-    Raise Exception.Create(strInvalidConsoleColour);
-  End;
-End;
-
 (**
 
   This method builds the root key INI filename for the loading and saving of settings from the instance 
@@ -235,32 +178,6 @@ Begin
   Result := strUserAppDataPath + strINIFileName;
   For iParam := 1 To ParamCount Do
     slParams.Add(ParamStr(iParam));
-End;
-
-(**
-
-  This function returns the current mode of output of the console functions. The first time its gets the 
-  console mode from the Win32 API.
-
-  @precon  hndConsole must be a valid console handle.
-  @postcon Returns the current mode of output of the console functions.
-
-  @param   hndConsole as a THandle as a constant
-  @return  a Boolean
-
-**)
-Function CheckConsoleMode(Const hndConsole : THandle) : Boolean;
-
-Var
-  lpMode : Cardinal;
-
-Begin
-  If ConsoleMode = cmUnknown Then
-    If Not GetConsoleMode(hndConsole, lpMode) Then
-      ConsoleMode := cmRedirected
-    Else
-      ConsoleMode := cmStandard;
-  Result := ConsoleMode = cmStandard;
 End;
 
 (**
@@ -453,48 +370,6 @@ Begin
   TestAttr(FILE_ATTRIBUTE_NOT_CONTENT_INDEXED, sfaIndexed, Result);
   TestAttr(faEncrypted, sfaEncrypted, Result);
   TestAttr(faVirtual, sfaVirtual, Result);
-End;
-
-(**
-
-  This function returns the background colour attribute for the console associated with the given cl#### 
-  colour. Colour Matrix: Red(Maroon) Yellow(Olive) Lime(Green) White(Gray) Aqua(Teal) Blue(Navy)
-
-  @precon  CSBI must be a valid Console Screen Buffer Info structure.
-  @postcon Returns the background colour attribute for the console associated with the given cl#### 
-           colour.
-
-  @param   iColour as a TColor as a constant
-  @param   iNone   as a TColor as a constant
-  @return  an Integer
-
-**)
-Function ForeGroundColour(Const iColour, iNone : TColor): Integer;
-
-ResourceString
-  strInvalidConsoleColour = 'Invalid console colour.';
-
-Begin
-  Case iColour Of
-    clBlack  : Result := 0;
-    clMaroon  :Result := FOREGROUND_RED;
-    clGreen   :Result := FOREGROUND_GREEN;
-    clNavy    :Result := FOREGROUND_BLUE;
-    clOlive   :Result := FOREGROUND_RED Or FOREGROUND_GREEN;
-    clPurple  :Result := FOREGROUND_RED Or FOREGROUND_BLUE;
-    clTeal    :Result := FOREGROUND_BLUE Or FOREGROUND_GREEN;
-    clGray    :Result := FOREGROUND_BLUE Or FOREGROUND_GREEN Or FOREGROUND_RED;
-    clRed     :Result := FOREGROUND_RED   Or FOREGROUND_INTENSITY;
-    clLime    :Result := FOREGROUND_GREEN Or FOREGROUND_INTENSITY;
-    clBlue    :Result := FOREGROUND_BLUE  Or FOREGROUND_INTENSITY;
-    clFuchsia :Result := FOREGROUND_RED Or FOREGROUND_BLUE Or FOREGROUND_INTENSITY;
-    clYellow  :Result := FOREGROUND_RED Or FOREGROUND_GREEN Or FOREGROUND_INTENSITY;
-    clAqua    :Result := FOREGROUND_BLUE Or FOREGROUND_GREEN  Or FOREGROUND_INTENSITY;
-    clWhite   :Result := FOREGROUND_BLUE Or FOREGROUND_GREEN Or FOREGROUND_RED Or FOREGROUND_INTENSITY;
-    clNone  : Result  := iNone;
-  Else
-    Raise Exception.Create(strInvalidConsoleColour);
-  End;
 End;
 
 (**
@@ -1286,189 +1161,6 @@ End;
 
 (**
 
-  This function outputs the given text to the console references by the given handle using the text and 
-  background colours provided. If xlNone is used for the colours then the consoles default colours are 
-  used. DOES NOT add a carraige return at the end of each line.
-
-  @precon  hndConsole must be a valid console handle.
-  @postcon Outputs the given text to the console references by the given handle using the text and 
-           background colours provided.
-
-  @param   hndConsole       as a THandle as a constant
-  @param   strText          as a String as a constant
-  @param   iTextColour      as a TColor as a constant
-  @param   iBackColour      as a TColor as a constant
-  @param   boolUpdateCursor as a Boolean as a constant
-
-**)
-Procedure OutputToConsole(Const hndConsole : THandle; Const strText : String = '';
-  Const iTextColour : TColor = clNone; Const iBackColour : TColor = clNone;
-  Const boolUpdateCursor : Boolean = True);
-
-Const
-  iForegroundMask = $0F;
-  iBackgroundMask = $F0;
-
-  (**
-
-    This method sets the fore and backgroudn colours for the console output.
-
-    @precon  None.
-    @postcon The console colour attributes are updated with the required colours.
-
-    @param   ConsoleInfo as a TConsoleScreenBufferInfo as a constant
-    @param   wChars      as a DWORD as a reference
-    @param   strTABText  as a String as a constant
-
-  **)
-  Procedure UpdateConsoleColours(Const ConsoleInfo : TConsoleScreenBufferInfo; Var wChars : DWORD;
-    Const strTABText : String);
-
-  Var
-    iForeAttrColour, iBackAttrColour : Integer;
-    iChar : Integer;
-    Attrs : Array of Word;
-  
-  Begin
-    SetLength(Attrs, wChars);
-    iForeAttrColour := ForeGroundColour(iTextColour, ConsoleInfo.wAttributes And iForegroundMask);
-    iBackAttrColour := BackGroundColour(iBackColour, ConsoleInfo.wAttributes And iBackgroundMask);
-    If wChars > 0 Then
-      For iChar := 0 To wChars - 1 Do
-        Attrs[iChar] := iForeAttrColour Or iBackAttrColour;
-    Win32Check(WriteConsoleOutputAttribute(hndConsole, Attrs,
-      Length(strTABText), ConsoleInfo.dwCursorPosition, wChars));
-  End;
-  
-  (**
-
-    This method sets the position of the cursor after the output of the string to the console.
-
-    @precon  None.
-    @postcon The position of the console cursor is updated.
-
-    @param   OldPos as a TCoord as a constant
-    @param   NewPos as a TCoord as a constant
-    @param   wChars as a DWORD as a reference
-
-  **)
-  Procedure UpdateCursor(Const OldPos, NewPos : TCoord; Var wChars : DWORD);
-
-  Begin
-    If boolUpdateCursor Then
-      Begin
-        // The only time the below fails is at the end of the buffer and a new
-        // line is required, hence the new line on failure.
-        If Not SetConsoleCursorPosition(hndConsole, NewPos) Then
-          Win32Check(WriteConsole(hndConsole, PChar(#13#10), Length(#13#10), wChars, Nil));
-      End Else
-        Win32Check(SetConsoleCursorPosition(hndConsole, OldPos));
-  End;
-  
-  (**
-
-    This procedure update the NewPos record based on the console information.
-
-    @precon  None.
-    @postcon The NewPos record is updated.
-
-    @param   ConsoleInfo as a TConsoleScreenBufferInfo as a constant
-    @param   NewPos      as a TCoord as a reference
-
-  **)
-  Procedure UpdateNewPos(Const ConsoleInfo : TConsoleScreenBufferInfo; Var NewPos : TCoord);
-
-  Begin
-    While NewPos.X >= ConsoleInfo.dwSize.X Do
-      Begin
-        Inc(NewPos.Y);
-        Dec(NewPos.X, ConsoleInfo.dwSize.X);
-      End;
-  End;
-
-Var
-  ConsoleInfo : TConsoleScreenBufferInfo;
-  wChars : DWord;
-  OldPos : TCoord;
-  NewPos : TCoord;
-  strTABText : String;
-
-Begin
-  strTabText := StringReplace(strText, #9, #175, [rfReplaceAll]);
-  If CheckConsoleMode(hndConsole) Then
-    Begin
-      Repeat
-        Win32Check(GetConsoleScreenBufferInfo(hndConsole, ConsoleInfo));
-        OldPos := ConsoleInfo.dwCursorPosition;
-        NewPos := OldPos;
-        Win32Check(WriteConsoleOutputCharacter(hndConsole, PChar(strTABText), Length(strTABText),
-          ConsoleInfo.dwCursorPosition, wChars));
-        UpdateConsoleColours(ConsoleInfo, wChars, strTABText);
-        If wChars > 0 Then
-          Delete(strTABText, 1, wChars);
-        Inc(NewPos.X, wChars);
-        UpdateNewPos(ConsoleInfo, NewPos);
-        If strTABText <> '' Then
-          Begin
-            Win32Check(WriteConsole(hndConsole, PChar(#13#10), Length(#13#10), wChars, Nil));
-            Inc(NewPos.Y);
-            NewPos.X := 0;
-          End;
-      Until strTABText = '';
-      UpdateCursor(OldPos, NewPos, wChars);
-    End Else
-      Write(strTABText);
-End;
-
-(**
-
-  This function outputs the given text to the console references by the given handle using the text and 
-  background colours provided. If xlNone is used for the colours then the consoles default colours are 
-  used. Adds a Carriage Return at the end of each line.
-
-  @precon  hndConsole must be a valid console handle.
-  @postcon Outputs the given text to the console references by the given handle using the text and
-           background colours provided.
-
-  @param   hndConsole       as a THandle as a constant
-  @param   strText          as a String as a constant
-  @param   iTextColour      as a TColor as a constant
-  @param   iBackColour      as a TColor as a constant
-  @param   boolUpdateCursor as a Boolean as a constant
-
-**)
-Procedure OutputToConsoleLn(Const hndConsole : THandle; Const strText : String = '';
-  Const iTextColour : TColor = clNone; Const iBackColour : TColor = clNone;
-  Const boolUpdateCursor : Boolean = True);
-
-Var
-  sl : TStringList;
-  i : Integer;
-  wChars : Cardinal;
-
-Begin
-  sl := TStringList.Create;
-  Try
-    sl.Text := strText;
-    If sl.Text = '' Then
-      sl.Text := #13#10;
-    For i := 0 to sl.Count - 1 Do
-      Begin
-        If CheckConsoleMode(hndConsole) Then
-          Begin
-            OutputToConsole(hndConsole, sl[i], iTextColour, iBackColour,
-              boolUpdateCursor);
-            Win32Check(WriteConsole(hndConsole, PChar(#13#10), Length(#13#10), wChars, Nil));
-          End Else
-            WriteLn(sl[i]);
-      End;
-  Finally
-    sl.Free;
-  End;
-End;
-
-(**
-
   This function returns the users logon name as a String.
 
   @precon  None.
@@ -1490,7 +1182,4 @@ Begin
   SetLength(Result, i - 1);
 End;
 
-(** Initialises the console more to Unknown to force a call to the Win32 API **)
-Initialization
-  ConsoleMode := cmUnknown;
 End.
