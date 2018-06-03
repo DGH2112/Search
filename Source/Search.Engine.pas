@@ -609,10 +609,10 @@ Begin
     End;
   If FParams.Count = 0 Then
     Include(CommandLineSwitches, clsShowHelp);
-  If (FSearchParams.Count = 0) And Not(clsShowHelp In CommandLineSwitches) Then
-    If FParams.Count = 0 Then
-      Include(CommandLineSwitches, clsShowHelp)
-    Else
+  If FParams.Count = 0 Then
+    Include(CommandLineSwitches, clsShowHelp);
+  If (FSearchParams.Count = 0) And Not([clsShowHelp, clsColours] * CommandLineSwitches <> []) Then
+    If FParams.Count > 0 Then
       Raise ESearchException.Create(strNeedToSpecifyCriteria);
 End;
 
@@ -1423,7 +1423,6 @@ Begin
         TSearchHelp.PrintHelp(FConsole)
       Else If clsColours In CommandLineSwitches Then
         Begin
-          //: @bug You cannot show the colours without a search criteria!
           If FColourSettings.Count = 0 Then
             OutputConfiguredColours
           Else
