@@ -3,9 +3,9 @@ Search
 
 Author:  David Hoyle
 
-Version: 1.2
+Version: 1.2c
 
-Date:    29 Apr 2018
+Date:    03 Jun 2018
 
 The code contain in the project can be used as an aid to learning and used to compile the project for your personal use. The code can be modified for your personel use however you should retain the headers identifying the original author and should not be publshed without the author's consent.
 
@@ -15,7 +15,7 @@ This code should not be published without the author's prior consent nor should 
 
 regards
 
-David Hoyle (c) 29 Apr 2018
+David Hoyle (c) 03 Jun 2018
 
 davidghoyle@gmail.com
 

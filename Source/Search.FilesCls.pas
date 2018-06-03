@@ -5,7 +5,7 @@
 
   @Version 1.0
   @Author  David Hoyle
-  @Date    22 Apr 2018
+  @Date    03 Jun 2018
 
 **)
 Unit Search.FilesCls;
@@ -15,10 +15,10 @@ Interface
 Uses
   SysUtils,
   Classes,
-  Contnrs,
   Search.Types, 
   System.RegularExpressions, 
-  Search.Interfaces;
+  Search.Interfaces, 
+  System.Generics.Collections;
 
 Type
   (** This is a procedure declaration for an exception event handler. **)
@@ -27,8 +27,7 @@ Type
   (** A class to hold a collection of files. **)
   TSearchFiles = Class(TInterfacedObject, ISearchFiles)
   Private
-    FDirectories      : TInterfaceList;
-    FFiles            : TInterfaceList;
+    FFiles            : TList<ISearchFile>;
     FExceptionHandler : TFilesExceptionHandler;
     FPath             : String;
     FRegEx            : TRegEx;
@@ -43,14 +42,14 @@ Type
     Procedure SetPath(Const strPath: String);
     Function  Add(Const SearchFileRec : TSearchFileRec; Const strSearchText: String;
       Var iGREPCount : Integer): Boolean; Overload;
-    Procedure OrderBy(Const OrderBy: TOrderBy; Const OrderDirection: TOrderDirection);
+    Procedure OrderBy;
     Function  OwnerWidth: Integer;
     Function  Add(Const FileInfo : ISearchFile) : Boolean; Overload;
     // General Methods
-    Function GrepFile(Const SearchFile : ISearchFile; Const strName, strSearchText : String) : Integer;
+    Function GrepFile(Const SearchFile : ISearchFile; Const strSearchText : String) : Integer;
   Public
-    Constructor Create(Const ExceptionHandler : TFilesExceptionHandler;
-      Const strRegExSearchText : String);
+    Constructor Create(Const OrderBy : TOrderBy; Const OrderDirection : TOrderDirection;
+      Const ExceptionHandler : TFilesExceptionHandler; Const strRegExSearchText : String);
     Destructor Destroy; Override;
   End;
 
@@ -59,7 +58,68 @@ Implementation
 Uses
   RegularExpressionsCore,
   Windows, 
-  Search.FileCls;
+  Search.FileCls, 
+  System.Generics.Defaults;
+
+Type
+  (** This isn an implementation of IComparer to allow sorting of the file collection. **)
+  TSearchFileComparer = Class(TComparer<ISearchFile>)
+  Strict Private
+    FOrderBy : TOrderBy;
+    FOrderDirection : TOrderDirection;
+  Strict Protected
+  Public
+    Function Compare(Const Left, Right : ISearchFile) : Integer; Override;
+    Constructor Create(Const OrderBy : TOrderBy; Const OrderDirection : TOrderDirection);
+  End;
+
+(**
+
+  This is an IComparer Compare method for the file list.
+
+  @precon  None.
+  @postcon Order the files list first by path (if it exists) and then by the order asked for.
+
+  @param   Left  as an ISearchFile as a constant
+  @param   Right as an ISearchFile as a constant
+  @return  an Integer
+
+**)
+Function TSearchFileComparer.Compare(Const Left, Right: ISearchFile): Integer;
+
+Const
+  iSecsInDay = 24 * 60 * 60;
+  
+Begin
+  Result := CompareText(ExtractFilePath(Left.FileName), ExtractFilePath(Right.FileName));
+  If Result = 0 Then
+    Case FOrderBy Of
+      obName:  Result := CompareText(Left.FileName, Right.FileName);
+      obSize:  Result := Left.Size - Right.Size;
+      obDate:  Result := Trunc(Left.Date  * iSecsInDay) - Trunc(Right.Date * iSecsInDay);
+      obOwner: Result := CompareText(Left.Owner, Right.Owner);
+    End;
+  If FOrderDirection = odDescending Then
+    Result := -Result;
+End;
+
+(**
+
+  A constructor for the TSearchFileComparer class.
+
+  @precon  None.
+  @postcon Sets the sorting order type and direction.
+
+  @param   OrderBy        as a TOrderBy as a constant
+  @param   OrderDirection as a TOrderDirection as a constant
+
+**)
+Constructor TSearchFileComparer.Create(Const OrderBy: TOrderBy; Const OrderDirection: TOrderDirection);
+
+Begin
+  FOrderBy := OrderBy;
+  FOrderDirection := OrderDirection;
+End;
 
 (**
 
@@ -74,15 +134,9 @@ Uses
 **)
 function TSearchFiles.Add(Const FileInfo: ISearchFile): Boolean;
 
-Var
-  Collection: TInterfaceList;
-
 begin
   Result := True;
-  Collection := FFiles;
-  If sfaDirectory In FileInfo.Attributes Then
-    Collection := FDirectories;
-  Collection.Add(FileInfo);
+  FFiles.Add(FileInfo);
 end;
 
 (**
@@ -104,24 +158,20 @@ Function TSearchFiles.Add(Const SearchFileRec : TSearchFileRec; Const strSearchT
 Var
   FFile : ISearchFile;
   iMatchCount: Integer;
-  Collection : TInterfaceList;
 
 Begin
   Result := True;
   FFile := TSearchFile.Create(SearchFileRec);
   If Not FHasCompressed And ([sfaFile, sfaCompressed] <= SearchFileRec.FAttrs) Then
     FHasCompressed := True;
-  Collection := FFiles;
-  If sfaDirectory In SearchFileRec.FAttrs Then
-    Collection := FDirectories;
   If FRegExSearch Then
     Begin
       If Not (sfaDirectory In SearchFileRec.FAttrs) Then
         Begin
-          iMatchCount := GrepFile(FFile, SearchFileRec.FName, strSearchText);
+          iMatchCount := GrepFile(FFile, strSearchText);
           If iMatchCount > 0 Then
             Begin
-              Collection.Add(FFile);
+              FFiles.Add(FFile);
               Inc(iGREPCount, iMatchCount);
             End Else
               Result := False;
@@ -130,7 +180,7 @@ Begin
       If Not Result Then
         FFile := Nil;
     End Else
-      Collection.Add(FFile);
+      FFiles.Add(FFile);
 End;
 
 (**
@@ -140,35 +190,25 @@ End;
   @precon  None.
   @postcon Creates the file list.
 
+  @param   OrderBy            as a TOrderBy as a constant
+  @param   OrderDirection     as a TOrderDirection as a constant
   @param   ExceptionHandler   as a TFilesExceptionHandler as a constant
   @param   strRegExSearchText as a String as a constant
 
 **)
-Constructor TSearchFiles.Create(Const ExceptionHandler : TFilesExceptionHandler;
-  Const strRegExSearchText : String);
-
-Const
-  strRegExError = 'Reg Ex Error: %s ("%s")';
+Constructor TSearchFiles.Create(Const OrderBy : TOrderBy; Const OrderDirection : TOrderDirection;
+      Const ExceptionHandler : TFilesExceptionHandler; Const strRegExSearchText : String);
 
 Begin
-  FDirectories := TInterfaceList.Create;
-  FFiles := TInterfaceList.Create;
+  FFiles := TList<ISearchFile>.Create(TSearchFileComparer.Create(OrderBy, OrderDirection));
   FExceptionHandler := ExceptionHandler;
   FRegExSearch := False;
   FHasCompressed := False;
-  Try
-    If strRegExSearchText <> '' Then
-      Begin
-        FRegEx := TRegEx.Create(strRegExSearchText, [roIgnoreCase, roCompiled, roSingleLine]);
-        FRegExSearch := True;
-      End;
-  Except
-    On E : ERegularExpressionError Do
-      Begin
-        If Assigned(FExceptionHandler) Then
-          FExceptionHandler(Format(strRegExError, [E.Message, strRegExSearchText]));
-      End;
-  End;
+  If strRegExSearchText <> '' Then
+    Begin
+      FRegEx := TRegEx.Create(strRegExSearchText, [roIgnoreCase, roCompiled, roSingleLine]);
+      FRegExSearch := True;
+    End;
 End;
 
 (**
@@ -183,7 +223,6 @@ Destructor TSearchFiles.Destroy;
 
 Begin
   FFiles.Free;
-  FDirectories.Free;
   Inherited Destroy;
 End;
 
@@ -200,7 +239,7 @@ End;
 Function TSearchFiles.GetCount : Integer;
 
 Begin
-  Result := FDirectories.Count + FFiles.Count;
+  Result := FFiles.Count;
 End;
 
 (**
@@ -217,10 +256,7 @@ End;
 Function TSearchFiles.GetFile(Const iIndex : Integer) : ISearchFile;
 
 Begin
-  If iIndex < FDirectories.Count Then
-    Result := FDirectories.Items[iIndex] As ISearchFile
-  Else
-    Result := FFiles.Items[iIndex - FDirectories.Count] As ISearchFile;
+  Result := FFiles.Items[iIndex] As ISearchFile;
 End;
 
 (**
@@ -260,17 +296,15 @@ End;
   This method searches the given text for match regular expressions.
 
   @precon  None.
-  @postcon This method searches the given file for regular expression matches and retuns the number of
+  @postcon This method searches the given file for regular expression matches and retuns the number of 
            matches found.
 
   @param   SearchFile    as an ISearchFile as a constant
-  @param   strName       as a String as a constant
   @param   strSearchText as a String as a constant
   @return  an Integer
 
 **)
-Function TSearchFiles.GrepFile(Const SearchFile : ISearchFile; Const strName,
-  strSearchText : String) : Integer;
+Function TSearchFiles.GrepFile(Const SearchFile : ISearchFile; Const strSearchText : String) : Integer;
 
 Var
   iLine: Integer;
@@ -281,18 +315,12 @@ Begin
   slFile := TStringList.Create;
   Try
     slFile.Text := strSearchText;
-    Try
-      For iLine := 0 To slFile.Count - 1 Do
-        Begin
-          M := FRegEx.Matches(slFile[iLine]);
-      If M.Count > 0 Then
-            SearchFile.AddRegExLine(iLine + 1, M);
-        End;
-    Except
-      On E : ERegularExpressionError Do
-        If Assigned(FExceptionHandler) Then
-          FExceptionHandler(Format('%s (%s)', [E.Message, strName]));
-    End;
+    For iLine := 0 To slFile.Count - 1 Do
+      Begin
+        M := FRegEx.Matches(slFile[iLine]);
+    If M.Count > 0 Then
+          SearchFile.AddRegExLine(iLine + 1, M);
+      End;
   Finally
     slFile.Free;
   End;
@@ -306,83 +334,12 @@ End;
   @precon  None.
   @postcon Orders the files in the collection by the given direction and attribute.
 
-  @param   OrderBy        as a TOrderBy as a constant
-  @param   OrderDirection as a TOrderDirection as a constant
 
 **)
-Procedure TSearchFiles.OrderBy(Const OrderBy : TOrderBy; Const OrderDirection : TOrderDirection);
-
-  (**
-
-    This method order the given collection by the OrderBy parameter.
-
-    @precon  Collection must be a valid instance.
-    @postcon The list is ordered.
-
-    @param   Collection as a TInterfaceList as a constant
-
-  **)
-  Procedure OrderCollection(Const Collection : TInterfaceList);
-
-    (**
-
-      This method attempts to find the minimum value for the select sort.
-
-      @precon  None.
-      @postcon Returns the minium index value if found else return -1.
-
-      @param   iOuter as an Integer as a constant
-      @param   iInner as an Integer as a constant
-      @return  an Integer
-
-    **)
-    Function FindMin(Const iOuter, iInner : Integer) : Integer;
-
-    Var
-      iFirst, iSecond : Integer;
-      FFI: ISearchFile;
-      SFI: ISearchFile;
-      
-    Begin
-      Result := -1;
-      If OrderDirection = odAscending Then
-        Begin
-          iFirst := iOuter;
-          iSecond := iInner;
-        End Else
-        Begin
-          iFirst := iInner;
-          iSecond := iOuter;
-        End;
-      FFI := Collection.Items[iFirst] As ISearchFile;
-      SFI := Collection.Items[iSecond] As ISearchFile;
-      Case OrderBy Of
-        obName:  If CompareText(SFI.FileName, FFI.FileName) < 0 Then Result := iInner;
-        obDate:  If SFI.Date < FFI.Date                         Then Result := iInner;
-        obSize:  If SFI.Size < FFI.Size                         Then Result := iInner;
-        obOwner: If CompareText(SFI.Owner, FFI.Owner) < 0       Then Result := iInner;
-      End;
-    End;
-
-  Var
-    iOuter, iInner : Integer;
-    iMin : Integer;
-    iCount: Integer;
-
-  Begin
-    iCount := Collection.Count;
-    For iOuter := 0 To iCount - 1 Do
-      For iInner := iOuter + 1 To iCount - 1 Do
-        Begin
-          iMin := FindMin(iOUter, iInner);
-          If iMin > -1 Then
-            Collection.Exchange(iOuter, iMin);
-        End;
-  End;
+Procedure TSearchFiles.OrderBy;
 
 Begin
-  OrderCollection(FDirectories);
-  OrderCollection(FFiles);
+  FFiles.Sort;
 End;
 
 (**
