@@ -3,9 +3,9 @@ Search
 
 Author:   David Hoyle
 
-Version:  1.0
+Version:  1.2c
 
-Date:     29 Apr 2018
+Date:     03 Jun 2018
 
 Web Page: TBA
 
