@@ -20,52 +20,20 @@ Uses
   Search.Functions,
   Search.Types,
   Search.Interfaces, 
-  System.RegularExpressions;
+  System.RegularExpressions, 
+  Search.Options;
 
 Type 
   (** This class defines the working that searches the directories and files
    for the information that matches the criteria. **)
   TSearch = Class(TInterfacedObject, ISearchEngine)
   Strict Private
-    (** The total number of file found by the search. **)
-    FFiles: Integer;
-    (** The total number of directories found by the search. **)
-    FDirectories: Integer;
-    (** This is the upper limit of a file size search. **)
-    FUSize: Int64;
-     (** This is the lower limit of a file size search. **)
-    FLSize: Int64;
-    (** This is the lower limit of a file date search. **)
-    FLDate: TDateTime;
-    (** This is the upper limit of a file date search. **)
-    FUDate: TDateTime;
-    (** The total size of al the files found in the search. **)
-    FFileSize: Int64;
-    (** This is a list of file attributes that are required in a search. **)
-    FFileAttrs: TSearchFileAttrs;
-    (** This is a list of search parameters that are not part of the command line switches. **)
-    FSearchParams: TStringList;
-    (** This is the level of directory of summarisation required. **)
-    FSummaryLevel: Integer;
-    (** A type to indicate the order of file sorting **)
-    FOrderFilesBy: TOrderBy;
-    (** A type to indicate the direction of sorting of files. **)
-    FOrderFilesDirection: TOrderDirection;
-    (** A string for which should be searched for inside text files. **)
-    FRegExSearch: String;
-    FRegExSurroundingLines : Integer;
-    (** A variable to hold the type of date to display and search for. **)
-    FDateType: TDateType;
-    (** A file name which hold exclusions which need to be applied to the searches. **)
-    FExlFileName: String;
-    (** A string list of exclusions to be applied to the searches. **)
-    FExclusions: TStringList;
-    (** A regular expression record to matchnig owner names. **)
-    FOwnerRegEx : TRegEx;
-    FOwnerSearch : Boolean;
-    FOwnerRegExSearch : String;
-    (** A string to store the loading and saving settings filename in. **)
-    FSizeFormat: TSizeFormat;
+    //: @todo Add the ability to show how many files in a total number of file.
+    FFiles: Integer;            // The total number of file found by the search
+    FDirectories: Integer;      // The total number of directories found by the search
+    FFileSize: Int64;           // The total size of al the files found in the search
+    FSearchParams: TStringList; // This is a list of search parameters
+    FOwnerRegEx : TRegEx;       // A regular expression record to matchnig owner names
     FRootKey: String;
     FParams: TStringList;
     FLevel: Integer;
@@ -74,6 +42,7 @@ Type
     FUNCPath : Boolean;
     FColourSettings : TStringList;
     FConsole : ISearchConsole;
+    FOptions : TSearchOptions;
   Strict Protected
     Procedure OutputDateTime(Const SearchFile: ISearchFile; Var strOutput: String);
     Procedure OutputSize(Const SearchFile: ISearchFile; Const boolHasCompressed : Boolean;
@@ -89,7 +58,6 @@ Type
     Procedure PrintTitle;
     Procedure PrintHeader(Const strPath, strPattern: String);
     Procedure PrintFooter(Const strPath: String);
-    Procedure DisplayCriteria;
     Procedure GetCommandLineSwitches;
     Function  LookupAccountBySID(Const SID: PSID): String;
     Function  OutputOwner(Const strFileName: String): String;
@@ -154,7 +122,8 @@ Uses
   Search.StrUtils, 
   System.RegularExpressionsCore, 
   Search.Help, 
-  Search.Console;
+  Search.Console, 
+  Search.DisplayCriteria;
 
 Const
   (** An ini section for the console colours. **)
@@ -203,8 +172,6 @@ Const
   strZipFileKey = 'ZipFile';
   (** An ini key for the Input colour **)
   strInputKey = 'Input';
-  (** An output format for all dates. **)
-  strOutputDateFmt = 'ddd dd/mmm/yyyy hh:mm:ss';
 
 (**
 
@@ -306,7 +273,7 @@ Begin
   Result := 0;
   If Not (clsSummaryLevel In CommandLineSwitches) Then
     Begin
-      Case FDateType Of
+      Case FOptions.FDateType Of
         dtCreation:   dtDate := recSearch.FindData.ftCreationTime;
         dtLastAccess: dtDate := recSearch.FindData.ftLastAccessTime;
         dtLastWrite:  dtDate := recSearch.FindData.ftLastWriteTime;
@@ -464,7 +431,7 @@ Constructor TSearch.Create;
 Begin
   FConsole := TSearchConsole.Create;
   FSearchParams := TStringList.Create;
-  FExclusions := TStringList.Create;
+  FOptions.FExclusions := TStringList.Create;
   FParams := TStringList.Create;
   FErrorLog := TStringList.Create;
   FColourSettings := TStringList.Create;
@@ -488,254 +455,10 @@ Begin
   SaveSettings;
   FColourSettings.Free;
   FErrorLog.Free;
-  FExclusions.Free;
+  FOptions.FExclusions.Free;
   FSearchParams.Free;
   FParams.Free;
   Inherited Destroy;
-End;
-
-(**
-
-  This method displays the criteria and command line options used during the
-  session.
-
-  @precon  None.
-  @postcon Displays the criteria and command line options used during the
-           session.
-
-**)
-Procedure TSearch.DisplayCriteria;
-
-  (**
-
-    This method outputs a single switch and its correpsonding message.
-
-    @precon  None.
-    @postcon Outputs a single switch and its correpsonding message.
-
-    @param   ASwitch            as a TCommandLineSwitch as a constant
-    @param   strSwitch          as a String as a constant
-    @param   strText            as a String as a constant
-    @param   boolCarriageReturn as a Boolean as a constant
-    @return  a Boolean
-
-  **)
-  Function DisplayText(Const ASwitch: TCommandLineSwitch; Const strSwitch, strText: String;
-    Const boolCarriageReturn: Boolean = True): Boolean;
-
-  Begin
-    Result := ASwitch In CommandLineSwitches;
-    If Result Then
-      Begin
-        FConsole.OutputToConsole(coStd, Format('  %2s', [strSwitch]), scHelpSwitch);
-        FConsole.OutputToConsole(coStd, Format(') %s', [strText]), scHelpText);
-        If boolCarriageReturn Then
-          FConsole.OutputToConsoleLn(coStd);
-      End;
-  End;
-
-  (**
-
-    This method tries to reduce the file size limit to a more manageable length for reading using K, M
-    and G.
-
-    @precon  None.
-    @postcon Tries to reduce the size to a factor of 1024.
-
-    @param   iSize as an Int64 as a constant
-    @return  a String
-
-  **)
-  Function ReduceSize(Const iSize: Int64): String;
-
-  Const
-    strSizes = 'KMGT';
-    iKiloByte = 1024;
-    iReductionLoopLimit = 4;
-
-  Var
-    iReductions: Integer;
-    strKMG: String;
-    iLSize: Int64;
-
-  Begin
-    iLSize := iSize;
-    iReductions := 0;
-    If iLSize > 0 Then
-      While (iLSize Mod iKiloByte = 0) And (iReductions < iReductionLoopLimit) Do
-        Begin
-          iLSize := iLSize Div iKiloByte;
-          Inc(iReductions);
-        End;
-    If iLSize > 0 Then
-      strKMG := strSizes[iReductions]
-    Else
-      strKMG := '';
-    Result := Format('%1.0n%s', [Int(Int64(iLSize)), strKMG]);
-  End;
-
-  (**
-
-    This method output a text relating to the attribute options used in the
-    search.
-
-    @precon  None.
-    @postcon Output a text relating to the attribute options used in the
-             search.
-
-  **)
-  Procedure DisplayAttributes;
-
-  ResourceString
-    strSearchingForFiles = 'Searching for files with the following attibutes:';
-    strReadOnly =   '        Read Only';
-    strArchive =    '        Archive';
-    strSystemFile = '        System File';
-    strHidden =     '        Hidden';
-    strFile =       '        File';
-    strDirectory =  '        Directory';
-    strVolume =     '        Volume';
-    strNormal =     '        Normal';
-    strDevice =     '        Device';
-    strTemporary =  '        Temporary';
-    strSparse =     '        Sparse';
-    strReparse =    '        Reparse';
-    strCompressed = '        Compressed';
-    strOffline =    '        Offline';
-    strIndexed =    '        Indexed';
-    strEncrypted =  '        Encrypted';
-    strVirtual =    '        Virtual';
-
-    (**
-
-      This method outputs the attribute description to the help screen if its in the set of file
-      attribute filters.
-
-      @precon  None.
-      @postcon The attribute name is output to the helper screen if in the filter.
-
-      @param   eAttribute       as a TSearchFileAttr as a constant
-      @param   strAttributeName as a String as a constant
-
-    **)
-    Procedure OutputAttribute(Const eAttribute : TSearchFileAttr; Const strAttributeName : String);
-
-    Begin
-      If eAttribute in FFileAttrs Then
-        FConsole.OutputToConsoleLn(coStd, strAttributeName, scHelpInfo);
-    End;
-
-  Begin
-    If DisplayText(clsAttrRange, 't', strSearchingForFiles) Then
-      Begin
-        OutputAttribute(sfaReadOnly, strReadOnly);
-        OutputAttribute(sfaArchive, strArchive);
-        OutputAttribute(sfaSystem, strSystemFile);
-        OutputAttribute(sfaHidden, strHidden);
-        OutputAttribute(sfaFile, strFile);
-        OutputAttribute(sfaDirectory, strDirectory);
-        OutputAttribute(sfaVolume, strVolume);
-        OutputAttribute(sfaNormal, strNormal);
-        OutputAttribute(sfaDevice, strDevice);
-        OutputAttribute(sfaTemporary, strTemporary);
-        OutputAttribute(sfaSparse, strSparse);
-        OutputAttribute(sfaReparse, strReparse);
-        OutputAttribute(sfaCompressed, strCompressed);
-        OutputAttribute(sfaOffLine, strOffline);
-        OutputAttribute(sfaIndexed, strIndexed);
-        OutputAttribute(sfaEncrypted, strEncrypted);
-        OutputAttribute(sfaVirtual, strVirtual);
-      End;
-  End;
-
-ResourceString
-  strSearchCriteria = 'Search Criteria and Command Line Options Used in this Session.';
-  strDisplayingCriteria = 'Displaying criteria used for this search.';
-  strRecursingSubdirectories = 'Recursing sub-directories.';
-  strDEBUGReadLnPause = 'Pause after finish.';
-  strDisplayingFileAttibs = 'Displaying File and Directory Attributes.';
-  strSummarisingOutput = 'Summarising output to the %d level of detail from ' +
-    'the specified starting point.';
-  strSupressingSummary = 'Supressing summary information on directories with zero files.';
-  strDisplayFilesWithDates = 'Display files with dates between %s and %s.';
-  strDisplayFilesWithSIzes = 'Display files with sizes between %s and %s byt' + 'es.';
-  strQuietMode = 'Quiet mode - no progress updates.';
-  strDisplayTheOwners = 'Display the Owners of the files found';
-  strSizeFormatTeraBytes = 'Sizes formatted in TeraBytes';
-  strSizeFormatGigaBytes = 'Sizes formatted in GigaBytes';
-  strSizeFormatMegaBytes = 'Sizes formatted in MegaBytes';
-  strSizeFormatKiloBytes = 'Sizes formatted in KiloBytes';
-  strOrderingFilesByName = 'Ordering files by Name';
-  strOrderingFilesBySize = 'Ordering files by Size';
-  strOrderingFilesByDate = 'Ordering files by Date';
-  strOrderingFilesByOwner = 'Ordering files by Owner';
-  strOrderingFilesInDescOrder = 'Descending Order';
-  strDisplayingFileCreationDates = 'Displaying file Creation Dates.';
-  strDisplayingFileLastAccessDates = 'Displaying file Last Access Dates.';
-  strDisplayingFileLastWriteDates = 'Displaying file Last Write Dates.';
-  strOwnerSearchingFor = '. Searching for Owners ';
-  strOwnerMatching = 'matching "%s"';
-  strSearchInZips = 'Search within ZIP files.';
-  strApplyingExclusions = 'Applying exclusions from the file "%s".';
-  strSearchForText = 'Search for the text "%s" within the files.';
-
-Begin
-  FConsole.OutputToConsoleLn(coStd, strSearchCriteria, scHelpHeader);
-  DisplayText(clsDisplayCriteria, 'c', strDisplayingCriteria);
-  DisplayText(clsSubDirectories, 's', strRecursingSubdirectories);
-  DisplayText(clsDebug, '!', strDEBUGReadLnPause);
-  DisplayText(clsShowAttribs, 'a', strDisplayingFileAttibs);
-  If Not(clsRegExSearch In CommandLineSwitches) Then
-    DisplayText(clsSummaryLevel, IntToStr(FSummaryLevel),
-      Format(strSummarisingOutput, [FSummaryLevel]));
-  DisplayText(clsSupressZeros, '0', strSupressingSummary);
-  DisplayText(clsDateRange, 'd', Format(strDisplayFilesWithDates, [
-    FormatDateTime(strOutputDateFmt, FLDate),
-    FormatDateTime(strOutputDateFmt, FUDate)]));
-  DisplayText(clsSizeRange, 'd', Format(strDisplayFilesWithSIzes, [ReduceSize(FLSize),
-      ReduceSize(FUSize)]));
-  DisplayAttributes;
-  DisplayText(clsQuiet, 'q', strQuietMode);
-  If DisplayText(clsOwner, 'w', strDisplayTheOwners, False) Then
-    Begin
-      If FOwnerSearch Then
-        Begin
-          FConsole.OutputToConsole(coStd, strOwnerSearchingFor, scHelpText);
-          FConsole.OutputToConsole(coStd, Format(strOwnerMatching, [FOwnerRegExSearch]), scHelpText);
-        End;
-      FConsole.OutputToConsoleLn(coStd, '.', scHelpText);
-    End;
-  If clsOrderBy In CommandLineSwitches Then
-    Begin
-      Case FOrderFilesBy Of
-        obName:      DisplayText(clsOrderBy, 'o', strOrderingFilesByName, False);
-        obSize:      DisplayText(clsOrderBy, 'o', strOrderingFilesBySize, False);
-        obDate:      DisplayText(clsOrderBy, 'o', strOrderingFilesByDate, False);
-        obOwner:     DisplayText(clsOrderBy, 'o', strOrderingFilesByOwner, False);
-      End;
-      If FOrderFilesDirection = odDescending Then
-        Begin
-          FConsole.OutputToConsole(coStd, ' (', scHelpText);
-          FConsole.OutputToConsole(coStd, strOrderingFilesInDescOrder, scHelpFootNote);
-          FConsole.OutputToConsole(coStd, ')', scHelpText);
-        End;
-      FConsole.OutputToConsoleLn(coStd, '.', scHelpText);
-    End;
-  Case FDateType Of
-    dtCreation:      DisplayText(clsDateType, 'e', strDisplayingFileCreationDates);
-    dtLastAccess:    DisplayText(clsDateType, 'a', strDisplayingFileLastAccessDates);
-    dtLastWrite:     DisplayText(clsDateType, 'w', strDisplayingFileLastWriteDates);
-  End;
-  DisplayText(clsRegExSearch, 'i', Format(strSearchForText, [FRegExSearch]));
-  DisplayText(clsExclusions, 'x', Format(strApplyingExclusions, [FExlFileName]));
-  DisplayText(clsSearchZip, 'p', strSearchInZips);
-  Case FSizeFormat Of
-    sfKilobytes:     DisplayText(clsSizeOutput, 'f', strSizeFormatKiloBytes);
-    sfMegaBytes:     DisplayText(clsSizeOutput, 'f', strSizeFormatMegaBytes);
-    sfGigaBytes:     DisplayText(clsSizeOutput, 'f', strSizeFormatGigaBytes);
-    sfTeraBytes:     DisplayText(clsSizeOutput, 'f', strSizeFormatTeraBytes);
-  End;
-  FConsole.OutputToConsoleLn(coStd);
 End;
 
 (**
@@ -801,7 +524,7 @@ Var
 
 Begin
   dblSize := iSize;
-  Case FSizeFormat Of
+  Case FOptions.FSizeFormat Of
     sfKilobytes: Result := Format(strKikoByteFmt, [RoundTo(dblSize / dblKileByte, 0)]);
     sfMegaBytes: Result := Format(strMegaByteFmt, [RoundTo(dblSize / dblMegaByte, 0)]);
     sfGigaBytes: Result := Format(strGigaByteFmt, [RoundTo(dblSize / dblGigaByte, 0)]);
@@ -834,12 +557,12 @@ Var
   iSwitch, iIndex: Integer;
 
 Begin
-  FSummaryLevel := 0;
+  FOptions.FSummaryLevel := 0;
   CommandLineSwitches := [];
   iSwitch := 0;
-  FOrderFilesBy := obNone;
-  FOrderFilesDirection := odAscending;
-  FDateType := dtLastWrite;
+  FOptions.FOrderFilesBy := obNone;
+  FOptions.FOrderFilesDirection := odAscending;
+  FOptions.FDateType := dtLastWrite;
   While iSwitch <= FParams.Count - 1 Do
     Begin
       If CharInSet(FParams[iSwitch][1], ['-', '/']) Then
@@ -853,21 +576,23 @@ Begin
                 's', 'S': Include(CommandLineSwitches, clsSubDirectories);
                 '!':      Include(CommandLineSwitches, clsDebug);
                 'a', 'A': Include(CommandLineSwitches, clsShowAttribs);
-                '1'..'9': GetSummaryLevel(FParams, iSwitch, iIndex, FSummaryLevel);
+                '1'..'9': GetSummaryLevel(FParams, iSwitch, iIndex, FOptions.FSummaryLevel);
                 '0':      Include(CommandLineSwitches, clsSupressZeros);
-                'd', 'D': GetDateRange(FParams, iSwitch, iIndex, FLDate, FUDate);
-                'z', 'Z': GetSizeRange(FParams, iSwitch, iIndex, FLSize, FUSize);
-                't', 'T': GetAttributes(FParams, iSwitch, iIndex, FFileAttrs);
+                'd', 'D': GetDateRange(FParams, iSwitch, iIndex, FOptions.FLDate, FOptions.FUDate);
+                'z', 'Z': GetSizeRange(FParams, iSwitch, iIndex, FOptions.FLSize, FOptions.FUSize);
+                't', 'T': GetAttributes(FParams, iSwitch, iIndex, FOptions.FFileAttrs);
                 'q', 'Q': Include(CommandLineSwitches, clsQuiet);
-                'w', 'W': FOwnerSearch := GetOwnerSwitch(FParams, iSwitch, iIndex, FOwnerRegExSearch);
-                'o', 'O': GetOrderBy(FParams, iSwitch, iIndex, FOrderFilesDirection, FOrderFilesBy);
-                'i', 'I': GetSearchInInfo(FParams, iSwitch, iIndex, FRegExSearch,
-                  FRegExSurroundingLines);
-                'e', 'E': GetDateType(FParams, iSwitch, iIndex, FDateType);
+                'w', 'W': FOptions.FOwnerSearch := GetOwnerSwitch(FParams, iSwitch, iIndex,
+                            FOptions.FOwnerRegExSearch);
+                'o', 'O': GetOrderBy(FParams, iSwitch, iIndex, FOptions.FOrderFilesDirection,
+                            FOptions.FOrderFilesBy);
+                'i', 'I': GetSearchInInfo(FParams, iSwitch, iIndex, FOptions.FRegExSearch,
+                            FOptions.FRegExSurroundingLines);
+                'e', 'E': GetDateType(FParams, iSwitch, iIndex, FOptions.FDateType);
                 'c', 'C': Include(CommandLineSwitches, clsDisplayCriteria);
-                'x', 'X': GetExclusions(FParams, iSwitch, iIndex, FExlFileName);
+                'x', 'X': GetExclusions(FParams, iSwitch, iIndex, FOptions.FExlFileName);
                 'p', 'P': Include(CommandLineSwitches, clsSearchZip);
-                'f', 'F': GetSizeFormat(FParams, iSwitch, iIndex, FSizeFormat);
+                'f', 'F': GetSizeFormat(FParams, iSwitch, iIndex, FOptions.FSizeFormat);
                 'v', 'V': Include(CommandLineSwitches, clsOutputAsCSV);
                 'l', 'L': GetColoursSwitch(FParams, iSwitch, iIndex, FColourSettings);
               Else
@@ -1363,7 +1088,7 @@ Begin
           Begin
             M := FileInfo.RegExMatches[iMatch];
             iStart := 1;
-            For iLine := Max(1, M.LineNum - FRegExSurroundingLines) To M.LineNum - 1 Do
+            For iLine := Max(1, M.LineNum - FOptions.FRegExSurroundingLines) To M.LineNum - 1 Do
               Begin
                 FConsole.OutputToConsole(coStd, Format('  %10.0n: ', [Int(iLine)]), scRegExLineNumbers);
                 FConsole.OutputToConsoleLn(coStd, slText[iLine - 1], scRegExLineOutput);
@@ -1380,12 +1105,13 @@ Begin
                 iStart := M.Group[iGroup].FIndex + M.Group[iGroup].FLength;
               End;
             FConsole.OutputToConsoleLn(coStd, strLine, scRegExLineOutput);
-            For iLine := Min(slText.Count, M.LineNum + 1) To Min(slText.Count, M.LineNum + FRegExSurroundingLines) Do
+            For iLine := Min(slText.Count, M.LineNum + 1) To Min(slText.Count, M.LineNum +
+              FOptions.FRegExSurroundingLines) Do
               Begin
                 FConsole.OutputToConsole(coStd, Format('  %10.0n: ', [Int(iLine)]), scRegExLineNumbers);
                 FConsole.OutputToConsoleLn(coStd, slText[iLine - 1], scRegExLineOutput);
               End;
-            If FRegExSurroundingLines > 0 Then
+            If FOptions.FRegExSurroundingLines > 0 Then
               FConsole.OutputToConsoleLn(coStd);
           End;
       Finally
@@ -1686,13 +1412,13 @@ Begin
   GetCommandLineSwitches;
   If Not (clsOutputAsCSV In CommandLineSwitches) Then
     If clsDisplayCriteria In CommandLineSwitches Then
-      DisplayCriteria;
+      TSearchCriteria.DisplayCriteria(FConsole, FOptions, CommandLineSwitches);
   If Not(clsExclusions In CommandLineSwitches) Or
-    ((clsExclusions In CommandLineSwitches) And FileExists(FExlFileName)) Then
+    ((clsExclusions In CommandLineSwitches) And FileExists(FOptions.FExlFileName)) Then
     Begin
       If clsExclusions In CommandLineSwitches Then
-        SafeLoadFromFile(FExclusions, FExlFileName);
-      FExclusions.Text := LowerCase(FExclusions.Text);
+        SafeLoadFromFile(FOptions.FExclusions, FOptions.FExlFileName);
+      FOptions.FExclusions.Text := LowerCase(FOptions.FExclusions.Text);
       If clsShowHelp In CommandLineSwitches Then
         TSearchHelp.PrintHelp(FConsole)
       Else If clsColours In CommandLineSwitches Then
@@ -1705,8 +1431,8 @@ Begin
         End
       Else
         Begin
-          If FOwnerSearch Then
-            FOwnerRegEx.Create(FOwnerRegExSearch, [roIgnoreCase, roCompiled, roSingleLine]);
+          If FOptions.FOwnerSearch Then
+            FOwnerRegEx.Create(FOptions.FOwnerRegExSearch, [roIgnoreCase, roCompiled, roSingleLine]);
           For i := 0 To FSearchParams.Count - 1 Do
             Begin
               iPos := Pos('=', FSearchParams[i]);
@@ -1737,7 +1463,7 @@ Begin
         End;
     End
   Else
-    Raise ESearchException.CreateFmt(strExclusionsNotFound, [FExlFileName]);
+    Raise ESearchException.CreateFmt(strExclusionsNotFound, [FOptions.FExlFileName]);
 End;
 
 (**
@@ -1850,10 +1576,10 @@ Begin
   Inc(FDirectories);
   boolDirPrinted := False;
   (* Find Files *)
-  FilesCollection := TSearchFiles.Create(FilesExceptionHandler, FRegExSearch);
+  FilesCollection := TSearchFiles.Create(FilesExceptionHandler, FOptions.FRegExSearch);
   Try
     Inc(Result, SearchForPatterns(slPatterns, strPath, FilesCollection));
-    FilesCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
+    FilesCollection.OrderBy(FOptions.FOrderFilesBy, FOptions.FOrderFilesDirection);
     OutputFilesToConsole(strPath, boolDirPrinted, FilesCollection);
   Finally
     FilesCollection := Nil;
@@ -1864,7 +1590,7 @@ Begin
   (* Output directory summary levels *)
   If clsSummaryLevel In CommandLineSwitches Then
     Begin
-      If (iLevel > -1) And (iLevel <= FSummaryLevel) Then
+      If (iLevel > -1) And (iLevel <= FOptions.FSummaryLevel) Then
         If Not((Result = 0) And (clsSupressZeros In CommandLineSwitches)) Then
           Begin
             strOutput := Format('%s%s%s', [FormatSize(Result),
@@ -1913,31 +1639,31 @@ Begin
             FConsole.CheckForEscape;
             boolFound := True;
             setAttributes := FileAttrsToAttrsSet(recSearch.Attr);
-            CheckFileAttributes(FFileAttrs, setAttributes, boolFound);
-            CheckSizeRange(recSearch.Size, FLSize, FUSize, boolFound);
-            Case FDateType Of
+            CheckFileAttributes(FOptions.FFileAttrs, setAttributes, boolFound);
+            CheckSizeRange(recSearch.Size, FOptions.FLSize, FOptions.FUSize, boolFound);
+            Case FOptions.FDateType Of
               dtCreation:
                 Begin
                   FileTimeToSystemTime(recSearch.FindData.ftCreationTime, ST);
                   dtDate := EncodeDate(ST.wYear, ST.wMonth, ST.wDay) + EncodeTime
                     (ST.wHour, ST.wMinute, ST.wSecond, ST.wMilliseconds);
-                  CheckDateRange(dtDate, FLDate, FUDate, boolFound);
+                  CheckDateRange(dtDate, FOptions.FLDate, FOptions.FUDate, boolFound);
                 End;
               dtLastAccess:
                 Begin
                   FileTimeToSystemTime(recSearch.FindData.ftLastAccessTime, ST);
                   dtDate := EncodeDate(ST.wYear, ST.wMonth, ST.wDay) + EncodeTime
                     (ST.wHour, ST.wMinute, ST.wSecond, ST.wMilliseconds);
-                  CheckDateRange(dtDate, FLDate, FUDate, boolFound);
+                  CheckDateRange(dtDate, FOptions.FLDate, FOptions.FUDate, boolFound);
                 End
               Else
-                CheckDateRange(recSearch.TimeStamp, FLDate, FUDate, boolFound);
+                CheckDateRange(recSearch.TimeStamp, FOptions.FLDate, FOptions.FUDate, boolFound);
             End;
-            CheckExclusions(strPath, recSearch.Name, boolFound, FExclusions);
+            CheckExclusions(strPath, recSearch.Name, boolFound, FOptions.FExclusions);
             If clsOwner In CommandLineSwitches Then
               Begin
                 strOwner := OutputOwner(strPath + recSearch.Name);
-                If FOwnerSearch Then             
+                If FOptions.FOwnerSearch Then             
                   boolFound := boolFound And CheckOwner(FOwnerRegEx, strOwner);          
               End;                                             
             If boolFound Then                                  
@@ -2000,19 +1726,20 @@ Begin
                   OutputCurrentSearchPath(strFileName + '\' + ZFAI.StoredPath);
                   boolFound := True;
                   iSize := ZFAI.UncompressedSize;
-                  CheckFileAttributes(FileAttrsToAttrsSet(ZFAI.ExternalFileAttributes), FFileAttrs,
-                    boolFound);
-                  CheckSizeRange(iSize, FLSize, FUSize, boolFound);
+                  CheckFileAttributes(FileAttrsToAttrsSet(ZFAI.ExternalFileAttributes),
+                    FOptions.FFileAttrs, boolFound);
+                  CheckSizeRange(iSize, FOptions.FLSize, FOptions.FUSize, boolFound);
                   // Zip files only contain the last write date of a file.
                   LongRec(iDateTime).Lo := ZFAI.LastModFileTime;
                   LongRec(iDateTime).Hi := ZFAI.LastModFileDate;
-                  CheckDateRange(FileDateToDateTime(iDateTime), FLDate, FUDate, boolFound);
+                  CheckDateRange(FileDateToDateTime(iDateTime), FOptions.FLDate, FOptions.FUDate,
+                    boolFound);
                   CheckExclusions(strPath, ZFAI.StoredPath + ZFAI.FileName, boolFound,
-                    FExclusions);
+                    FOptions.FExclusions);
                   If clsOwner In CommandLineSwitches Then
                     Begin
                       strOwner := OutputOwner(strFileName);
-                      If FOwnerSearch Then             
+                      If FOptions.FOwnerSearch Then             
                         boolFound := boolFound And CheckOwner(FOwnerRegEx, strOwner);
                     End;
                   iLDirFiles := iDirFiles;
@@ -2066,7 +1793,7 @@ Begin
   Inc(FDirectories);
   boolDirPrinted := False;
   (* Find Files in Zip *)
-  FilesCollection := TSearchFiles.Create(FilesExceptionHandler, FRegExSearch);
+  FilesCollection := TSearchFiles.Create(FilesExceptionHandler, FOptions.FRegExSearch);
   Try
     Inc(Result, SearchForPatternsInZip(strFileName, slPatterns, iDirFiles, strFileName,
         FilesCollection));
@@ -2080,7 +1807,7 @@ Begin
         Begin
           If (strPath <> ExtractFilePath(FilesCollection.FileInfo[iFile].FileName)) Or (Files = Nil) Then
             Begin
-              Files := TSearchFiles.Create(FilesExceptionHandler, FRegExSearch);
+              Files := TSearchFiles.Create(FilesExceptionHandler, FOptions.FRegExSearch);
               PathCollections.Add(Files);
               strPath := ExtractFilePath(FilesCollection.FileInfo[iFile].FileName);
               Files.Path := strPath;
@@ -2091,7 +1818,7 @@ Begin
       For iPath := 0 To PathCollections.Count - 1 Do
         Begin
           PathCollection := PathCollections[iPath] As ISearchFiles;
-          PathCollection.OrderBy(FOrderFilesBy, FOrderFilesDirection);
+          PathCollection.OrderBy(FOptions.FOrderFilesBy, FOptions.FOrderFilesDirection);
           OutputFilesToConsole(strFileName + '\' + PathCollection.Path, boolDirPrinted, PathCollection);
         End;
     Finally

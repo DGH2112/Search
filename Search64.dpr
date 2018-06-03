@@ -44,7 +44,9 @@ uses
   Search.ConvertDate in 'Source\Search.ConvertDate.pas',
   Search.ResourceStrings in 'Source\Search.ResourceStrings.pas',
   Search.Console in 'Source\Search.Console.pas',
-  Search.Help in 'Source\Search.Help.pas';
+  Search.Help in 'Source\Search.Help.pas',
+  Search.DisplayCriteria in 'Source\Search.DisplayCriteria.pas',
+  Search.Options in 'Source\Search.Options.pas';
 
 ResourceString
   (** A resource string to define the Exception output format. **)

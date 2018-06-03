@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    02 Jun 2018
+  @Date    03 Jun 2018
   
 **)
 Unit Search.Constants;
@@ -79,6 +79,9 @@ Const
     clWhite, 
     clNone
   );
+
+  (** An output format for all dates. **)
+  strOutputDateFmt = 'ddd dd/mmm/yyyy hh:mm:ss';
 
 Implementation
 
