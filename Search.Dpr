@@ -5,7 +5,7 @@
 
   @version 1.2
   @Author  David Hoyle
-  @Date    02 Jun 2018
+  @Date    03 Jun 2018
   @todo    Add switch for RegEx filename matching
   @todo    Check that GREP will work with multi-line matches
 

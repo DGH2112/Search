@@ -28,7 +28,6 @@ Type
    for the information that matches the criteria. **)
   TSearch = Class(TInterfacedObject, ISearchEngine)
   Strict Private
-    //: @todo Add the ability to show how many files in a total number of file.
     FFoundFiles: Integer;       // The total number of file found by the search
     FTotalFiles: Integer;       // The total number of files searched
     FDirectories: Integer;      // The total number of directories found by the search
@@ -356,9 +355,16 @@ Begin
           Inc(iDirFiles);
           LongRec(iTime).Lo := ZFAI.LastModFileTime;
           LongRec(iTime).Hi := ZFAI.LastModFileDate;
-          boolAdded := FilesCollection.Add(TSearchFileRec.Create(FileDateToDateTime(iTime),
-            ZFAI.UncompressedSize, ZFAI.CompressedSize, FileAttrsToAttrsSet(ZFAI.ExternalFileAttributes),
-            strOwner, ZFAI.StoredPath + ZFAI.FileName), GetZipFileText, FGREPCount);
+          boolAdded := FilesCollection.Add(
+            TSearchFileRec.Create(
+              FileDateToDateTime(iTime),
+              ZFAI.UncompressedSize,
+              ZFAI.CompressedSize,
+              FileAttrsToAttrsSet(ZFAI.ExternalFileAttributes),
+              strOwner,
+              ZFAI.StoredPath + ZFAI.FileName
+            ),
+          GetZipFileText, FGREPCount);
         End Else
           boolAdded := True;
       If boolAdded Then
@@ -383,7 +389,7 @@ Procedure TSearch.ConfigureColour;
 ResourceString
   strInvalidUseColourName = 'The output colour name "%s" is not valid. Use the command line switch /' + 
     'L so see valid colour names';
-  strInvalidUseColourValue = 'The output colour value "%s" is not valid. Use the command line switch /' + 
+  strInvalidUseColourValue = 'The output colour value "%s" is not valid. Use the command line switch /' +
     'L so see valid colour values';
   strColoursUpdated1 = 'Colour name "';
   strcoloursUpdated2 = '" updated to colour value "';
@@ -457,6 +463,34 @@ End;
 
 (**
 
+  This method counts the number of files in the zip archive.
+
+  @precon  Z must be a valid open archive.
+  @postcon The number of files onyl is returned.
+
+  @param   Z as a TZipForge as a constant
+  @return  an Integer
+
+**)
+Function TSearch.CountFilesInZIP(Const Z: TZipForge): Integer;
+
+Var
+  boolResult: Boolean;
+  ZFAI: TZFArchiveItem;
+
+Begin
+  Result := 0;
+  boolResult := Z.FindFirst('*.*', ZFAI);
+  While boolResult And Not ZFAI.Encrypted Do
+    Begin
+      If ZFAI.ExternalFileAttributes And faDirectory = 0 Then
+        Inc(Result);
+      boolResult := Z.FindNext(ZFAI);
+    End;
+End;
+
+(**
+
   This is the constructor method for the TSearch class.
 
   @precon  None.
@@ -500,34 +534,6 @@ Begin
   FSearchParams.Free;
   FParams.Free;
   Inherited Destroy;
-End;
-
-(**
-
-  This method counts the number of files in the zip archive.
-
-  @precon  Z must be a valid open archive.
-  @postcon The number of files onyl is returned.
-
-  @param   Z as a TZipForge as a constant
-  @return  an Integer
-
-**)
-Function TSearch.CountFilesInZIP(Const Z: TZipForge): Integer;
-
-Var
-  boolResult: Boolean;
-  ZFAI: TZFArchiveItem;
-
-Begin
-  Result := 0;
-  boolResult := Z.FindFirst('*.*', ZFAI);
-  While boolResult And Not ZFAI.Encrypted Do
-    Begin
-      If ZFAI.ExternalFileAttributes And faDirectory = 0 Then
-        Inc(Result);
-      boolResult := Z.FindNext(ZFAI);
-    End;
 End;
 
 (**
@@ -1051,11 +1057,11 @@ Begin
         (FilesCollection.FileInfo[iFile].RegExMatches.Count > 0);
       If Not(clsRegExSearch In CommandLineSwitches) Or boolRegEx Then
         If Not(clsOutputAsCSV In CommandLineSwitches) Then
-          FConsole.OutputToConsoleLn(coStd, strOutput + FilesCollection.FileInfo[iFile].FileName,
-            scFileInfo)
+          FConsole.OutputToConsoleLn(coStd, strOutput +
+            ExtractFileName(FilesCollection.FileInfo[iFile].FileName), scFileInfo)
         Else
           FConsole.OutputToConsoleLn(coStd,
-            strOutput + strPath + FilesCollection.FileInfo[iFile].FileName, scFileInfo);
+            strOutput + strPath + ExtractFileName(FilesCollection.FileInfo[iFile].FileName), scFileInfo);
       OutputRegExInformation(strPath, boolRegEx, FilesCollection.FileInfo[iFile]);
     End;
   If Not(clsOutputAsCSV In CommandLineSwitches) Then
@@ -1646,10 +1652,11 @@ Begin
   Inc(FDirectories);
   boolDirPrinted := False;
   (* Find Files *)
-  FilesCollection := TSearchFiles.Create(FilesExceptionHandler, FOptions.FRegExSearch);
+  FilesCollection := TSearchFiles.Create(FOptions.FOrderFilesBy, FOptions.FOrderFilesDirection,
+    FilesExceptionHandler, FOptions.FRegExSearch);
   Try
     Inc(Result, SearchForPatterns(slPatterns, strPath, FilesCollection));
-    FilesCollection.OrderBy(FOptions.FOrderFilesBy, FOptions.FOrderFilesDirection);
+    FilesCollection.OrderBy;
     OutputFilesToConsole(strPath, boolDirPrinted, FilesCollection);
   Finally
     FilesCollection := Nil;
@@ -1867,12 +1874,13 @@ Begin
   Inc(FDirectories);
   boolDirPrinted := False;
   (* Find Files in Zip *)
-  FilesCollection := TSearchFiles.Create(FilesExceptionHandler, FOptions.FRegExSearch);
+  FilesCollection := TSearchFiles.Create(FOptions.FOrderFilesBy, FOptions.FOrderFilesDirection,
+    FilesExceptionHandler, FOptions.FRegExSearch);
   Try
     Inc(Result, SearchForPatternsInZip(strFileName, slPatterns, iDirFiles, strFileName,
-        FilesCollection));
+      FilesCollection));
     // Break down files into individual paths
-    FilesCollection.OrderBy(obName, odAscending);
+    FilesCollection.OrderBy;
     PathCollections := TInterfaceList.Create;
     Try
       strPath := '';
@@ -1881,7 +1889,8 @@ Begin
         Begin
           If (strPath <> ExtractFilePath(FilesCollection.FileInfo[iFile].FileName)) Or (Files = Nil) Then
             Begin
-              Files := TSearchFiles.Create(FilesExceptionHandler, FOptions.FRegExSearch);
+              Files := TSearchFiles.Create(FOptions.FOrderFilesBy, FOptions.FOrderFilesDirection,
+                FilesExceptionHandler, FOptions.FRegExSearch);
               PathCollections.Add(Files);
               strPath := ExtractFilePath(FilesCollection.FileInfo[iFile].FileName);
               Files.Path := strPath;
@@ -1891,8 +1900,9 @@ Begin
         End;
       For iPath := 0 To PathCollections.Count - 1 Do
         Begin
+          boolDirPrinted := False;
           PathCollection := PathCollections[iPath] As ISearchFiles;
-          PathCollection.OrderBy(FOptions.FOrderFilesBy, FOptions.FOrderFilesDirection);
+          PathCollection.OrderBy;
           OutputFilesToConsole(strFileName + '\' + PathCollection.Path, boolDirPrinted, PathCollection);
         End;
     Finally
