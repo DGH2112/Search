@@ -93,7 +93,7 @@ Type
     Function  Add(Const SearchFileRec : TSearchFileRec; Const strSearchText : String;
       Var iGREPCount : Integer) : Boolean; Overload;
     Function  OwnerWidth : Integer;
-    Procedure OrderBy(Const OrderBy : TOrderBy; Const OrderDirection : TOrderDirection);
+    Procedure OrderBy;
     Function  Add(Const FileInfo : ISearchFile) : Boolean; Overload;
     (**
       A property to return a specific file from the collection.

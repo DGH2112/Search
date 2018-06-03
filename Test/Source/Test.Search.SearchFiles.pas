@@ -58,7 +58,7 @@ Var
   iGREPCount : Integer;
 
 Begin
-  FISearchFiles := TSearchFiles.Create(ExceptionHandler, '');
+  FISearchFiles := TSearchFiles.Create(obNone, odAscending, ExceptionHandler, '');
   FISearchFiles.Add(
     TSearchFileRec.Create(EncodeDateTime(2018, 1, 7, 14, 30, 15, 0), 123456, 23456,
       [sfaFile, sfaArchive, sfaCompressed], 'David.Hoyle', 'D:\Path\MyFileName.pas'),
@@ -125,27 +125,51 @@ End;
 
 Procedure TTestISearchFiles.TestOrderBy;
 
+Var
+  F: ISearchFiles;
+
+  Function CreateFileCollection(Const OrderBy : TOrderBy;
+    Const OrderDirection : TOrderDirection) : ISearchFiles;
+
+  Var
+    iGREPCount: Integer;
+
+  Begin
+    Result := TSearchFiles.Create(OrderBy, OrderDirection, ExceptionHandler, '');
+    Result.Add(
+      TSearchFileRec.Create(EncodeDateTime(2018, 1, 7, 14, 30, 15, 0), 123456, 23456,
+        [sfaFile, sfaArchive, sfaCompressed], 'David.Hoyle', 'D:\Path\MyFileName.pas'),
+      '',
+      iGREPCount
+    );
+    Result.Add(
+      TSearchFileRec.Create(EncodeDateTime(2018, 1, 8, 15, 35, 20, 0), 234567, 0, [sfaFile, sfaSystem],
+        'David.Hoyle', 'D:\Path\MyOtherFileName.pas'),
+      '',
+      iGREPCount
+    );
+    Result.OrderBy;
+  End;
+  
 Begin
-  CheckEquals('D:\Path\MyFileName.pas', FISearchFiles.FileInfo[0].FileName);
-  CheckEquals('D:\Path\MyOtherFileName.pas', FISearchFiles.FileInfo[1].FileName);
-  FISearchFiles.OrderBy(obName, odAscending);
-  CheckEquals('D:\Path\MyFileName.pas', FISearchFiles.FileInfo[0].FileName);
-  CheckEquals('D:\Path\MyOtherFileName.pas', FISearchFiles.FileInfo[1].FileName);
-  FISearchFiles.OrderBy(obName, odDescending);
-  CheckEquals('D:\Path\MyOtherFileName.pas', FISearchFiles.FileInfo[0].FileName);
-  CheckEquals('D:\Path\MyFileName.pas', FISearchFiles.FileInfo[1].FileName);
-  FISearchFiles.OrderBy(obDate, odAscending);
-  CheckEquals('D:\Path\MyFileName.pas', FISearchFiles.FileInfo[0].FileName);
-  CheckEquals('D:\Path\MyOtherFileName.pas', FISearchFiles.FileInfo[1].FileName);
-  FISearchFiles.OrderBy(obDate, odDescending);
-  CheckEquals('D:\Path\MyOtherFileName.pas', FISearchFiles.FileInfo[0].FileName);
-  CheckEquals('D:\Path\MyFileName.pas', FISearchFiles.FileInfo[1].FileName);
-  FISearchFiles.OrderBy(obSize, odAscending);
-  CheckEquals('D:\Path\MyFileName.pas', FISearchFiles.FileInfo[0].FileName);
-  CheckEquals('D:\Path\MyOtherFileName.pas', FISearchFiles.FileInfo[1].FileName);
-  FISearchFiles.OrderBy(obSize, odDescending);
-  CheckEquals('D:\Path\MyOtherFileName.pas', FISearchFiles.FileInfo[0].FileName);
-  CheckEquals('D:\Path\MyFileName.pas', FISearchFiles.FileInfo[1].FileName);
+  F := CreateFileCollection(obName, odAscending);
+  CheckEquals('D:\Path\MyFileName.pas',      F.FileInfo[0].FileName, '1.1');
+  CheckEquals('D:\Path\MyOtherFileName.pas', F.FileInfo[1].FileName, '1.2');
+  F := CreateFileCollection(obName, odDescending);
+  CheckEquals('D:\Path\MyOtherFileName.pas', F.FileInfo[0].FileName, '2.1');
+  CheckEquals('D:\Path\MyFileName.pas',      F.FileInfo[1].FileName, '2.2');
+  F := CreateFileCollection(obDate, odAscending);
+  CheckEquals('D:\Path\MyFileName.pas',      F.FileInfo[0].FileName, '3.1');
+  CheckEquals('D:\Path\MyOtherFileName.pas', F.FileInfo[1].FileName, '3.2');
+  F := CreateFileCollection(obDate, odDescending);
+  CheckEquals('D:\Path\MyOtherFileName.pas', F.FileInfo[0].FileName, '4.1');
+  CheckEquals('D:\Path\MyFileName.pas',      F.FileInfo[1].FileName, '4.2');
+  F := CreateFileCollection(obSize, odAscending);
+  CheckEquals('D:\Path\MyFileName.pas',      F.FileInfo[0].FileName, '5.1');
+  CheckEquals('D:\Path\MyOtherFileName.pas', F.FileInfo[1].FileName, '5.2');
+  F := CreateFileCollection(obSize, odDescending);
+  CheckEquals('D:\Path\MyOtherFileName.pas', F.FileInfo[0].FileName, '6.1');
+  CheckEquals('D:\Path\MyFileName.pas',      F.FileInfo[1].FileName, '6.2');
 End;
 
 Procedure TTestISearchFiles.TestOwnerWidth;
