@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    02 Jun 2018
+  @Date    03 Jun 2018
   
 **)
 Unit Search.Interfaces;
@@ -135,13 +135,19 @@ Type
     Function  GetColour(Const eColour : TSearchColour) : TColor;
     Procedure SetColour(Const eColour : TSearchColour; Const iColour : TColor);
     Function  GetWidth : Integer;
-    Function  CheckConsoleMode(Const eConsoleOutput : TConsoleOutput) : Boolean;
-    Procedure OutputToConsole(Const eConsoleOutput : TConsoleOutput; Const strText : String = '';
+    Function  CheckConsoleMode(Const eConsoleHnd : TConsoleHnd) : Boolean;
+    Procedure OutputToConsole(Const eConsoleHnd : TConsoleHnd; Const strText : String = '';
       Const eTextColour : TSearchColour = scNone; Const eBackColour : TSearchColour = scNone;
-      Const boolUpdateCursor : Boolean = True);
-    Procedure OutputToConsoleLn(Const eConsoleOutput : TConsoleOutput; Const strText : String = '';
+      Const boolUpdateCursor : Boolean = True); Overload;
+    Procedure OutputToConsoleLn(Const eConsoleHnd : TConsoleHnd; Const strText : String = '';
       Const eTextColour : TSearchColour = scNone; Const eBackColour : TSearchColour = scNone;
-      Const boolUpdateCursor : Boolean = True);
+      Const boolUpdateCursor : Boolean = True); OverLoad;
+    Procedure OutputToConsole(Const eConsoleHnd : TConsoleHnd; Const strText : String;
+      Const iTextColour : TColor; Const iBackColour : TColor; Const boolUpdateCursor : Boolean);
+      Overload;
+    Procedure OutputToConsoleLn(Const eConsoleHnd : TConsoleHnd; Const strText : String;
+      Const iTextColour : TColor; Const iBackColour : TColor; Const boolUpdateCursor : Boolean);
+      Overload;
     Procedure CheckForEscape;
     (**
       This property returns the error handle for console output.

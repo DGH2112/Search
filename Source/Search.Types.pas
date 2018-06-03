@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    02 Jun 2018
+  @Date    03 Jun 2018
   
 **)
 Unit Search.Types;
@@ -145,7 +145,7 @@ Type
   );
 
   (** An enumerate to define the type of console output to be used. **)
-  TConsoleOutput = (coStd, coErr);
+  TConsoleHnd = (coStd, coErr);
 
 Implementation
 

@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    02 Jun 2018
+  @Date    03 Jun 2018
   
 **)
 Unit Search.Console;
@@ -15,15 +15,16 @@ Uses
   Search.Interfaces,
   Search.Types,
   Vcl.Graphics, 
-  System.SysUtils;
+  System.SysUtils, 
+  Winapi.Windows;
 
 Type
   (** A class to implement the ISearchConsole interface for providing coloured output capabilities to
       the windows console. **)
   TSearchConsole = Class(TInterfacedObject, ISearchConsole)
   Strict Private
-    FConsoleHnd : Array[Low(TConsoleOutput)..High(TConsoleOutput)] Of THandle;
-    FColours : Array[Low(TSearchColour)..High(TSearchColour)] Of TColor;
+    FConsoleHnd : Array[Low(TConsoleHnd)..High(TConsoleHnd)] Of THandle;
+    FColour : Array[Low(TSearchColour)..High(TSearchColour)] Of TColor;
     FWidth: Integer;
     FHeight: Integer;
   Strict Protected
@@ -33,16 +34,27 @@ Type
     Function  GetErrHnd: NativeUInt;
     Function  GetStdHnd: NativeUInt;
     Function  GetWidth : Integer;
-    Function  CheckConsoleMode(Const eConsoleOutput : TConsoleOutput) : Boolean;
-    Procedure OutputToConsole(Const eConsoleHnd : TConsoleOutput; Const strText: String = '';
+    Function  CheckConsoleMode(Const eConsoleOutput : TConsoleHnd) : Boolean;
+    Procedure OutputToConsole(Const eConsoleHnd : TConsoleHnd; Const strText: String = '';
       Const eTextColour: TSearchColour = scNone; Const eBackColour: TSearchColour = scNone;
-      Const boolUpdateCursor: Boolean = True);
-    Procedure OutputToConsoleLn(Const eConsoleHnd : TConsoleOutput; Const strText: String = '';
+      Const boolUpdateCursor: Boolean = True); Overload;
+    Procedure OutputToConsoleLn(Const eConsoleHnd : TConsoleHnd; Const strText: String = '';
       Const eTextColour: TSearchColour = scNone; Const eBackColour: TSearchColour = scNone;
-      Const boolUpdateCursor: Boolean = True);
+      Const boolUpdateCursor: Boolean = True); Overload;
+    Procedure OutputToConsole(Const eConsoleHnd : TConsoleHnd; Const strText: String;
+      Const iTextColour: TColor; Const iBackColour: TColor; Const boolUpdateCursor: Boolean); Overload;
+    Procedure OutputToConsoleLn(Const eConsoleHnd : TConsoleHnd; Const strText : String;
+      Const iTextColour : TColor; Const iBackColour : TColor; Const boolUpdateCursor : Boolean);
+      Overload;
     Procedure CheckForEscape;
     // General Methods
-    Procedure ClearLine;
+    Procedure UpdateCursor(Const eConsoleHnd : TConsoleHnd; Const OldPos, NewPos : TCoord;
+      Var wChars : DWORD; Const boolUpdateCursor : Boolean); InLine;
+    Procedure UpdateConsoleColours(Const eConsoleHnd : TConsoleHnd; Const iTextColour : TColor;
+      Const iBackColour : TColor; Const ConsoleInfo : TConsoleScreenBufferInfo; Var wChars : DWORD;
+      Const strTABText : String); InLine;
+    Procedure UpdateNewPos(Const ConsoleInfo : TConsoleScreenBufferInfo; Var NewPos : TCoord); InLine;
+    Procedure ClearLine; InLine;
     Function  GetConsoleCharacter(Const Characters: TSysCharSet): Char;
     Function  BackGroundColour(Const iColour, iNone : TColor) : Integer;
     Function  ForeGroundColour(Const iColour, iNone : TColor): Integer;
@@ -54,8 +66,7 @@ Type
 Implementation
 
 Uses
-  System.Classes, 
-  Winapi.Windows;
+  System.Classes;
 
 Type
   (** An enumerate to define the current console output mode **)
@@ -115,11 +126,11 @@ End;
   @precon  hndConsole must be a valid console handle.
   @postcon Returns the current mode of output of the console functions.
 
-  @param   eConsoleOutput as a TConsoleOutput as a constant
+  @param   eConsoleOutput as a TConsoleHnd as a constant
   @return  a Boolean
 
 **)
-Function TSearchConsole.CheckConsoleMode(Const eConsoleOutput : TConsoleOutput) : Boolean;
+Function TSearchConsole.CheckConsoleMode(Const eConsoleOutput : TConsoleHnd) : Boolean;
 
 Var
   lpMode : Cardinal;
@@ -210,7 +221,7 @@ Var
   ConsoleInfo: TConsoleScreenBufferInfo;
 
 Begin
-  FColours[scException] := clRed;
+  FColour[scException] := clRed;
   FConsoleHnd[coStd] := GetStdHandle(STD_OUTPUT_HANDLE);
   FConsoleHnd[coErr] := GetStdHandle(STD_ERROR_HANDLE);
   GetConsoleScreenBufferInfo(FConsoleHnd[coStd], ConsoleInfo);
@@ -274,7 +285,7 @@ End;
 Function TSearchConsole.GetColour(Const eColour: TSearchColour): TColor;
 
 Begin
-  Result := FColours[eColour];
+  Result := FColour[eColour];
 End;
 
 (**
@@ -367,118 +378,35 @@ End;
   @postcon Outputs the given text to the console references by the given handle using the text and 
            background colours provided.
 
-  @param   eConsoleHnd      as a TConsoleOutput as a constant
+  @param   eConsoleHnd      as a TConsoleHnd as a constant
   @param   strText          as a String as a constant
-  @param   eTextColour      as a TSearchColour as a constant
-  @param   eBackColour      as a TSearchColour as a constant
+  @param   iTextColour      as a TColor as a constant
+  @param   iBackColour      as a TColor as a constant
   @param   boolUpdateCursor as a Boolean as a constant
 
 **)
-Procedure TSearchConsole.OutputToConsole(Const eConsoleHnd : TConsoleOutput;
-  Const strText: String = ''; Const eTextColour: TSearchColour = TSearchColour.scNone;
-  Const eBackColour: TSearchColour = TSearchColour.scNone; Const boolUpdateCursor: Boolean = True);
-
-Const
-  iForegroundMask = $0F;
-  iBackgroundMask = $F0;
-
-  (**
-
-    This method sets the fore and backgroudn colours for the console output.
-
-    @precon  None.
-    @postcon The console colour attributes are updated with the required colours.
-
-    @param   ConsoleInfo as a TConsoleScreenBufferInfo as a constant
-    @param   wChars      as a DWORD as a reference
-    @param   strTABText  as a String as a constant
-
-  **)
-  Procedure UpdateConsoleColours(Const ConsoleInfo : TConsoleScreenBufferInfo; Var wChars : DWORD;
-    Const strTABText : String);
-
-  Var
-    iForeAttrColour, iBackAttrColour : Integer;
-    iChar : Integer;
-    Attrs : Array of Word;
-  
-  Begin
-    SetLength(Attrs, wChars);
-    iForeAttrColour := ForeGroundColour(FColours[eTextColour],
-      ConsoleInfo.wAttributes And iForegroundMask);
-    iBackAttrColour := BackGroundColour(FColours[eBackColour],
-      ConsoleInfo.wAttributes And iBackgroundMask);
-    If wChars > 0 Then
-      For iChar := 0 To wChars - 1 Do
-        Attrs[iChar] := iForeAttrColour Or iBackAttrColour;
-    Win32Check(WriteConsoleOutputAttribute(FConsoleHnd[eConsoleHnd], Attrs,
-      Length(strTABText), ConsoleInfo.dwCursorPosition, wChars));
-  End;
-  
-  (**
-
-    This method sets the position of the cursor after the output of the string to the console.
-
-    @precon  None.
-    @postcon The position of the console cursor is updated.
-
-    @param   OldPos as a TCoord as a constant
-    @param   NewPos as a TCoord as a constant
-    @param   wChars as a DWORD as a reference
-
-  **)
-  Procedure UpdateCursor(Const OldPos, NewPos : TCoord; Var wChars : DWORD);
-
-  Begin
-    If boolUpdateCursor Then
-      Begin
-        // The only time the below fails is at the end of the buffer and a new
-        // line is required, hence the new line on failure.
-        If Not SetConsoleCursorPosition(FConsoleHnd[eConsoleHnd], NewPos) Then
-          Win32Check(WriteConsole(FConsoleHnd[eConsoleHnd], PChar(#13#10), Length(#13#10), wChars, Nil));
-      End Else
-        Win32Check(SetConsoleCursorPosition(FConsoleHnd[eConsoleHnd], OldPos));
-  End;
-  
-  (**
-
-    This procedure update the NewPos record based on the console information.
-
-    @precon  None.
-    @postcon The NewPos record is updated.
-
-    @param   ConsoleInfo as a TConsoleScreenBufferInfo as a constant
-    @param   NewPos      as a TCoord as a reference
-
-  **)
-  Procedure UpdateNewPos(Const ConsoleInfo : TConsoleScreenBufferInfo; Var NewPos : TCoord);
-
-  Begin
-    While NewPos.X >= ConsoleInfo.dwSize.X Do
-      Begin
-        Inc(NewPos.Y);
-        Dec(NewPos.X, ConsoleInfo.dwSize.X);
-      End;
-  End;
+Procedure TSearchConsole.OutputToConsole(Const eConsoleHnd: TConsoleHnd; Const strText: String;
+  Const iTextColour, iBackColour: TColor; Const boolUpdateCursor: Boolean);
 
 Var
-  ConsoleInfo : TConsoleScreenBufferInfo;
-  wChars : DWord;
-  OldPos : TCoord;
-  NewPos : TCoord;
-  strTABText : String;
+  ConsoleInfo: TConsoleScreenBufferInfo;
+  wChars: DWORD;
+  OldPos: TCoord;
+  NewPos: TCoord;
+  strTABText: String;
 
 Begin
-  strTabText := StringReplace(strText, #9, #175, [rfReplaceAll]);
+  strTABText := StringReplace(strText, #9, #175, [rfReplaceAll]);
   If CheckConsoleMode(eConsoleHnd) Then
     Begin
       Repeat
         Win32Check(GetConsoleScreenBufferInfo(FConsoleHnd[eConsoleHnd], ConsoleInfo));
         OldPos := ConsoleInfo.dwCursorPosition;
         NewPos := OldPos;
-        Win32Check(WriteConsoleOutputCharacter(FConsoleHnd[eConsoleHnd], PChar(strTABText), Length(strTABText),
+        Win32Check(WriteConsoleOutputCharacter(FConsoleHnd[eConsoleHnd], PChar(strTABText),
+          Length(strTABText),
           ConsoleInfo.dwCursorPosition, wChars));
-        UpdateConsoleColours(ConsoleInfo, wChars, strTABText);
+        UpdateConsoleColours(eConsoleHnd, iTextColour, iBackColour, ConsoleInfo, wChars, strTABText);
         If wChars > 0 Then
           Delete(strTABText, 1, wChars);
         Inc(NewPos.X, wChars);
@@ -490,9 +418,34 @@ Begin
             NewPos.X := 0;
           End;
       Until strTABText = '';
-      UpdateCursor(OldPos, NewPos, wChars);
+      UpdateCursor(eConsoleHnd, OldPos, NewPos, wChars, boolUpdateCursor);
     End Else
       Write(strTABText);
+End;
+
+(**
+
+  This function outputs the given text to the console references by the given handle using the text and 
+  background colours provided. If xlNone is used for the colours then the consoles default colours are 
+  used. DOES NOT add a carraige return at the end of each line.
+
+  @precon  hndConsole must be a valid console handle.
+  @postcon Outputs the given text to the console references by the given handle using the text and 
+           background colours provided.
+
+  @param   eConsoleHnd      as a TConsoleHnd as a constant
+  @param   strText          as a String as a constant
+  @param   eTextColour      as a TSearchColour as a constant
+  @param   eBackColour      as a TSearchColour as a constant
+  @param   boolUpdateCursor as a Boolean as a constant
+
+**)
+Procedure TSearchConsole.OutputToConsole(Const eConsoleHnd : TConsoleHnd;
+  Const strText: String = ''; Const eTextColour: TSearchColour = TSearchColour.scNone;
+  Const eBackColour: TSearchColour = TSearchColour.scNone; Const boolUpdateCursor: Boolean = True);
+
+Begin
+  OutputToConsole(eConsoleHnd, strText, FColour[eTextColour], FColour[eBackColour], boolUpdateCursor);
 End;
 
 (**
@@ -505,16 +458,15 @@ End;
   @postcon Outputs the given text to the console references by the given handle using the text and 
            background colours provided.
 
-  @param   eConsoleHnd      as a TConsoleOutput as a constant
+  @param   eConsoleHnd      as a TConsoleHnd as a constant
   @param   strText          as a String as a constant
-  @param   eTextColour      as a TSearchColour as a constant
-  @param   eBackColour      as a TSearchColour as a constant
+  @param   iTextColour      as a TColor as a constant
+  @param   iBackColour      as a TColor as a constant
   @param   boolUpdateCursor as a Boolean as a constant
 
 **)
-Procedure TSearchConsole.OutputToConsoleLn(Const eConsoleHnd : TConsoleOutput;
-  Const strText: String = ''; Const eTextColour: TSearchColour = TSearchColour.scNone;
-  Const eBackColour: TSearchColour = TSearchColour.scNone; Const boolUpdateCursor: Boolean = True);
+Procedure TSearchConsole.OutputToConsoleLn(Const eConsoleHnd: TConsoleHnd; Const strText: String;
+  Const iTextColour, iBackColour: TColor; Const boolUpdateCursor: Boolean);
 
 Var
   sl : TStringList;
@@ -531,7 +483,7 @@ Begin
       Begin
         If CheckConsoleMode(eConsoleHnd) Then
           Begin
-            OutputToConsole(eConsoleHnd, sl[i], eTextColour, eBackColour, boolUpdateCursor);
+            OutputToConsole(eConsoleHnd, sl[i], iTextColour, iBackColour, boolUpdateCursor);
             Win32Check(WriteConsole(FConsoleHnd[eConsoleHnd], PChar(#13#10), Length(#13#10), wChars, Nil));
           End Else
             WriteLn(sl[i]);
@@ -539,6 +491,31 @@ Begin
   Finally
     sl.Free;
   End;
+End;
+
+(**
+
+  This function outputs the given text to the console references by the given handle using the text and 
+  background colours provided. If xlNone is used for the colours then the consoles default colours are 
+  used. Adds a Carriage Return at the end of each line.
+
+  @precon  hndConsole must be a valid console handle.
+  @postcon Outputs the given text to the console references by the given handle using the text and 
+           background colours provided.
+
+  @param   eConsoleHnd      as a TConsoleHnd as a constant
+  @param   strText          as a String as a constant
+  @param   eTextColour      as a TSearchColour as a constant
+  @param   eBackColour      as a TSearchColour as a constant
+  @param   boolUpdateCursor as a Boolean as a constant
+
+**)
+Procedure TSearchConsole.OutputToConsoleLn(Const eConsoleHnd : TConsoleHnd;
+  Const strText: String = ''; Const eTextColour: TSearchColour = TSearchColour.scNone;
+  Const eBackColour: TSearchColour = TSearchColour.scNone; Const boolUpdateCursor: Boolean = True);
+
+Begin
+  OutputToConsoleLn(eConsoleHnd, strText, FColour[eTextColour], FColour[eBackColour], boolUpdateCursor);
 End;
 
 (**
@@ -596,8 +573,96 @@ End;
 Procedure TSearchConsole.SetColour(Const eColour: TSearchColour; Const iColour: TColor);
 
 Begin
-  If iColour <> FColours[eColour] Then
-    FColours[eColour] := iColour;
+  If iColour <> FColour[eColour] Then
+    FColour[eColour] := iColour;
+End;
+
+(**
+
+  This method sets the fore and backgroudn colours for the console output.
+
+  @precon  None.
+  @postcon The console colour attributes are updated with the required colours.
+
+  @param   eConsoleHnd as a TConsoleHnd as a constant
+  @param   iTextColour as a TColor as a constant
+  @param   iBackColour as a TColor as a constant
+  @param   ConsoleInfo as a TConsoleScreenBufferInfo as a constant
+  @param   wChars      as a DWORD as a reference
+  @param   strTABText  as a String as a constant
+
+**)
+Procedure TSearchConsole.UpdateConsoleColours(Const eConsoleHnd : TConsoleHnd;
+  Const iTextColour : TColor; Const iBackColour : TColor; Const ConsoleInfo : TConsoleScreenBufferInfo;
+  Var wChars : DWORD; Const strTABText : String);
+
+Const
+  iForegroundMask = $0F;
+  iBackgroundMask = $F0;
+
+Var
+  iForeAttrColour, iBackAttrColour : Integer;
+  iChar : Integer;
+  Attrs : Array of Word;
+  
+Begin
+  SetLength(Attrs, wChars);
+  iForeAttrColour := ForeGroundColour(iTextColour, ConsoleInfo.wAttributes And iForegroundMask);
+  iBackAttrColour := BackGroundColour(iBackColour, ConsoleInfo.wAttributes And iBackgroundMask);
+  If wChars > 0 Then
+    For iChar := 0 To wChars - 1 Do
+      Attrs[iChar] := iForeAttrColour Or iBackAttrColour;
+  Win32Check(WriteConsoleOutputAttribute(FConsoleHnd[eConsoleHnd], Attrs,
+    Length(strTABText), ConsoleInfo.dwCursorPosition, wChars));
+End;
+  
+(**
+
+  This method sets the position of the cursor after the output of the string to the console.
+
+  @precon  None.
+  @postcon The position of the console cursor is updated.
+
+  @param   eConsoleHnd      as a TConsoleHnd as a constant
+  @param   OldPos           as a TCoord as a constant
+  @param   NewPos           as a TCoord as a constant
+  @param   wChars           as a DWORD as a reference
+  @param   boolUpdateCursor as a Boolean as a constant
+
+**)
+Procedure TSearchConsole.UpdateCursor(Const eConsoleHnd : TConsoleHnd; Const OldPos, NewPos : TCoord;
+  Var wChars : DWORD; Const boolUpdateCursor : Boolean);
+
+Begin
+  If boolUpdateCursor Then
+    Begin
+      // The only time the below fails is at the end of the buffer and a new
+      // line is required, hence the new line on failure.
+      If Not SetConsoleCursorPosition(FConsoleHnd[eConsoleHnd], NewPos) Then
+        Win32Check(WriteConsole(FConsoleHnd[eConsoleHnd], PChar(#13#10), Length(#13#10), wChars, Nil));
+    End Else
+      Win32Check(SetConsoleCursorPosition(FConsoleHnd[eConsoleHnd], OldPos));
+End;
+  
+(**
+
+  This procedure update the NewPos record based on the console information.
+
+  @precon  None.
+  @postcon The NewPos record is updated.
+
+  @param   ConsoleInfo as a TConsoleScreenBufferInfo as a constant
+  @param   NewPos      as a TCoord as a reference
+
+**)
+Procedure TSearchConsole.UpdateNewPos(Const ConsoleInfo : TConsoleScreenBufferInfo; Var NewPos : TCoord);
+
+Begin
+  While NewPos.X >= ConsoleInfo.dwSize.X Do
+    Begin
+      Inc(NewPos.Y);
+      Dec(NewPos.X, ConsoleInfo.dwSize.X);
+    End;
 End;
 
 (** Initialises the console more to Unknown to force a call to the Win32 API **)

@@ -4,7 +4,7 @@
 
   @Author  David Hoyle
   @Version 1.0
-  @Date    02 Jun 2018
+  @Date    03 Jun 2018
 
 **)
 Unit Search.Engine;
@@ -422,7 +422,6 @@ Var
   iColourItem : TSearchColourList;
   iColourName : TSearchColour;
   iColourValue : TSearchColourList;
-  //: @debug iOldColour: TSearchColour;
 
 Begin
   iColourName := scNone;
@@ -443,7 +442,6 @@ Begin
       End;
   If iColourValue = sclNone Then
     Raise ESearchException.CreateFmt(strInvalidUseColourValue, [FColourSettings.ValueFromIndex[0]]);
-  //iOldColour := iColourName;
   FConsole.OutputToConsole(coStd, strColoursUpdated1, scSuccess);
   FConsole.OutputToConsole(coStd, FColourSettings.Names[0], iColourName);
   FConsole.Colour[iColourName] := SearchColourList[iColourValue];
@@ -1052,7 +1050,7 @@ Begin
   For iAvailableColour := Low(TSearchColourList) To High(TSearchColourList) Do
     Begin
       FConsole.OutputToConsole(coStd, Format(strColours, [strSearchColourList[iAvailableColour]]));
-      //: @bug FConsole.OutputToConsoleLn(coStd, strSampleText, SearchColourList[iAvailableColour]);
+      FConsole.OutputToConsoleLn(coStd, strSampleText, SearchColourList[iAvailableColour], clNone, True);
     End;
   FConsole.OutputToConsoleLn(coStd);
 End;
@@ -1699,6 +1697,7 @@ Begin
         TSearchHelp.PrintHelp(FConsole)
       Else If clsColours In CommandLineSwitches Then
         Begin
+          //: @bug You cannot show the colours without a search criteria!
           If FColourSettings.Count = 0 Then
             OutputConfiguredColours
           Else
