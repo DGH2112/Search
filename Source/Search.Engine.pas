@@ -93,6 +93,7 @@ Type
     Procedure OutputConfiguredColours;
     Procedure ConfigureColour;
     Function  CountFiles(const strPath: String): Integer;
+    function CountFilesInZIP(const Z: TZipForge): Integer;
     Procedure SafeLoadFromFile(Const slText : TStringList; Const strFileName: String);
     Procedure PrintErrorLog;
     // ISearchEngine;
@@ -348,22 +349,24 @@ Var
 
 Begin
   Result := 0;
-  If Not(clsSummaryLevel In CommandLineSwitches) Then
+  If ZFAI.ExternalFileAttributes And faDirectory = 0 Then
     Begin
-      Inc(iDirFiles);
-      LongRec(iTime).Lo := ZFAI.LastModFileTime;
-      LongRec(iTime).Hi := ZFAI.LastModFileDate;
-      boolAdded := FilesCollection.Add(TSearchFileRec.Create(FileDateToDateTime(iTime),
-        ZFAI.UncompressedSize, ZFAI.CompressedSize, FileAttrsToAttrsSet(ZFAI.ExternalFileAttributes),
-        strOwner, ZFAI.StoredPath + ZFAI.FileName), GetZipFileText, FGREPCount);
-    End
-  Else
-    boolAdded := True;
-  If boolAdded Then
-    Begin
-      Inc(FFoundFiles);
-      Inc(FFileSize, ZFAI.UncompressedSize);
-      Inc(Result, ZFAI.UncompressedSize);
+      If Not(clsSummaryLevel In CommandLineSwitches) Then
+        Begin
+          Inc(iDirFiles);
+          LongRec(iTime).Lo := ZFAI.LastModFileTime;
+          LongRec(iTime).Hi := ZFAI.LastModFileDate;
+          boolAdded := FilesCollection.Add(TSearchFileRec.Create(FileDateToDateTime(iTime),
+            ZFAI.UncompressedSize, ZFAI.CompressedSize, FileAttrsToAttrsSet(ZFAI.ExternalFileAttributes),
+            strOwner, ZFAI.StoredPath + ZFAI.FileName), GetZipFileText, FGREPCount);
+        End Else
+          boolAdded := True;
+      If boolAdded Then
+        Begin
+          Inc(FFoundFiles);
+          Inc(FFileSize, ZFAI.UncompressedSize);
+          Inc(Result);
+        End;
     End;
 End;
 
@@ -436,7 +439,6 @@ Function TSearch.CountFiles(Const strPath: String): Integer;
 Var
   recSearch: TSearchRec;
   iResult: Integer;
-  iFileOnly: Integer;
 
 Begin
   Result := 0;
@@ -498,6 +500,34 @@ Begin
   FSearchParams.Free;
   FParams.Free;
   Inherited Destroy;
+End;
+
+(**
+
+  This method counts the number of files in the zip archive.
+
+  @precon  Z must be a valid open archive.
+  @postcon The number of files onyl is returned.
+
+  @param   Z as a TZipForge as a constant
+  @return  an Integer
+
+**)
+Function TSearch.CountFilesInZIP(Const Z: TZipForge): Integer;
+
+Var
+  boolResult: Boolean;
+  ZFAI: TZFArchiveItem;
+
+Begin
+  Result := 0;
+  boolResult := Z.FindFirst('*.*', ZFAI);
+  While boolResult And Not ZFAI.Encrypted Do
+    Begin
+      If ZFAI.ExternalFileAttributes And faDirectory = 0 Then
+        Inc(Result);
+      boolResult := Z.FindNext(ZFAI);
+    End;
 End;
 
 (**
@@ -1760,7 +1790,7 @@ Begin
       Begin
         Z.OpenArchive;
         Try
-          Inc(FTotalFiles, Z.FileCount);
+          Inc(FTotalFiles, CountFilesInZIP(Z));
           For iPattern := 0 To slPatterns.Count - 1 Do
             Begin
               FConsole.CheckForEscape;
